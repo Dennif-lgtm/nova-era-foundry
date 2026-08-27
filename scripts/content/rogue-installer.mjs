@@ -1,9 +1,8 @@
 import { MODULE_ID } from "../constants.mjs";
 import { ROGUE_CLASS, ROGUE_FEATURES, ROGUE_SUBCLASSES } from "./rogue-data.mjs";
 
-const CONTENT_VERSION = "3";
-const SUBCLASS_PACK_NAME = "nova-era-ladino";
-const SUBCLASS_PACK_LABEL = "Nova Era — Ladino";
+const CONTENT_VERSION = "4";
+const ANALYZE_ACTIVITY_ID = "novaeraAnalyze01";
 
 function stableId(seed) {
   let first = 0x811c9dc5;
@@ -72,29 +71,20 @@ async function configureAdvancement(itemsByKey) {
   }
 }
 
-async function ensureSubclassCompendium(itemsByKey) {
-  const collection = `world.${SUBCLASS_PACK_NAME}`;
-  let pack = game.packs.get(collection);
-  pack ??= await CompendiumCollection.createCompendium({
-    type: "Item",
-    label: SUBCLASS_PACK_LABEL,
-    name: SUBCLASS_PACK_NAME,
-    package: "world"
-  });
-
-  const documents = await pack.getDocuments();
-  for (const subclass of ROGUE_SUBCLASSES) {
-    const source = itemsByKey.get(subclass.key).toObject();
-    delete source._id;
-    source.folder = null;
-    const existing = documents.find(document => document.getFlag(MODULE_ID, "contentKey") === subclass.key);
-    if (existing) await existing.update(source);
-    else await Item.create(source, { pack: pack.collection });
-  }
-}
-
 function itemSource({ key, name, type = "feat", description, level = 0, group = "base" }, folder) {
   const system = { description: { value: description, chat: "" } };
+  if (key === "exposicao") {
+    system.activities = {
+      [ANALYZE_ACTIVITY_ID]: {
+        _id: ANALYZE_ACTIVITY_ID,
+        type: "utility",
+        name: "Analisar",
+        activation: { type: "bonus", value: 1, override: true },
+        description: { chatFlavor: "Analisa uma criatura escolhida como alvo." },
+        roll: { formula: "", name: "", prompt: false, visible: false }
+      }
+    };
+  }
   if (type === "class") Object.assign(system, { identifier: "ladino-nova-era", hitDice: "d8" });
   if (type === "subclass") Object.assign(system, { identifier: key, classIdentifier: "ladino-nova-era" });
   return {
@@ -116,6 +106,18 @@ async function upsertItem(source) {
   return Item.create(source);
 }
 
+async function updateEmbeddedExposureItems(source) {
+  for (const actor of game.actors) {
+    const items = actor.items.filter(item => item.getFlag(MODULE_ID, "contentKey") === "exposicao");
+    for (const item of items) {
+      await item.update({
+        "system.activities": source.system.activities,
+        [`flags.${MODULE_ID}.contentVersion`]: CONTENT_VERSION
+      });
+    }
+  }
+}
+
 export async function installRogueContent({ notify = true } = {}) {
   if (!game.user.isGM) return [];
   let folder = game.folders.find(entry => entry.type === "Item" && entry.name === "Nova Era — Ladino");
@@ -134,7 +136,7 @@ export async function installRogueContent({ notify = true } = {}) {
   for (const source of sources) results.push(await upsertItem(source));
   const itemsByKey = new Map(results.map(item => [item.getFlag(MODULE_ID, "contentKey"), item]));
   await configureAdvancement(itemsByKey);
-  await ensureSubclassCompendium(itemsByKey);
+  await updateEmbeddedExposureItems(sources.find(source => source.flags[MODULE_ID].contentKey === "exposicao"));
   await game.settings.set(MODULE_ID, "rogueContentVersion", CONTENT_VERSION);
   if (notify) ui.notifications.info(`Nova Era: Ladino completo instalado/atualizado (${results.length} itens).`);
   return results;
