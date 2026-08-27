@@ -1,7 +1,9 @@
 import { MODULE_ID } from "../constants.mjs";
 import { ROGUE_CLASS, ROGUE_FEATURES, ROGUE_SUBCLASSES } from "./rogue-data.mjs";
 
-const CONTENT_VERSION = "2";
+const CONTENT_VERSION = "3";
+const SUBCLASS_PACK_NAME = "nova-era-ladino";
+const SUBCLASS_PACK_LABEL = "Nova Era — Ladino";
 
 function stableId(seed) {
   let first = 0x811c9dc5;
@@ -70,6 +72,27 @@ async function configureAdvancement(itemsByKey) {
   }
 }
 
+async function ensureSubclassCompendium(itemsByKey) {
+  const collection = `world.${SUBCLASS_PACK_NAME}`;
+  let pack = game.packs.get(collection);
+  pack ??= await CompendiumCollection.createCompendium({
+    type: "Item",
+    label: SUBCLASS_PACK_LABEL,
+    name: SUBCLASS_PACK_NAME,
+    package: "world"
+  });
+
+  const documents = await pack.getDocuments();
+  for (const subclass of ROGUE_SUBCLASSES) {
+    const source = itemsByKey.get(subclass.key).toObject();
+    delete source._id;
+    source.folder = null;
+    const existing = documents.find(document => document.getFlag(MODULE_ID, "contentKey") === subclass.key);
+    if (existing) await existing.update(source);
+    else await Item.create(source, { pack: pack.collection });
+  }
+}
+
 function itemSource({ key, name, type = "feat", description, level = 0, group = "base" }, folder) {
   const system = { description: { value: description, chat: "" } };
   if (type === "class") Object.assign(system, { identifier: "ladino-nova-era", hitDice: "d8" });
@@ -111,6 +134,7 @@ export async function installRogueContent({ notify = true } = {}) {
   for (const source of sources) results.push(await upsertItem(source));
   const itemsByKey = new Map(results.map(item => [item.getFlag(MODULE_ID, "contentKey"), item]));
   await configureAdvancement(itemsByKey);
+  await ensureSubclassCompendium(itemsByKey);
   await game.settings.set(MODULE_ID, "rogueContentVersion", CONTENT_VERSION);
   if (notify) ui.notifications.info(`Nova Era: Ladino completo instalado/atualizado (${results.length} itens).`);
   return results;
