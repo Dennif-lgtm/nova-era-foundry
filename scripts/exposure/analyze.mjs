@@ -8,7 +8,13 @@ function isAnalyzeActivity(activity) {
 }
 
 function targetLevel(actor) {
-  const value = actor.system.details?.level ?? actor.system.details?.cr ?? 0;
+  const value = actor.type === "character"
+    ? actor.system.details?.level
+    : actor.system.details?.cr;
+  if (typeof value === "string" && value.includes("/")) {
+    const [numerator, denominator] = value.split("/").map(Number);
+    return denominator ? numerator / denominator : 0;
+  }
   return Number(value) || 0;
 }
 
@@ -40,7 +46,7 @@ async function analyze(activity) {
   const targetActor = selectedTarget();
   if (!sourceActor || !targetActor) return;
 
-  const dc = 10 + targetLevel(targetActor);
+  const dc = Math.ceil(10 + targetLevel(targetActor));
   const rolls = await sourceActor.rollSkill({ skill: "inv" });
   const roll = Array.isArray(rolls) ? rolls[0] : rolls;
   if (!roll) return;
