@@ -1,0 +1,6 @@
+{
+  "NOVAERA.Exposure.Title": "Exposição",
+  "NOVAERA.Exposure.NotEnough": "Exposição insuficiente: disponível {current}, necessário {amount}.",
+  "NOVAERA.Settings.ClearExposure.Name": "Limpar Exposição ao encerrar o combate",
+  "NOVAERA.Settings.ClearExposure.Hint": "Remove dos Atores os registros de Exposição quando o encontro é encerrado. Desative se desejar administrar encontros manualmente."
+}

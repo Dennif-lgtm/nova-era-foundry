@@ -1,0 +1,60 @@
+import { EXPOSURE_FLAG, EXPOSURE_MAX, MODULE_ID } from "../constants.mjs";
+
+function assertActor(actor, label) {
+  if (!(actor instanceof Actor)) {
+    throw new TypeError(`${label} precisa ser um Actor do Foundry.`);
+  }
+}
+
+function sourceKey(sourceActor) {
+  return sourceActor.uuid.replaceAll(".", "__");
+}
+
+/**
+ * Stores Exposure on the target Actor, separated by the observing rogue UUID.
+ * This prevents two rogues from sharing the same reading of one creature.
+ */
+export class ExposureStore {
+  static get(targetActor, sourceActor) {
+    assertActor(targetActor, "Alvo");
+    assertActor(sourceActor, "Ladino");
+    const ledger = targetActor.getFlag(MODULE_ID, EXPOSURE_FLAG) ?? {};
+    return Math.clamp(Number(ledger[sourceKey(sourceActor)] ?? 0), 0, EXPOSURE_MAX);
+  }
+
+  static async set(targetActor, sourceActor, value) {
+    assertActor(targetActor, "Alvo");
+    assertActor(sourceActor, "Ladino");
+    const next = Math.clamp(Number(value) || 0, 0, EXPOSURE_MAX);
+    const ledger = foundry.utils.deepClone(targetActor.getFlag(MODULE_ID, EXPOSURE_FLAG) ?? {});
+    const key = sourceKey(sourceActor);
+
+    if (next === 0) delete ledger[key];
+    else ledger[key] = next;
+
+    await targetActor.setFlag(MODULE_ID, EXPOSURE_FLAG, ledger);
+    Hooks.callAll("novaEraExposureChanged", { targetActor, sourceActor, value: next });
+    return next;
+  }
+
+  static async add(targetActor, sourceActor, amount = 1) {
+    return this.set(targetActor, sourceActor, this.get(targetActor, sourceActor) + amount);
+  }
+
+  static async consume(targetActor, sourceActor, amount = 1) {
+    const current = this.get(targetActor, sourceActor);
+    if (current < amount) {
+      ui.notifications.warn(game.i18n.format("NOVAERA.Exposure.NotEnough", { current, amount }));
+      return false;
+    }
+    await this.set(targetActor, sourceActor, current - amount);
+    return true;
+  }
+
+  static async clearAll() {
+    const updates = game.actors
+      .filter(actor => actor.getFlag(MODULE_ID, EXPOSURE_FLAG))
+      .map(actor => actor.unsetFlag(MODULE_ID, EXPOSURE_FLAG));
+    await Promise.all(updates);
+  }
+}
