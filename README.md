@@ -7,7 +7,7 @@ Módulo de regras e automações para:
 
 ## Estado atual
 
-Primeira fundação técnica do módulo. Esta versão oferece um armazenamento de Exposição por alvo e por Ladino, limpeza opcional ao encerrar o combate e uma API para as automações seguintes.
+Esta versão oferece armazenamento de Exposição por alvo e por Ladino e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
 ## Instalação pelo Foundry
 
@@ -36,6 +36,12 @@ await game.novaEra.exposure.postCard({
   value: game.novaEra.exposure.get(alvo, ladino),
   reason: "Analisar"
 });
+```
+
+Um Mestre também pode reconstruir ou atualizar os itens de conteúdo pelo console:
+
+```js
+await game.novaEra.content.installRogue();
 ```
 
 ## Próximo marco
