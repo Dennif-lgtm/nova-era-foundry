@@ -81,3 +81,44 @@
   cursor: not-allowed;
   opacity: 0.45;
 }
+
+.dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
+  grid-template-columns: minmax(165px, 190px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+}
+
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel {
+  align-self: start;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem;
+}
+
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel .exposure-panel-heading,
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel .exposure-panel-controls {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel .exposure-panel-heading {
+  text-align: center;
+}
+
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel .exposure-target {
+  min-height: 2.7em;
+  white-space: normal;
+  text-align: center;
+}
+
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel button[data-action="analyze"] {
+  width: 100%;
+}
+
+@media (max-width: 920px) {
+  .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
+    grid-template-columns: var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+  }
+
+  .dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel {
+    grid-column: 1 / -1;
+  }
+}

@@ -71,15 +71,35 @@ function createPanel(actor) {
   return panel;
 }
 
+function expandSheet(app, root) {
+  const windowElement = root.closest(".application, .window-app") ?? root;
+  if (windowElement.dataset.novaEraExpanded === "true") return;
+  windowElement.dataset.novaEraExpanded = "true";
+  const currentWidth = windowElement.getBoundingClientRect().width;
+  const maximumWidth = Math.max(currentWidth, window.innerWidth - 24);
+  const width = Math.min(currentWidth + 190, maximumWidth);
+  if (width <= currentWidth + 10 || typeof app.setPosition !== "function") return;
+  const currentLeft = app.position?.left ?? windowElement.getBoundingClientRect().left;
+  const left = Math.max(12, currentLeft - ((width - currentWidth) / 2));
+  app.setPosition({ width, left });
+}
+
 function renderExposurePanel(app, html) {
   const actor = app.actor ?? app.document;
   if (!isNovaEraRogue(actor)) return;
   const root = sheetRoot(app, html);
   if (!root || root.querySelector(".nova-era.exposure-panel")) return;
   const panel = createPanel(actor);
-  const anchor = root.querySelector(".sheet-body, [data-application-part='body'], .tab-body");
-  if (anchor) anchor.before(panel);
-  else root.prepend(panel);
+  const mainContent = root.querySelector(".sheet-body .main-content");
+  if (mainContent) {
+    mainContent.classList.add("nova-era-has-exposure-panel");
+    mainContent.prepend(panel);
+    expandSheet(app, root);
+  } else {
+    const anchor = root.querySelector(".sheet-body, [data-application-part='body'], .tab-body");
+    if (anchor) anchor.before(panel);
+    else root.prepend(panel);
+  }
 }
 
 export function refreshExposurePanels() {
