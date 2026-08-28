@@ -45,6 +45,10 @@ export class ExposureStore {
       return false;
     }
     await this.set(targetActor, sourceActor, current - amount);
+    const combat = game.combat;
+    if (combat?.started) {
+      await sourceActor.setFlag(MODULE_ID, "exposureConsumedTurn", `${combat.id}:${combat.round}:${combat.turn}`);
+    }
     return true;
   }
 

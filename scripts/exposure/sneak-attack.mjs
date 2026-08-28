@@ -108,6 +108,7 @@ async function executeSneakAttack(sourceActor, targetActor, techniqueId = null) 
 
   const consumed = await ExposureStore.consume(targetActor, sourceActor, exposureCost);
   if (!consumed) return;
+  await sourceActor.unsetFlag(MODULE_ID, "pendingDaggerHit");
   const current = turnKey();
   if (current) await sourceActor.setFlag(MODULE_ID, TURN_FLAG, current);
 

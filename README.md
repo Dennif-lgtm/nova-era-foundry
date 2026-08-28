@@ -54,6 +54,8 @@ Depois de confirmar um acerto, o botão **Ataque Furtivo** consome 1 Exposição
 
 A partir do nível 6, **Exploração Técnica** permite consumir 2 Exposições no Ataque Furtivo e escolher Perfuração Precisa, Quebra de Ritmo ou Corte de Passo. Os efeitos temporários são acompanhados pelo módulo até o início do turno correspondente.
 
+A ficha do Ladino possui tema próprio em grafite, preto e dourado envelhecido. O painel também acompanha Lâmina de Teste, Ponto Cego, Evasão Calculada, Leitura Completa e Golpe Decifrado conforme essas características entram na progressão.
+
 ## Próximo marco
 
 Integrar o consumo de Exposição ao Ataque Furtivo.

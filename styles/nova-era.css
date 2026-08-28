@@ -153,6 +153,131 @@
   opacity: 0.45;
 }
 
+.nova-era.exposure-panel .feature-button {
+  width: 100%;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #8d7952;
+  border-radius: 4px;
+  background: #293139;
+  color: #eee3ce;
+}
+
+.nova-era.exposure-panel .feature-button:hover:not(:disabled) {
+  background: #37444e;
+  box-shadow: 0 0 5px rgba(207, 174, 105, 0.35);
+}
+
+.nova-era.exposure-panel .feature-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.nova-era.exposure-panel .passive-statuses {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+}
+
+.nova-era.exposure-panel .passive-statuses span {
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #4b5359;
+  border-radius: 3px;
+  background: rgba(19, 24, 28, 0.75);
+  color: #827f78;
+  font-size: 0.74rem;
+  text-align: center;
+}
+
+.nova-era.exposure-panel .passive-statuses span.active {
+  border-color: #c9a75f;
+  color: #f0d18d;
+  box-shadow: inset 0 0 8px rgba(201, 167, 95, 0.16);
+}
+
+/* Tema exclusivo das fichas que possuem Ladino — Nova Era. */
+.nova-era-rogue-sheet {
+  --dnd5e-color-gold: #b9a06b;
+  --dnd5e-color-red: #8e6d35;
+  --dnd5e-color-blue: #728c98;
+  --dnd5e-color-scrollbar: #8f815f;
+  --dnd5e-color-iron-gray: #222a30;
+  --dnd5e-color-blue-gray-1: #181e23;
+  --dnd5e-color-blue-gray-2: #20282e;
+  --dnd5e-color-blue-gray-3: #3b4850;
+  --dnd5e-color-blue-gray-4: #29343b;
+}
+
+.nova-era-rogue-sheet .sheet-header {
+  position: relative;
+  isolation: isolate;
+  box-shadow: inset 0 -18px 30px rgba(5, 8, 10, 0.82);
+}
+
+.nova-era-rogue-sheet .sheet-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(105deg, rgba(7, 11, 14, 0.78), rgba(22, 30, 35, 0.54) 52%, rgba(4, 7, 9, 0.82));
+}
+
+.nova-era-rogue-sheet .sheet-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nova-era-rogue-sheet .sheet-body {
+  background-color: #11171b !important;
+  background-blend-mode: multiply;
+}
+
+.nova-era-rogue-sheet .main-content,
+.nova-era-rogue-sheet .tab-body {
+  color: #ded8cb;
+}
+
+.nova-era-rogue-sheet .card,
+.nova-era-rogue-sheet .items-section,
+.nova-era-rogue-sheet .pill-lg,
+.nova-era-rogue-sheet .pill-sm {
+  border-color: #5f665f !important;
+}
+
+.nova-era-rogue-sheet .items-section .items-header,
+.nova-era-rogue-sheet .items-section .item-header,
+.nova-era-rogue-sheet .inventory-element .items-header {
+  background: linear-gradient(90deg, #20292f, #303a3d) !important;
+  color: #d9c69e !important;
+  border-color: #817252 !important;
+}
+
+.nova-era-rogue-sheet .items-section .item,
+.nova-era-rogue-sheet .inventory-element .item,
+.nova-era-rogue-sheet .favorites .item {
+  background-color: rgba(27, 34, 39, 0.86);
+  border-color: #485158 !important;
+}
+
+.nova-era-rogue-sheet .items-section .item:hover,
+.nova-era-rogue-sheet .inventory-element .item:hover {
+  background-color: rgba(48, 60, 67, 0.92);
+}
+
+.nova-era-rogue-sheet input,
+.nova-era-rogue-sheet select,
+.nova-era-rogue-sheet textarea {
+  --input-background-color: rgba(12, 17, 20, 0.82);
+  --input-border-color: #59645f;
+}
+
+.nova-era-rogue-sheet .gold-icon,
+.nova-era-rogue-sheet .level-badge,
+.nova-era-rogue-sheet .badge {
+  filter: sepia(0.22) saturate(0.72) hue-rotate(345deg);
+}
+
 .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
   grid-template-columns: minmax(165px, 190px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
 }

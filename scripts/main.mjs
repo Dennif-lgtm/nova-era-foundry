@@ -4,6 +4,7 @@ import { postExposureCard } from "./exposure/exposure-chat.mjs";
 import { registerAnalyzeAutomation } from "./exposure/analyze.mjs";
 import { registerSneakAttackAutomation } from "./exposure/sneak-attack.mjs";
 import { registerExposurePanel } from "./ui/exposure-panel.mjs";
+import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { ensureRogueContent, installRogueContent } from "./content/rogue-installer.mjs";
 
 Hooks.once("init", () => {
@@ -43,6 +44,7 @@ Hooks.once("ready", async () => {
   registerAnalyzeAutomation();
   registerSneakAttackAutomation();
   registerExposurePanel();
+  registerBaseFeatureAutomation();
 
   console.info(`${MODULE_ID} | API disponível em game.novaEra`);
 });

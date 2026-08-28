@@ -6,6 +6,17 @@ import {
   sneakAttackDice,
   sneakAttackUsedThisTurn
 } from "../exposure/sneak-attack.mjs";
+import {
+  canUseBlindSpot,
+  canUseDecipheredStrike,
+  hasCalculatedEvasion,
+  hasCompleteReading,
+  hasDecipheredStrike,
+  pendingTestBlade,
+  requestTestBlade,
+  useBlindSpot,
+  useDecipheredStrike
+} from "../features/base-features.mjs";
 
 function isNovaEraRogue(actor) {
   return actor?.items?.some(item => item.type === "class" && item.system.identifier === "ladino-nova-era");
@@ -49,6 +60,11 @@ function refreshPanel(panel, actor) {
   const techniqueControls = panel.querySelector("[data-role='technique-controls']");
   const techniqueButton = panel.querySelector("[data-action='technical-exploitation']");
   const sneakUsed = sneakAttackUsedThisTurn(actor);
+  const testBladeButton = panel.querySelector("[data-action='test-blade']");
+  const blindSpotButton = panel.querySelector("[data-action='blind-spot']");
+  const decipheredButton = panel.querySelector("[data-action='deciphered-strike']");
+  const evasionStatus = panel.querySelector("[data-role='calculated-evasion']");
+  const readingStatus = panel.querySelector("[data-role='complete-reading']");
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
   pipLabel.textContent = pips;
   pipLabel.setAttribute("aria-label", `${value} de ${EXPOSURE_MAX} Exposições`);
@@ -63,6 +79,15 @@ function refreshPanel(panel, actor) {
   techniqueButton.title = sneakUsed
     ? "Ataque Furtivo já usado neste turno"
     : value < 2 ? "O alvo precisa possuir ao menos 2 Exposições" : "Consome 2 Exposições";
+  testBladeButton.hidden = !pendingTestBlade(actor, target);
+  blindSpotButton.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "ponto-cego");
+  blindSpotButton.disabled = !canUseBlindSpot(actor);
+  decipheredButton.hidden = !hasDecipheredStrike(actor);
+  decipheredButton.disabled = !canUseDecipheredStrike(actor, target);
+  evasionStatus.hidden = !hasCalculatedEvasion(actor);
+  evasionStatus.classList.toggle("active", !!target && value >= 1);
+  readingStatus.hidden = !hasCompleteReading(actor);
+  readingStatus.classList.toggle("active", !!target && value >= 3);
 }
 
 function createPanel(actor) {
@@ -77,6 +102,9 @@ function createPanel(actor) {
     <div class="exposure-panel-controls">
       <span class="exposure-target"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> <span data-role="target"></span></span>
       <button type="button" data-action="analyze"><i class="fa-solid fa-eye" aria-hidden="true"></i> Analisar</button>
+      <button type="button" data-action="test-blade" class="feature-button" hidden>
+        <i class="fa-solid fa-khanda" aria-hidden="true"></i> Lâmina de Teste · +1
+      </button>
       <button type="button" data-action="sneak-attack" class="sneak-attack-button">
         <i class="fa-solid fa-burst" aria-hidden="true"></i>
         <span>Ataque Furtivo</span>
@@ -92,6 +120,16 @@ function createPanel(actor) {
         <button type="button" data-action="technical-exploitation">
           <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Usar Técnica · −2
         </button>
+      </div>
+      <button type="button" data-action="blind-spot" class="feature-button" hidden>
+        <i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Ponto Cego · Hide
+      </button>
+      <button type="button" data-action="deciphered-strike" class="feature-button" hidden>
+        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Golpe Decifrado · +2d6
+      </button>
+      <div class="passive-statuses">
+        <span data-role="calculated-evasion" hidden><i class="fa-solid fa-person-running"></i> Evasão Calculada</span>
+        <span data-role="complete-reading" hidden><i class="fa-solid fa-eye"></i> Leitura Completa</span>
       </div>
     </div>`;
 
@@ -112,6 +150,18 @@ function createPanel(actor) {
     event.preventDefault();
     const techniqueId = panel.querySelector("[data-role='technique']").value;
     await requestSneakAttack(actor, selectedTarget(), techniqueId);
+  });
+  panel.querySelector("[data-action='test-blade']").addEventListener("click", async event => {
+    event.preventDefault();
+    await requestTestBlade(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='blind-spot']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useBlindSpot(actor);
+  });
+  panel.querySelector("[data-action='deciphered-strike']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useDecipheredStrike(actor, selectedTarget());
   });
   refreshPanel(panel, actor);
   return panel;
@@ -135,6 +185,8 @@ function renderExposurePanel(app, html) {
   if (!isNovaEraRogue(actor)) return;
   const root = sheetRoot(app, html);
   if (!root || root.querySelector(".nova-era.exposure-panel")) return;
+  const windowElement = root.closest(".application, .window-app") ?? root;
+  windowElement.classList.add("nova-era-rogue-sheet");
   const panel = createPanel(actor);
   const mainContent = root.querySelector(".sheet-body .main-content");
   if (mainContent) {
@@ -168,4 +220,5 @@ export function registerExposurePanel() {
   Hooks.on("novaEraSneakAttackUsed", refreshExposurePanels);
   Hooks.on("updateActor", refreshExposurePanels);
   Hooks.on("updateCombat", refreshExposurePanels);
+  Hooks.on("novaEraBaseFeatureChanged", refreshExposurePanels);
 }
