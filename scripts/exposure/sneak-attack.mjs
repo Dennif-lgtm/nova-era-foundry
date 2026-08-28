@@ -123,6 +123,12 @@ async function executeSneakAttack(sourceActor, targetActor, techniqueId = null) 
       : `Ataque Furtivo: 1 Exposição consumida para causar ${dice}d6 de dano adicional.`
   });
   const roll = await new Roll(`${dice}d6`, sourceActor.getRollData()).evaluate();
+  await sourceActor.setFlag(MODULE_ID, "lastSneakAttack", {
+    turn: current,
+    targetActorUuid: targetActor.uuid,
+    dice,
+    total: roll.total
+  });
   await roll.toMessage({
     speaker: ChatMessage.getSpeaker({ actor: sourceActor }),
     flavor: technique

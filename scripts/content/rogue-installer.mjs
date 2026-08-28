@@ -1,8 +1,15 @@
 import { MODULE_ID } from "../constants.mjs";
 import { ROGUE_CLASS, ROGUE_FEATURES, ROGUE_SUBCLASSES } from "./rogue-data.mjs";
 
-const CONTENT_VERSION = "4";
+const CONTENT_VERSION = "5";
 const ANALYZE_ACTIVITY_ID = "novaeraAnalyze01";
+
+const CONTENT_ICONS = {
+  ladino: "modules/nova-era/assets/icons/ladino.png",
+  fantasma: "modules/nova-era/assets/icons/fantasma.png",
+  assassino: "modules/nova-era/assets/icons/assassino.png",
+  rastreador: "modules/nova-era/assets/icons/rastreador.png"
+};
 
 function stableId(seed) {
   let first = 0x811c9dc5;
@@ -90,10 +97,23 @@ function itemSource({ key, name, type = "feat", description, level = 0, group = 
   return {
     name,
     type,
+    ...(CONTENT_ICONS[key] ? { img: CONTENT_ICONS[key] } : {}),
     folder: folder.id,
     system,
     flags: { [MODULE_ID]: { contentKey: key, level, group, contentVersion: CONTENT_VERSION } }
   };
+}
+
+async function updateEmbeddedIdentityIcons() {
+  for (const actor of game.actors) {
+    const updates = actor.items
+      .filter(item => CONTENT_ICONS[item.getFlag(MODULE_ID, "contentKey")])
+      .map(item => ({
+        _id: item.id,
+        img: CONTENT_ICONS[item.getFlag(MODULE_ID, "contentKey")]
+      }));
+    if (updates.length) await actor.updateEmbeddedDocuments("Item", updates);
+  }
 }
 
 async function upsertItem(source) {
@@ -137,6 +157,7 @@ export async function installRogueContent({ notify = true } = {}) {
   const itemsByKey = new Map(results.map(item => [item.getFlag(MODULE_ID, "contentKey"), item]));
   await configureAdvancement(itemsByKey);
   await updateEmbeddedExposureItems(sources.find(source => source.flags[MODULE_ID].contentKey === "exposicao"));
+  await updateEmbeddedIdentityIcons();
   await game.settings.set(MODULE_ID, "rogueContentVersion", CONTENT_VERSION);
   if (notify) ui.notifications.info(`Nova Era: Ladino completo instalado/atualizado (${results.length} itens).`);
   return results;

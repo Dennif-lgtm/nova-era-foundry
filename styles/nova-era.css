@@ -172,6 +172,42 @@
   opacity: 0.42;
 }
 
+.nova-era.exposure-panel .feature-button.danger {
+  border-color: #9c5747;
+  background: #552824;
+  color: #f3d2c5;
+}
+
+.nova-era.exposure-panel .rule-reminder,
+.nova-era.exposure-panel .advanced-controls {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.45rem;
+  border: 1px solid #8d7952;
+  border-radius: 4px;
+  background: rgba(22, 28, 32, 0.88);
+  color: #ead7ad;
+  text-align: center;
+}
+
+.nova-era.exposure-panel .rule-reminder[hidden],
+.nova-era.exposure-panel .advanced-controls[hidden] {
+  display: none;
+}
+
+.nova-era.exposure-panel .rule-reminder small {
+  color: #c9bda6;
+  line-height: 1.25;
+}
+
+.nova-era.exposure-panel .advanced-controls button {
+  padding: 0.25rem;
+  border: 1px solid #6d675a;
+  border-radius: 3px;
+  background: #2f3539;
+  color: #eee3ce;
+}
+
 .nova-era.exposure-panel .passive-statuses {
   display: grid;
   gap: 0.3rem;

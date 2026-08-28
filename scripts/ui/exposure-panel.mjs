@@ -17,6 +17,19 @@ import {
   useBlindSpot,
   useDecipheredStrike
 } from "../features/base-features.mjs";
+import {
+  canNoticeError,
+  canUseAnticipation,
+  canUseCalculatedEvasion,
+  canUseFatalFlaw,
+  canUseFirstImpression,
+  completeReadingState,
+  useAnticipation,
+  useCalculatedEvasion,
+  useFatalFlaw,
+  useFirstImpression,
+  useNoticedError
+} from "../features/advanced-base-features.mjs";
 
 function isNovaEraRogue(actor) {
   return actor?.items?.some(item => item.type === "class" && item.system.identifier === "ladino-nova-era");
@@ -65,6 +78,12 @@ function refreshPanel(panel, actor) {
   const decipheredButton = panel.querySelector("[data-action='deciphered-strike']");
   const evasionStatus = panel.querySelector("[data-role='calculated-evasion']");
   const readingStatus = panel.querySelector("[data-role='complete-reading']");
+  const evasionButton = panel.querySelector("[data-action='calculated-evasion']");
+  const readingControls = panel.querySelector("[data-role='reading-controls']");
+  const anticipationControls = panel.querySelector("[data-role='anticipation-controls']");
+  const firstImpressionButton = panel.querySelector("[data-action='first-impression']");
+  const noticedErrorButton = panel.querySelector("[data-action='noticed-error']");
+  const fatalFlawButton = panel.querySelector("[data-action='fatal-flaw']");
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
   pipLabel.textContent = pips;
   pipLabel.setAttribute("aria-label", `${value} de ${EXPOSURE_MAX} Exposições`);
@@ -87,7 +106,19 @@ function refreshPanel(panel, actor) {
   evasionStatus.hidden = !hasCalculatedEvasion(actor);
   evasionStatus.classList.toggle("active", !!target && value >= 1);
   readingStatus.hidden = !hasCompleteReading(actor);
-  readingStatus.classList.toggle("active", !!target && value >= 3);
+  readingStatus.classList.toggle("active", completeReadingState(actor, target));
+  evasionButton.hidden = !hasCalculatedEvasion(actor);
+  evasionButton.disabled = !canUseCalculatedEvasion(actor, target);
+  readingControls.hidden = !completeReadingState(actor, target);
+  anticipationControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "antecipacao");
+  for (const button of anticipationControls.querySelectorAll("button")) button.disabled = !canUseAnticipation(actor, target);
+  const hasPredator = actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "olhar-predador");
+  firstImpressionButton.hidden = !hasPredator;
+  firstImpressionButton.disabled = !canUseFirstImpression(actor, target);
+  noticedErrorButton.hidden = !hasPredator;
+  noticedErrorButton.disabled = !canNoticeError(actor, target);
+  fatalFlawButton.hidden = !hasPredator;
+  fatalFlawButton.disabled = !canUseFatalFlaw(actor, target);
 }
 
 function createPanel(actor) {
@@ -127,6 +158,22 @@ function createPanel(actor) {
       <button type="button" data-action="deciphered-strike" class="feature-button" hidden>
         <i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Golpe Decifrado · +2d6
       </button>
+      <button type="button" data-action="calculated-evasion" class="feature-button" hidden>
+        <i class="fa-solid fa-person-running" aria-hidden="true"></i> Resolver Evasão Calculada
+      </button>
+      <div data-role="reading-controls" class="rule-reminder" hidden>
+        <strong>Leitura Completa ativa</strong>
+        <small>Primeiro ataque do turno: +2 · Resistências provocadas pelo alvo: +2 · O alvo não recebe Vantagem contra você.</small>
+      </div>
+      <div data-role="anticipation-controls" class="advanced-controls" hidden>
+        <strong>Antecipação · Reação</strong>
+        <button type="button" data-action="anticipate-attack">Golpe · +4 CA</button>
+        <button type="button" data-action="anticipate-movement">Movimento · metade</button>
+        <button type="button" data-action="anticipate-technique">Técnica · +4 resistência</button>
+      </div>
+      <button type="button" data-action="first-impression" class="feature-button" hidden>Primeira Impressão · Analisar</button>
+      <button type="button" data-action="noticed-error" class="feature-button" hidden>Nenhum Erro Passa Despercebido · +1</button>
+      <button type="button" data-action="fatal-flaw" class="feature-button danger" hidden>Falha Fatal · −3</button>
       <div class="passive-statuses">
         <span data-role="calculated-evasion" hidden><i class="fa-solid fa-person-running"></i> Evasão Calculada</span>
         <span data-role="complete-reading" hidden><i class="fa-solid fa-eye"></i> Leitura Completa</span>
@@ -162,6 +209,34 @@ function createPanel(actor) {
   panel.querySelector("[data-action='deciphered-strike']").addEventListener("click", async event => {
     event.preventDefault();
     await useDecipheredStrike(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='calculated-evasion']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useCalculatedEvasion(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='anticipate-attack']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useAnticipation(actor, selectedTarget(), "attack");
+  });
+  panel.querySelector("[data-action='anticipate-movement']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useAnticipation(actor, selectedTarget(), "movement");
+  });
+  panel.querySelector("[data-action='anticipate-technique']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useAnticipation(actor, selectedTarget(), "technique");
+  });
+  panel.querySelector("[data-action='first-impression']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useFirstImpression(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='noticed-error']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useNoticedError(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='fatal-flaw']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useFatalFlaw(actor, selectedTarget());
   });
   refreshPanel(panel, actor);
   return panel;

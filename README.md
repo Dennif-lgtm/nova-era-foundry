@@ -56,6 +56,8 @@ A partir do nível 6, **Exploração Técnica** permite consumir 2 Exposições 
 
 A ficha do Ladino possui tema próprio em grafite, preto e dourado envelhecido. O painel também acompanha Lâmina de Teste, Ponto Cego, Evasão Calculada, Leitura Completa e Golpe Decifrado conforme essas características entram na progressão.
 
+A versão 0.9.0 acrescenta ícones próprios para o Ladino, Fantasma, Assassino e Rastreador. Também adiciona resolução guiada de Evasão Calculada, lembretes completos de Leitura Completa, as três opções de Antecipação e os controles de Primeira Impressão, Nenhum Erro Passa Despercebido e Falha Fatal. Quando o D&D5e não informa ao módulo a criatura que originou um efeito, o alvo selecionado funciona como confirmação explícita da origem.
+
 ## Próximo marco
 
 Integrar o consumo de Exposição ao Ataque Furtivo.
