@@ -6,7 +6,9 @@ import { registerSneakAttackAutomation } from "./exposure/sneak-attack.mjs";
 import { registerExposurePanel } from "./ui/exposure-panel.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
+import { registerSecondaryEffects, secondaryMacroApi } from "./features/secondary-effects.mjs";
 import { ensureRogueContent, installRogueContent } from "./content/rogue-installer.mjs";
+import { ensureRogueMacros, installRogueMacros } from "./content/macro-installer.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -26,6 +28,13 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+
+  game.settings.register(MODULE_ID, "rogueMacroVersion", {
+    scope: "world",
+    config: false,
+    type: String,
+    default: ""
+  });
 });
 
 Hooks.once("ready", async () => {
@@ -38,15 +47,18 @@ Hooks.once("ready", async () => {
       clearAll: ExposureStore.clearAll.bind(ExposureStore),
       postCard: postExposureCard
     },
-    content: { installRogue: installRogueContent }
+    content: { installRogue: installRogueContent, installRogueMacros },
+    macros: secondaryMacroApi
   };
 
   await ensureRogueContent();
+  await ensureRogueMacros();
   registerAnalyzeAutomation();
   registerSneakAttackAutomation();
   registerExposurePanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
+  registerSecondaryEffects();
 
   console.info(`${MODULE_ID} | API disponível em game.novaEra`);
 });

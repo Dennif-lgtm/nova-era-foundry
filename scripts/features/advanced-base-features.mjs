@@ -82,7 +82,7 @@ export function canUseAnticipation(actor, targetActor) {
 export async function useAnticipation(actor, targetActor, option) {
   if (!canUseAnticipation(actor, targetActor)) {
     ui.notifications.warn("Nova Era: Antecipação exige Leitura Completa e uma Reação disponível.");
-    return;
+    return false;
   }
   const choices = {
     attack: ["Antecipar Golpe", "+4 CA contra o ataque declarado."],
@@ -90,11 +90,12 @@ export async function useAnticipation(actor, targetActor, option) {
     technique: ["Antecipar Técnica", "+4 no teste de resistência provocado pela criatura."]
   };
   const choice = choices[option];
-  if (!choice) return;
+  if (!choice) return false;
   const current = roundKey();
   if (current) await actor.setFlag(MODULE_ID, FLAGS.anticipation, current);
   await sendRuleCard(actor, choice[0], `${choice[1]} Origem confirmada: <strong>${targetActor.name}</strong>. Use a Reação antes da resolução.`);
   Hooks.callAll("novaEraBaseFeatureChanged", { sourceActor: actor, targetActor, feature: "anticipation" });
+  return true;
 }
 
 export function canUseFirstImpression(actor, targetActor) {

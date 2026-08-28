@@ -200,7 +200,8 @@
   line-height: 1.25;
 }
 
-.nova-era.exposure-panel .advanced-controls button {
+.nova-era.exposure-panel .advanced-controls button,
+.nova-era.exposure-panel .rule-reminder button {
   padding: 0.25rem;
   border: 1px solid #6d675a;
   border-radius: 3px;

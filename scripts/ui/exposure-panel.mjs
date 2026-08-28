@@ -30,6 +30,12 @@ import {
   useFirstImpression,
   useNoticedError
 } from "../features/advanced-base-features.mjs";
+import {
+  prepareAnticipationArmor,
+  prepareAnticipationSave,
+  prepareReadingAttack,
+  prepareReadingSave
+} from "../features/secondary-effects.mjs";
 
 function isNovaEraRogue(actor) {
   return actor?.items?.some(item => item.type === "class" && item.system.identifier === "ladino-nova-era");
@@ -164,6 +170,8 @@ function createPanel(actor) {
       <div data-role="reading-controls" class="rule-reminder" hidden>
         <strong>Leitura Completa ativa</strong>
         <small>Primeiro ataque do turno: +2 · Resistências provocadas pelo alvo: +2 · O alvo não recebe Vantagem contra você.</small>
+        <button type="button" data-action="reading-attack">Preparar ataque · +2</button>
+        <button type="button" data-action="reading-save">Preparar resistência · +2</button>
       </div>
       <div data-role="anticipation-controls" class="advanced-controls" hidden>
         <strong>Antecipação · Reação</strong>
@@ -214,9 +222,18 @@ function createPanel(actor) {
     event.preventDefault();
     await useCalculatedEvasion(actor, selectedTarget());
   });
+  panel.querySelector("[data-action='reading-attack']").addEventListener("click", async event => {
+    event.preventDefault();
+    await prepareReadingAttack(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='reading-save']").addEventListener("click", async event => {
+    event.preventDefault();
+    await prepareReadingSave(actor, selectedTarget());
+  });
   panel.querySelector("[data-action='anticipate-attack']").addEventListener("click", async event => {
     event.preventDefault();
-    await useAnticipation(actor, selectedTarget(), "attack");
+    const target = selectedTarget();
+    if (await useAnticipation(actor, target, "attack")) await prepareAnticipationArmor(actor, target);
   });
   panel.querySelector("[data-action='anticipate-movement']").addEventListener("click", async event => {
     event.preventDefault();
@@ -224,7 +241,8 @@ function createPanel(actor) {
   });
   panel.querySelector("[data-action='anticipate-technique']").addEventListener("click", async event => {
     event.preventDefault();
-    await useAnticipation(actor, selectedTarget(), "technique");
+    const target = selectedTarget();
+    if (await useAnticipation(actor, target, "technique")) await prepareAnticipationSave(actor, target);
   });
   panel.querySelector("[data-action='first-impression']").addEventListener("click", async event => {
     event.preventDefault();

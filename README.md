@@ -60,6 +60,8 @@ A versão 0.9.0 acrescenta ícones próprios para o Ladino, Fantasma, Assassino 
 
 A versão 0.9.1 corrige a sequência de Falha Fatal para considerar como parte das 3 Exposições aquela já consumida pelo Ataque Furtivo. Também torna visualmente evidente quando os botões de Antecipação estão bloqueados.
 
+A versão 0.10.0 instala a pasta **Nova Era — Macros do Ladino** e adiciona gatilhos de efeitos secundários. Leitura Completa pode preparar +2 para o próximo ataque ou resistência; Antecipar Golpe aplica +4 CA temporário; Antecipar Técnica aplica +4 à próxima resistência; Antecipar Movimento registra a Reação. Os efeitos de ataque e resistência são removidos depois da rolagem correspondente.
+
 ## Próximo marco
 
 Integrar o consumo de Exposição ao Ataque Furtivo.
