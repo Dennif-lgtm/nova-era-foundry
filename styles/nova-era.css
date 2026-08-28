@@ -82,6 +82,40 @@
   opacity: 0.45;
 }
 
+.nova-era.exposure-panel .sneak-attack-button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.4rem;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #c69a57;
+  border-radius: 4px;
+  background: #302326;
+  color: #f8ead0;
+  text-align: left;
+}
+
+.nova-era.exposure-panel .sneak-attack-button i {
+  grid-row: 1 / 3;
+  color: #f0c879;
+}
+
+.nova-era.exposure-panel .sneak-attack-button small {
+  color: #d5b98b;
+  line-height: 1.1;
+}
+
+.nova-era.exposure-panel .sneak-attack-button:hover:not(:disabled) {
+  background: #493036;
+  box-shadow: 0 0 5px rgba(240, 200, 121, 0.45);
+}
+
+.nova-era.exposure-panel .sneak-attack-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
   grid-template-columns: minmax(165px, 190px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
 }

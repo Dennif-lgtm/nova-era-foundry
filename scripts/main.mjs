@@ -2,6 +2,7 @@ import { MODULE_ID } from "./constants.mjs";
 import { ExposureStore } from "./exposure/exposure-store.mjs";
 import { postExposureCard } from "./exposure/exposure-chat.mjs";
 import { registerAnalyzeAutomation } from "./exposure/analyze.mjs";
+import { registerSneakAttackAutomation } from "./exposure/sneak-attack.mjs";
 import { registerExposurePanel } from "./ui/exposure-panel.mjs";
 import { ensureRogueContent, installRogueContent } from "./content/rogue-installer.mjs";
 
@@ -40,6 +41,7 @@ Hooks.once("ready", async () => {
 
   await ensureRogueContent();
   registerAnalyzeAutomation();
+  registerSneakAttackAutomation();
   registerExposurePanel();
 
   console.info(`${MODULE_ID} | API disponível em game.novaEra`);

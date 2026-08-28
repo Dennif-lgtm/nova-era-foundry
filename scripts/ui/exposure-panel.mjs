@@ -1,5 +1,10 @@
 import { EXPOSURE_MAX, MODULE_ID } from "../constants.mjs";
 import { ExposureStore } from "../exposure/exposure-store.mjs";
+import {
+  requestSneakAttack,
+  sneakAttackDice,
+  sneakAttackUsedThisTurn
+} from "../exposure/sneak-attack.mjs";
 
 function isNovaEraRogue(actor) {
   return actor?.items?.some(item => item.type === "class" && item.system.identifier === "ladino-nova-era");
@@ -38,10 +43,18 @@ function refreshPanel(panel, actor) {
   const targetLabel = panel.querySelector("[data-role='target']");
   const pipLabel = panel.querySelector("[data-role='pips']");
   const analyzeButton = panel.querySelector("[data-action='analyze']");
+  const sneakButton = panel.querySelector("[data-action='sneak-attack']");
+  const sneakDice = panel.querySelector("[data-role='sneak-dice']");
+  const sneakUsed = sneakAttackUsedThisTurn(actor);
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
   pipLabel.textContent = pips;
   pipLabel.setAttribute("aria-label", `${value} de ${EXPOSURE_MAX} Exposições`);
   analyzeButton.disabled = !target;
+  sneakDice.textContent = `${sneakAttackDice(actor)}d6`;
+  sneakButton.disabled = !target || value < 1 || sneakUsed;
+  sneakButton.title = sneakUsed
+    ? "Ataque Furtivo já usado neste turno"
+    : value < 1 ? "O alvo precisa possuir ao menos 1 Exposição" : "Consome 1 Exposição";
 }
 
 function createPanel(actor) {
@@ -56,6 +69,11 @@ function createPanel(actor) {
     <div class="exposure-panel-controls">
       <span class="exposure-target"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> <span data-role="target"></span></span>
       <button type="button" data-action="analyze"><i class="fa-solid fa-eye" aria-hidden="true"></i> Analisar</button>
+      <button type="button" data-action="sneak-attack" class="sneak-attack-button">
+        <i class="fa-solid fa-burst" aria-hidden="true"></i>
+        <span>Ataque Furtivo</span>
+        <small><span data-role="sneak-dice">1d6</span> · −1 Exposição</small>
+      </button>
     </div>`;
 
   panel.querySelector("[data-action='analyze']").addEventListener("click", async event => {
@@ -66,6 +84,10 @@ function createPanel(actor) {
       return;
     }
     await activity.use();
+  });
+  panel.querySelector("[data-action='sneak-attack']").addEventListener("click", async event => {
+    event.preventDefault();
+    await requestSneakAttack(actor, selectedTarget());
   });
   refreshPanel(panel, actor);
   return panel;
@@ -119,4 +141,7 @@ export function registerExposurePanel() {
   for (const hook of hooks) Hooks.on(hook, renderExposurePanel);
   Hooks.on("targetToken", refreshExposurePanels);
   Hooks.on("novaEraExposureChanged", refreshExposurePanels);
+  Hooks.on("novaEraSneakAttackUsed", refreshExposurePanels);
+  Hooks.on("updateActor", refreshExposurePanels);
+  Hooks.on("updateCombat", refreshExposurePanels);
 }

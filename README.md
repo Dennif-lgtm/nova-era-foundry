@@ -50,6 +50,8 @@ Selecione exatamente um token como alvo e use a atividade **Analisar** dentro da
 
 O painel **Nova Era — Exposição** na ficha mostra o alvo selecionado, a quantidade atual de Exposição e um botão rápido para Analisar.
 
+Depois de confirmar um acerto, o botão **Ataque Furtivo** consome 1 Exposição e rola automaticamente o dano adequado ao nível do Ladino. Durante o combate, o botão permite apenas um uso por turno.
+
 ## Próximo marco
 
 Integrar o consumo de Exposição ao Ataque Furtivo.
