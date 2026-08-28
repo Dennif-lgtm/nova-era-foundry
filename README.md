@@ -52,6 +52,8 @@ O painel **Nova Era — Exposição** na ficha mostra o alvo selecionado, a quan
 
 Depois de confirmar um acerto, o botão **Ataque Furtivo** consome 1 Exposição e rola automaticamente o dano adequado ao nível do Ladino. Durante o combate, o botão permite apenas um uso por turno.
 
+A partir do nível 6, **Exploração Técnica** permite consumir 2 Exposições no Ataque Furtivo e escolher Perfuração Precisa, Quebra de Ritmo ou Corte de Passo. Os efeitos temporários são acompanhados pelo módulo até o início do turno correspondente.
+
 ## Próximo marco
 
 Integrar o consumo de Exposição ao Ataque Furtivo.

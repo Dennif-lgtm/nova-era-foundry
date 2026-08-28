@@ -116,6 +116,43 @@
   opacity: 0.45;
 }
 
+.nova-era.exposure-panel .technique-controls {
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(208, 159, 83, 0.4);
+}
+
+.nova-era.exposure-panel .technique-controls label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #f0c879;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.nova-era.exposure-panel .technique-controls select {
+  width: 100%;
+  margin-bottom: 0.35rem;
+  color: #f8ead0;
+  background: #241b1d;
+  border: 1px solid #8f6735;
+}
+
+.nova-era.exposure-panel .technique-controls button {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #c69a57;
+  border-radius: 4px;
+  background: #503b28;
+  color: #f8ead0;
+}
+
+.nova-era.exposure-panel .technique-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
   grid-template-columns: minmax(165px, 190px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
 }

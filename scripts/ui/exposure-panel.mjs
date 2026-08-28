@@ -2,6 +2,7 @@ import { EXPOSURE_MAX, MODULE_ID } from "../constants.mjs";
 import { ExposureStore } from "../exposure/exposure-store.mjs";
 import {
   requestSneakAttack,
+  hasTechnicalExploitation,
   sneakAttackDice,
   sneakAttackUsedThisTurn
 } from "../exposure/sneak-attack.mjs";
@@ -45,6 +46,8 @@ function refreshPanel(panel, actor) {
   const analyzeButton = panel.querySelector("[data-action='analyze']");
   const sneakButton = panel.querySelector("[data-action='sneak-attack']");
   const sneakDice = panel.querySelector("[data-role='sneak-dice']");
+  const techniqueControls = panel.querySelector("[data-role='technique-controls']");
+  const techniqueButton = panel.querySelector("[data-action='technical-exploitation']");
   const sneakUsed = sneakAttackUsedThisTurn(actor);
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
   pipLabel.textContent = pips;
@@ -55,6 +58,11 @@ function refreshPanel(panel, actor) {
   sneakButton.title = sneakUsed
     ? "Ataque Furtivo já usado neste turno"
     : value < 1 ? "O alvo precisa possuir ao menos 1 Exposição" : "Consome 1 Exposição";
+  techniqueControls.hidden = !hasTechnicalExploitation(actor);
+  techniqueButton.disabled = !target || value < 2 || sneakUsed;
+  techniqueButton.title = sneakUsed
+    ? "Ataque Furtivo já usado neste turno"
+    : value < 2 ? "O alvo precisa possuir ao menos 2 Exposições" : "Consome 2 Exposições";
 }
 
 function createPanel(actor) {
@@ -74,6 +82,17 @@ function createPanel(actor) {
         <span>Ataque Furtivo</span>
         <small><span data-role="sneak-dice">1d6</span> · −1 Exposição</small>
       </button>
+      <div data-role="technique-controls" class="technique-controls" hidden>
+        <label for="nova-era-technique-${actor.id}">Exploração Técnica</label>
+        <select id="nova-era-technique-${actor.id}" data-role="technique">
+          <option value="perfuracao-precisa">Perfuração Precisa</option>
+          <option value="quebra-ritmo">Quebra de Ritmo</option>
+          <option value="corte-passo">Corte de Passo</option>
+        </select>
+        <button type="button" data-action="technical-exploitation">
+          <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Usar Técnica · −2
+        </button>
+      </div>
     </div>`;
 
   panel.querySelector("[data-action='analyze']").addEventListener("click", async event => {
@@ -88,6 +107,11 @@ function createPanel(actor) {
   panel.querySelector("[data-action='sneak-attack']").addEventListener("click", async event => {
     event.preventDefault();
     await requestSneakAttack(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='technical-exploitation']").addEventListener("click", async event => {
+    event.preventDefault();
+    const techniqueId = panel.querySelector("[data-role='technique']").value;
+    await requestSneakAttack(actor, selectedTarget(), techniqueId);
   });
   refreshPanel(panel, actor);
   return panel;
