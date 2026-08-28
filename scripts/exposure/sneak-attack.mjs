@@ -24,9 +24,19 @@ function rogueClass(actor) {
 }
 
 function turnKey() {
-  const combat = game.combat;
+  return combatTurnKey(game.combat);
+}
+
+function combatTurnKey(combat) {
   if (!combat?.started) return null;
   return `${combat.id}:${combat.round}:${combat.turn}`;
+}
+
+function combatantFor(actor) {
+  return game.combat?.combatants.find(combatant => {
+    const combatActor = combatant.actor;
+    return combatActor?.uuid === actor.uuid || combatActor?.id === actor.id;
+  }) ?? null;
 }
 
 export function sneakAttackDice(actor) {
@@ -57,6 +67,7 @@ async function applyTechnique(sourceActor, targetActor, techniqueId) {
   const technique = TECHNIQUES[techniqueId];
   if (!technique || techniqueId === "perfuracao-precisa") return;
   const expiresActorUuid = techniqueId === "quebra-ritmo" ? targetActor.uuid : sourceActor.uuid;
+  const expiresCombatantId = combatantFor(techniqueId === "quebra-ritmo" ? targetActor : sourceActor)?.id ?? null;
   const changes = techniqueId === "corte-passo" ? movementChanges(targetActor) : [];
   await targetActor.createEmbeddedDocuments("ActiveEffect", [{
     name: `${technique.name} — Nova Era`,
@@ -68,7 +79,8 @@ async function applyTechnique(sourceActor, targetActor, techniqueId) {
       [MODULE_ID]: {
         technique: techniqueId,
         appliedTurn: turnKey(),
-        expiresActorUuid
+        expiresActorUuid,
+        expiresCombatantId
       }
     }
   }]);
@@ -155,16 +167,21 @@ function blocksReaction(activity) {
 
 async function expireTechniques(combat) {
   if (!game.user.isGM || game.users.activeGM?.id !== game.user.id) return;
-  const activeActor = combat.combatant?.actor;
+  const activeCombatant = combat.combatant;
+  const activeActor = activeCombatant?.actor;
   if (!activeActor) return;
-  const current = turnKey();
+  const current = combatTurnKey(combat);
   const actors = new Set(game.actors);
   for (const token of canvas.tokens?.placeables ?? []) if (token.actor) actors.add(token.actor);
   for (const actor of actors) {
     const expired = actor.effects.filter(effect => {
       const expiresActorUuid = effect.getFlag(MODULE_ID, "expiresActorUuid");
+      const expiresCombatantId = effect.getFlag(MODULE_ID, "expiresCombatantId");
       const appliedTurn = effect.getFlag(MODULE_ID, "appliedTurn");
-      return expiresActorUuid === activeActor.uuid && appliedTurn !== current;
+      const reachedTurn = expiresCombatantId
+        ? expiresCombatantId === activeCombatant.id
+        : (expiresActorUuid === activeActor.uuid || expiresActorUuid === activeActor.id);
+      return reachedTurn && appliedTurn !== current;
     });
     if (expired.length) await actor.deleteEmbeddedDocuments("ActiveEffect", expired.map(effect => effect.id));
   }

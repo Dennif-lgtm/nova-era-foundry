@@ -26,13 +26,10 @@ export class ExposureStore {
     assertActor(targetActor, "Alvo");
     assertActor(sourceActor, "Ladino");
     const next = Math.clamp(Number(value) || 0, 0, EXPOSURE_MAX);
-    const ledger = foundry.utils.deepClone(targetActor.getFlag(MODULE_ID, EXPOSURE_FLAG) ?? {});
     const key = sourceKey(sourceActor);
-
-    if (next === 0) delete ledger[key];
-    else ledger[key] = next;
-
-    await targetActor.setFlag(MODULE_ID, EXPOSURE_FLAG, ledger);
+    const path = `flags.${MODULE_ID}.${EXPOSURE_FLAG}`;
+    if (next === 0) await targetActor.update({ [`${path}.-=${key}`]: null });
+    else await targetActor.update({ [`${path}.${key}`]: next });
     Hooks.callAll("novaEraExposureChanged", { targetActor, sourceActor, value: next });
     return next;
   }
