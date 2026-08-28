@@ -7,7 +7,7 @@ Módulo de regras e automações para:
 
 ## Estado atual
 
-Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar** e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
+Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
 ## Instalação pelo Foundry
 
@@ -47,6 +47,8 @@ await game.novaEra.content.installRogue();
 ## Analisar
 
 Selecione exatamente um token como alvo e use a atividade **Analisar** dentro da característica **Exposição**. O módulo realiza Investigação contra CD 10 + nível/ND do alvo e registra até 3 Exposições em caso de sucesso.
+
+O painel **Nova Era — Exposição** na ficha mostra o alvo selecionado, a quantidade atual de Exposição e um botão rápido para Analisar.
 
 ## Próximo marco
 

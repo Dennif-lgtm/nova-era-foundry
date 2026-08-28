@@ -24,3 +24,60 @@
   color: #65584c;
   font-style: italic;
 }
+
+.nova-era.exposure-panel {
+  margin: 0.45rem 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #8f6735;
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(47, 26, 27, 0.96), rgba(92, 43, 38, 0.94));
+  color: #f2dfbd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.nova-era .exposure-panel-heading,
+.nova-era .exposure-panel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nova-era .exposure-panel-heading {
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(208, 159, 83, 0.5);
+  color: #f0c879;
+}
+
+.nova-era .exposure-panel-heading .exposure-pips {
+  margin: 0;
+  color: #f0c879;
+  text-shadow: 0 0 5px rgba(240, 200, 121, 0.35);
+}
+
+.nova-era .exposure-target {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nova-era.exposure-panel button[data-action="analyze"] {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid #c69a57;
+  border-radius: 4px;
+  background: #6f2925;
+  color: #f8ead0;
+}
+
+.nova-era.exposure-panel button[data-action="analyze"]:hover:not(:disabled) {
+  background: #8a3730;
+  box-shadow: 0 0 5px rgba(240, 200, 121, 0.45);
+}
+
+.nova-era.exposure-panel button[data-action="analyze"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
