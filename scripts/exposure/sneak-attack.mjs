@@ -101,7 +101,8 @@ async function executeSneakAttack(sourceActor, targetActor, techniqueId = null) 
     return;
   }
   const exposureCost = technique ? 2 : 1;
-  if (ExposureStore.get(targetActor, sourceActor) < exposureCost) {
+  const exposureBefore = ExposureStore.get(targetActor, sourceActor);
+  if (exposureBefore < exposureCost) {
     ui.notifications.warn("Nova Era: o alvo não possui Exposição suficiente.");
     return;
   }
@@ -127,7 +128,9 @@ async function executeSneakAttack(sourceActor, targetActor, techniqueId = null) 
     turn: current,
     targetActorUuid: targetActor.uuid,
     dice,
-    total: roll.total
+    total: roll.total,
+    exposureBefore,
+    exposureCost
   });
   await roll.toMessage({
     speaker: ChatMessage.getSpeaker({ actor: sourceActor }),

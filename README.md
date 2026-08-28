@@ -58,6 +58,8 @@ A ficha do Ladino possui tema próprio em grafite, preto e dourado envelhecido. 
 
 A versão 0.9.0 acrescenta ícones próprios para o Ladino, Fantasma, Assassino e Rastreador. Também adiciona resolução guiada de Evasão Calculada, lembretes completos de Leitura Completa, as três opções de Antecipação e os controles de Primeira Impressão, Nenhum Erro Passa Despercebido e Falha Fatal. Quando o D&D5e não informa ao módulo a criatura que originou um efeito, o alvo selecionado funciona como confirmação explícita da origem.
 
+A versão 0.9.1 corrige a sequência de Falha Fatal para considerar como parte das 3 Exposições aquela já consumida pelo Ataque Furtivo. Também torna visualmente evidente quando os botões de Antecipação estão bloqueados.
+
 ## Próximo marco
 
 Integrar o consumo de Exposição ao Ataque Furtivo.

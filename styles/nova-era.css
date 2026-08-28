@@ -208,6 +208,12 @@
   color: #eee3ce;
 }
 
+.nova-era.exposure-panel .advanced-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  filter: grayscale(0.7);
+}
+
 .nova-era.exposure-panel .passive-statuses {
   display: grid;
   gap: 0.3rem;

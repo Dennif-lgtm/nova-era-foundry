@@ -143,7 +143,7 @@ export async function useNoticedError(actor, targetActor) {
 export function canUseFatalFlaw(actor, targetActor) {
   const lastSneakAttack = actor?.getFlag(MODULE_ID, "lastSneakAttack");
   return hasFeature(actor, "olhar-predador") && !!targetActor
-    && ExposureStore.get(targetActor, actor) === 3
+    && lastSneakAttack?.exposureBefore === 3
     && lastSneakAttack?.turn === turnKey()
     && lastSneakAttack?.targetActorUuid === targetActor.uuid
     && !actor.getFlag(MODULE_ID, FLAGS.fatalFlaw);
@@ -164,13 +164,16 @@ async function executeTargetChange(sourceActor, targetActor, type, data = {}) {
   } else if (type === "noticedError") {
     await applyExposure(sourceActor, targetActor, 1, "Nenhum Erro Passa Despercebido: +1 Exposição após uma falha perceptível da criatura.");
   } else if (type === "fatalFlaw") {
-    const consumed = await ExposureStore.consume(targetActor, sourceActor, 3);
-    if (!consumed) return;
+    const remainingExposure = ExposureStore.get(targetActor, sourceActor);
+    if (remainingExposure > 0) {
+      const consumed = await ExposureStore.consume(targetActor, sourceActor, remainingExposure);
+      if (!consumed) return;
+    }
     await sourceActor.setFlag(MODULE_ID, FLAGS.fatalFlaw, true);
     const sneakAttack = sourceActor.getFlag(MODULE_ID, "lastSneakAttack");
     const maximum = Number(sneakAttack?.dice ?? 0) * 6;
     const adjustment = Math.max(0, maximum - Number(sneakAttack?.total ?? 0));
-    await sendRuleCard(sourceActor, "Falha Fatal", `As 3 Exposições de ${targetActor.name} foram consumidas. O Ataque Furtivo passa para <strong>${maximum} de dano</strong>; acrescente <strong>${adjustment}</strong> ao resultado já rolado. Aplique também uma Técnica de Exploração sem custo adicional.`);
+    await sendRuleCard(sourceActor, "Falha Fatal", `As 3 Exposições de ${targetActor.name}, incluindo a usada pelo Ataque Furtivo, foram consumidas. O Ataque Furtivo passa para <strong>${maximum} de dano</strong>; acrescente <strong>${adjustment}</strong> ao resultado já rolado. Aplique também uma Técnica de Exploração sem custo adicional.`);
   }
   Hooks.callAll("novaEraBaseFeatureChanged", { sourceActor, targetActor, feature: type });
 }
