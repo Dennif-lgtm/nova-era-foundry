@@ -364,7 +364,7 @@
 
 /* Painel premium do Ladino — Nova Era. */
 .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
-  grid-template-columns: minmax(218px, 238px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+  grid-template-columns: minmax(292px, 316px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
 }
 
 .dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel,
@@ -431,7 +431,7 @@
 .nova-era .ne-panel-brand small,
 .nova-era .ne-panel-brand strong { display: block; }
 .nova-era .ne-panel-brand small { color: #a88d5e; font-size: 8px; line-height: 1.1; }
-.nova-era .ne-panel-brand strong { color: #ead7b3; font-size: 17px; line-height: 1.2; text-shadow: 0 1px #000; }
+.nova-era .ne-panel-brand strong { color: #ead7b3; font-size: 19px; line-height: 1.2; text-shadow: 0 1px #000; }
 .nova-era .ne-brand-crest {
   display: grid;
   place-items: center;
@@ -454,15 +454,15 @@
   background: linear-gradient(105deg, rgba(24,27,29,.98), rgba(10,12,14,.98));
   box-shadow: inset 0 0 0 1px #07090a;
 }
-.nova-era .ne-section-kicker { display: block; color: #bda36f; font-size: 8px; text-transform: uppercase; letter-spacing: .13em; }
-.nova-era .ne-target-card strong { display: block; overflow: hidden; margin-top: 3px; color: #f0e4cf; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.nova-era .ne-section-kicker { display: block; color: #bda36f; font-size: 10px; text-transform: uppercase; letter-spacing: .13em; }
+.nova-era .ne-target-card strong { display: block; overflow: hidden; margin-top: 4px; color: #f0e4cf; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
 
 .nova-era .ne-ornament-title {
   display: flex;
   align-items: center;
   gap: 7px;
   color: #d8bc7d;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .14em;
@@ -470,12 +470,12 @@
 .nova-era .ne-ornament-title::before,
 .nova-era .ne-ornament-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #98713b); }
 .nova-era .ne-ornament-title::after { background: linear-gradient(90deg, #98713b, transparent); }
-.nova-era .ne-exposure-gems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.nova-era .ne-exposure-gems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 10px 10px 15px; }
 .nova-era .ne-exposure-gems span {
   position: relative;
   display: grid;
   place-items: center;
-  height: 42px;
+  height: 48px;
   color: #302c26;
   border: 1px solid #4c4437;
   border-radius: 52% 0;
@@ -484,8 +484,8 @@
   box-shadow: inset 0 0 8px #000;
   transition: color .2s, border-color .2s, filter .2s;
 }
-.nova-era .ne-exposure-gems span::after { content: attr(data-stage); position: absolute; right: -13px; bottom: -13px; transform: rotate(-45deg); color: #75694f; font-size: 8px; }
-.nova-era .ne-exposure-gems i { transform: rotate(-45deg); font-size: 18px; }
+.nova-era .ne-exposure-gems span::after { content: attr(data-stage); position: absolute; right: -15px; bottom: -15px; transform: rotate(-45deg); color: #8f805e; font-size: 9px; }
+.nova-era .ne-exposure-gems i { transform: rotate(-45deg); font-size: 20px; }
 .nova-era .ne-exposure-gems span.active {
   color: #fff0ac;
   border-color: #e1ad46;
@@ -507,7 +507,7 @@
 .nova-era.exposure-panel .advanced-controls button,
 .nova-era.exposure-panel .rule-reminder button,
 .nova-era.exposure-panel .technique-controls button {
-  min-height: 36px;
+  min-height: 44px;
   margin: 0;
   border: 1px solid #665638;
   border-radius: 1px;
@@ -517,13 +517,13 @@
   text-shadow: 0 1px #000;
   transition: border-color .15s, background .15s, box-shadow .15s, transform .1s;
 }
-.nova-era.exposure-panel .ne-action { display: grid; grid-template-columns: 24px 1fr; align-content: center; align-items: center; padding: 5px 7px; text-align: left; }
+.nova-era.exposure-panel .ne-action { display: grid; grid-template-columns: 28px 1fr; align-content: center; align-items: center; padding: 7px 9px; text-align: left; }
 .nova-era.exposure-panel .ne-action i { grid-row: 1 / 3; color: var(--ne-accent-bright); text-align: center; }
-.nova-era.exposure-panel .ne-action span { font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.nova-era.exposure-panel .ne-action small { color: #ab9c83; font-size: 7px; }
+.nova-era.exposure-panel .ne-action span { font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.nova-era.exposure-panel .ne-action small { color: #bcae97; font-size: 9px; }
 .nova-era.exposure-panel .ne-action-primary { border-color: #9f4e38; background: linear-gradient(135deg, #531c18, #211315); }
 .nova-era.exposure-panel button:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--ne-accent-bright); box-shadow: inset 0 0 0 1px #090a0b, 0 0 8px color-mix(in srgb, var(--ne-accent) 40%, transparent); }
-.nova-era.exposure-panel button:disabled { opacity: .36; filter: grayscale(.72); cursor: not-allowed; }
+.nova-era.exposure-panel button:disabled { opacity: .56; filter: grayscale(.55); cursor: not-allowed; }
 
 .nova-era .ne-panel-group { margin: 0 4px 5px; border: 1px solid #4b4232; background: rgba(8,10,11,.82); }
 .nova-era .ne-panel-group[hidden] { display: none; }
@@ -532,12 +532,12 @@
   grid-template-columns: 16px 1fr 12px;
   align-items: center;
   gap: 5px;
-  min-height: 27px;
-  padding: 4px 7px;
+  min-height: 34px;
+  padding: 6px 9px;
   color: #c9af78;
   background: linear-gradient(90deg, #1c2022, #101315);
   cursor: pointer;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -551,27 +551,27 @@
 .nova-era .ne-group-movement summary i:first-child { color: var(--ne-defense); }
 .nova-era .ne-group-subclass { border-color: color-mix(in srgb, var(--ne-subclass) 72%, #6d552e); }
 .nova-era .ne-group-subclass summary { color: #ebd8b8; background: linear-gradient(90deg, color-mix(in srgb, var(--ne-subclass) 66%, #111), #111416); }
-.nova-era .ne-group-body { display: grid; gap: 4px; padding: 5px; }
+.nova-era .ne-group-body { display: grid; gap: 6px; padding: 7px; }
 .nova-era .ne-button-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-.nova-era.exposure-panel .feature-button { display: grid; grid-template-columns: 18px 1fr; align-items: center; min-width: 0; padding: 5px; font-size: 9px; }
+.nova-era.exposure-panel .feature-button { display: grid; grid-template-columns: 22px 1fr; align-items: center; min-width: 0; padding: 7px; font-size: 10px; }
 .nova-era.exposure-panel .feature-button i { grid-row: 1 / 3; color: var(--ne-defense); }
-.nova-era.exposure-panel .feature-button small { color: #9da6a4; font-size: 7px; }
+.nova-era.exposure-panel .feature-button small { color: #b0b9b7; font-size: 8px; }
 .nova-era.exposure-panel .feature-button.danger { border-color: #8d3a2e; background: linear-gradient(#521d1a, #211113); color: #ffd2c3; }
 
 .nova-era.exposure-panel .technique-controls { display: grid; gap: 4px; margin: 0; padding: 0; border: 0; }
 .nova-era.exposure-panel .technique-controls[hidden] { display: none; }
-.nova-era.exposure-panel .technique-controls label { margin: 0; color: #bda36f; font-size: 8px; }
-.nova-era.exposure-panel .technique-controls select { height: 29px; margin: 0; padding: 0 6px; border: 1px solid #5f523a; border-radius: 1px; background: #111517; color: #eadfca; font-size: 9px; }
+.nova-era.exposure-panel .technique-controls label { margin: 0; color: #bda36f; font-size: 10px; }
+.nova-era.exposure-panel .technique-controls select { height: 34px; margin: 0; padding: 0 7px; border: 1px solid #5f523a; border-radius: 1px; background: #111517; color: #eadfca; font-size: 10px; }
 .nova-era.exposure-panel .technique-controls button { width: 100%; }
 
 .nova-era.exposure-panel .rule-reminder,
 .nova-era.exposure-panel .advanced-controls { gap: 4px; padding: 5px; border: 0; border-radius: 0; background: transparent; }
 .nova-era.exposure-panel .rule-reminder strong,
-.nova-era.exposure-panel .advanced-controls strong { color: var(--ne-accent-bright); font-size: 9px; letter-spacing: .04em; }
-.nova-era.exposure-panel .rule-reminder small { font-size: 7px; }
+.nova-era.exposure-panel .advanced-controls strong { color: var(--ne-accent-bright); font-size: 11px; letter-spacing: .04em; }
+.nova-era.exposure-panel .rule-reminder small { font-size: 9px; }
 .nova-era.exposure-panel .advanced-controls button,
-.nova-era.exposure-panel .rule-reminder button { min-height: 31px; padding: 4px; font-size: 8px; }
+.nova-era.exposure-panel .rule-reminder button { min-height: 36px; padding: 6px; font-size: 10px; }
 
 .nova-era .ne-status-bar {
   display: flex;
@@ -588,7 +588,7 @@
   padding: 4px;
   border-color: #544a37;
   background: rgba(8,10,11,.7);
-  font-size: 7px;
+  font-size: 9px;
   text-transform: uppercase;
   letter-spacing: .04em;
 }
@@ -599,6 +599,12 @@
     grid-template-columns: var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
   }
   .dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel { grid-column: 1 / -1; max-width: 480px; justify-self: center; }
+}
+
+@media (min-width: 1081px) and (max-width: 1180px) {
+  .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
+    grid-template-columns: minmax(270px, 286px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

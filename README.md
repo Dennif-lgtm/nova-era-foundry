@@ -65,3 +65,5 @@ A versão 0.12.0 amplia a pasta **Nova Era — Macros do Ladino** para 31 macros
 Movimentos que dependem do tabuleiro e decisões do Mestre são apresentados como resoluções guiadas no chat; dados, custos, efeitos, limites de turno, Descanso Longo, Exposição e Pressão são tratados pelo módulo.
 
 A versão 0.13.0 redesenha o painel como uma interface premium de jogo: cabeçalho próprio, cartão de alvo, gemas animadas de Exposição, ações primárias hierarquizadas, seções recolhíveis, cores dinâmicas para cada subclasse e barra de estados. Grupos sem habilidades disponíveis são ocultados automaticamente e o indicador de Reação reflete o estado real de Antecipação.
+
+A versão 0.13.1 calibra o painel a partir do teste em ficha real: aumenta a coluna, tipografia e botões; separa os numerais das gemas; melhora a leitura dos estados bloqueados; e reduz a altura inicial mantendo os grupos secundários recolhidos. A migração deixa de substituir diretamente a coleção interna de atividades do D&D5e em itens existentes, evitando a falha de atualização observada em alguns mundos.

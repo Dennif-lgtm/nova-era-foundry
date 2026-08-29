@@ -215,7 +215,7 @@ function createPanel(actor) {
       </button>
     </div>
 
-    <details class="ne-panel-group ne-group-movement" open>
+    <details class="ne-panel-group ne-group-movement">
       <summary><i class="fa-solid fa-person-running"></i><span>Movimento & Defesa</span><i class="fa-solid fa-chevron-down"></i></summary>
       <div class="ne-group-body ne-button-grid">
         <button type="button" data-action="test-blade" class="feature-button" hidden><i class="fa-solid fa-khanda"></i><span>Lâmina de Teste</span><small>+1 Exposição</small></button>
@@ -225,7 +225,7 @@ function createPanel(actor) {
       </div>
     </details>
 
-    <details class="ne-panel-group ne-group-techniques" open>
+    <details class="ne-panel-group ne-group-techniques">
       <summary><i class="fa-solid fa-crosshairs"></i><span>Técnicas</span><i class="fa-solid fa-chevron-down"></i></summary>
       <div class="ne-group-body">
         <div data-role="technique-controls" class="technique-controls" hidden>
@@ -425,7 +425,7 @@ function expandSheet(app, root) {
   windowElement.dataset.novaEraExpanded = "true";
   const currentWidth = windowElement.getBoundingClientRect().width;
   const maximumWidth = Math.max(currentWidth, window.innerWidth - 24);
-  const width = Math.min(currentWidth + 245, maximumWidth);
+  const width = Math.min(currentWidth + 325, maximumWidth);
   if (width <= currentWidth + 10 || typeof app.setPosition !== "function") return;
   const currentLeft = app.position?.left ?? windowElement.getBoundingClientRect().left;
   const left = Math.max(12, currentLeft - ((width - currentWidth) / 2));

@@ -1,7 +1,7 @@
 import { MODULE_ID } from "../constants.mjs";
 import { ROGUE_CLASS, ROGUE_FEATURES, ROGUE_SUBCLASSES } from "./rogue-data.mjs";
 
-const CONTENT_VERSION = "6";
+const CONTENT_VERSION = "7";
 const ANALYZE_ACTIVITY_ID = "novaeraAnalyze01";
 
 const CONTENT_ICONS = {
@@ -120,7 +120,12 @@ async function upsertItem(source) {
   const key = source.flags[MODULE_ID].contentKey;
   const existing = game.items.find(item => item.getFlag(MODULE_ID, "contentKey") === key);
   if (existing) {
-    await existing.update(source);
+    const update = foundry.utils.deepClone(source);
+    // Activities are an embedded collection in D&D5e 5.x. Replacing the
+    // collection while migrating an existing Item can make the whole content
+    // installation fail. New Items still receive the complete activity source.
+    if (update.system?.activities) delete update.system.activities;
+    await existing.update(update);
     return existing;
   }
   return Item.create(source);
@@ -139,7 +144,6 @@ async function updateEmbeddedContentItems(sources) {
         [`flags.${MODULE_ID}.contentVersion`]: CONTENT_VERSION
       };
       if (source.img) update.img = source.img;
-      if (source.system.activities) update["system.activities"] = source.system.activities;
       return [update];
     });
     if (updates.length) await actor.updateEmbeddedDocuments("Item", updates);
