@@ -18,6 +18,12 @@ Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automat
 - Transforma as três Técnicas de Exploração em botões diretos.
 - Reforça visualmente o bloco dinâmico de subclasse e a barra de Reação.
 
+### v0.13.3 — Símbolos de classe e subclasse
+
+- Exibe o ícone oficial do Ladino no brasão do painel.
+- Acrescenta um medalhão menor com o ícone da subclasse ativa.
+- Alterna automaticamente entre Fantasma, Assassino e Rastreador.
+
 ## Instalação pelo Foundry
 
 Na tela **Instalar Módulo**, cole no campo **URL do Manifesto**:

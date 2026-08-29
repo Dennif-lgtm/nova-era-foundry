@@ -164,6 +164,10 @@ function refreshPanel(panel, actor) {
   trackerControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "instinto-caca");
   const subclass = !ghostControls.hidden ? "fantasma" : !assassinControls.hidden ? "assassino" : !trackerControls.hidden ? "rastreador" : "ladino";
   panel.dataset.subclass = subclass;
+  const subclassIcon = panel.querySelector("[data-role='subclass-icon']");
+  subclassIcon.hidden = subclass === "ladino";
+  subclassIcon.src = `modules/${MODULE_ID}/assets/icons/${subclass}.png`;
+  subclassIcon.alt = subclass === "ladino" ? "" : `Símbolo da subclasse ${subclass}`;
   panel.querySelector("[data-role='subclass-title']").textContent = subclass === "ladino"
     ? "Recursos avançados"
     : subclass[0].toUpperCase() + subclass.slice(1);
@@ -190,7 +194,10 @@ function createPanel(actor) {
   panel.dataset.actorUuid = actor.uuid;
   panel.innerHTML = `
     <header class="ne-panel-brand">
-      <span class="ne-brand-crest"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i></span>
+      <span class="ne-brand-icons">
+        <span class="ne-brand-crest"><img src="modules/${MODULE_ID}/assets/icons/ladino.png" alt="Símbolo da classe Ladino"></span>
+        <span class="ne-subclass-crest"><img data-role="subclass-icon" src="modules/${MODULE_ID}/assets/icons/ladino.png" alt="" hidden></span>
+      </span>
       <span><small>Nova Era</small><strong>Nova Era — Ladino</strong></span>
       <i class="fa-solid fa-diamond ne-brand-gem" aria-hidden="true"></i>
     </header>

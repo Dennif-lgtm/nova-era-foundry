@@ -668,13 +668,33 @@
   white-space: nowrap;
 }
 .nova-era .ne-brand-crest {
+  position: relative;
   width: 47px;
   height: 47px;
   border: 2px solid var(--ne-gold);
   background: radial-gradient(circle,#4a2a19,#090b0c 69%);
   box-shadow: 0 0 0 2px #08090a,0 0 0 3px #765326,0 0 14px rgba(205,142,47,.3);
 }
-.nova-era .ne-brand-crest i { font-size: 23px; color: #f0cf8a; }
+.nova-era .ne-brand-icons { position: relative; display: block; width: 50px; height: 50px; }
+.nova-era .ne-brand-crest img,
+.nova-era .ne-subclass-crest img { width: 100%; height: 100%; border: 0; object-fit: cover; }
+.nova-era .ne-brand-crest img { transform: rotate(-45deg) scale(1.18); border-radius: 50%; }
+.nova-era .ne-subclass-crest {
+  position: absolute;
+  right: -8px;
+  bottom: -7px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border: 1px solid var(--ne-accent-bright);
+  border-radius: 50%;
+  background: #090b0d;
+  box-shadow: 0 0 0 2px #08090a, 0 0 7px color-mix(in srgb, var(--ne-accent) 55%, transparent);
+}
+.nova-era .ne-subclass-crest[hidden] { display: none; }
+.nova-era .ne-subclass-crest img { border-radius: 50%; }
 .nova-era .ne-brand-gem { font-size: 13px; color: #cf2d22; }
 
 .nova-era .ne-target-card {
