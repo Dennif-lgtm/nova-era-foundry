@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.13.2 — Painel ilustrado
+
+- Reconstrói o painel conforme a referência visual aprovada de Nova Era.
+- Amplia molduras, olhos de Exposição, tipografia e placas de ação.
+- Exibe o retrato do alvo selecionado.
+- Separa Hide e Desengajar em controles visuais próprios de Ponto Cego.
+- Transforma as três Técnicas de Exploração em botões diretos.
+- Reforça visualmente o bloco dinâmico de subclasse e a barra de Reação.
+
 ## Instalação pelo Foundry
 
 Na tela **Instalar Módulo**, cole no campo **URL do Manifesto**:

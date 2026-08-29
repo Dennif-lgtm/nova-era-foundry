@@ -86,12 +86,13 @@ function panelState(actor) {
 function refreshPanel(panel, actor) {
   const { target, value, pips } = panelState(actor);
   const targetLabel = panel.querySelector("[data-role='target']");
+  const targetPortrait = panel.querySelector("[data-role='target-portrait']");
   const pipLabel = panel.querySelector("[data-role='pips']");
   const analyzeButton = panel.querySelector("[data-action='analyze']");
   const sneakButton = panel.querySelector("[data-action='sneak-attack']");
   const sneakDice = panel.querySelector("[data-role='sneak-dice']");
   const techniqueControls = panel.querySelector("[data-role='technique-controls']");
-  const techniqueButton = panel.querySelector("[data-action='technical-exploitation']");
+  const techniqueButtons = [...panel.querySelectorAll("[data-action='technical-exploitation']")];
   const sneakUsed = sneakAttackUsedThisTurn(actor);
   const testBladeButton = panel.querySelector("[data-action='test-blade']");
   const blindSpotButtons = [...panel.querySelectorAll("[data-action^='blind-spot-']")];
@@ -113,6 +114,8 @@ function refreshPanel(panel, actor) {
   const subclassGroup = panel.querySelector(".ne-group-subclass");
   const reactionStatus = panel.querySelector("[data-role='reaction-status']");
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
+  targetPortrait.src = target?.prototypeToken?.texture?.src ?? target?.img ?? "icons/svg/mystery-man.svg";
+  targetPortrait.alt = target ? `Retrato de ${target.name}` : "Nenhum alvo selecionado";
   pipLabel.textContent = pips;
   pipLabel.setAttribute("aria-label", `${value} de ${EXPOSURE_MAX} Exposições`);
   panel.dataset.exposure = String(value);
@@ -126,10 +129,12 @@ function refreshPanel(panel, actor) {
     ? "Ataque Furtivo já usado neste turno"
     : value < 1 ? "O alvo precisa possuir ao menos 1 Exposição" : "Passivo: não consome Exposição";
   techniqueControls.hidden = !hasTechnicalExploitation(actor);
-  techniqueButton.disabled = !target || value < 2 || sneakUsed;
-  techniqueButton.title = sneakUsed
-    ? "Ataque Furtivo já usado neste turno"
-    : value < 2 ? "O alvo precisa possuir ao menos 2 Exposições" : "Consome 2 Exposições";
+  for (const techniqueButton of techniqueButtons) {
+    techniqueButton.disabled = !target || value < 2 || sneakUsed;
+    techniqueButton.title = sneakUsed
+      ? "Ataque Furtivo já usado neste turno"
+      : value < 2 ? "O alvo precisa possuir ao menos 2 Exposições" : "Consome 2 Exposições";
+  }
   testBladeButton.hidden = !pendingTestBlade(actor, target);
   const hasBlindSpot = actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "ponto-cego");
   for (const button of blindSpotButtons) {
@@ -186,13 +191,16 @@ function createPanel(actor) {
   panel.innerHTML = `
     <header class="ne-panel-brand">
       <span class="ne-brand-crest"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i></span>
-      <span><small>Nova Era</small><strong>Ladino</strong></span>
+      <span><small>Nova Era</small><strong>Nova Era — Ladino</strong></span>
       <i class="fa-solid fa-diamond ne-brand-gem" aria-hidden="true"></i>
     </header>
 
     <section class="ne-target-card">
-      <span class="ne-section-kicker"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Alvo</span>
-      <strong data-role="target" class="exposure-target"></strong>
+      <div class="ne-target-copy">
+        <span class="ne-section-kicker"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Alvo</span>
+        <strong data-role="target" class="exposure-target"></strong>
+      </div>
+      <span class="ne-target-portrait"><img data-role="target-portrait" src="icons/svg/mystery-man.svg" alt="Nenhum alvo selecionado"></span>
     </section>
 
     <section class="ne-exposure-block">
@@ -217,10 +225,11 @@ function createPanel(actor) {
 
     <details class="ne-panel-group ne-group-movement">
       <summary><i class="fa-solid fa-person-running"></i><span>Movimento & Defesa</span><i class="fa-solid fa-chevron-down"></i></summary>
-      <div class="ne-group-body ne-button-grid">
+      <div class="ne-group-body ne-button-grid ne-movement-grid">
         <button type="button" data-action="test-blade" class="feature-button" hidden><i class="fa-solid fa-khanda"></i><span>Lâmina de Teste</span><small>+1 Exposição</small></button>
-        <button type="button" data-action="blind-spot-hide" class="feature-button" hidden><i class="fa-solid fa-user-ninja"></i><span>Ponto Cego</span><small>Hide</small></button>
-        <button type="button" data-action="blind-spot-disengage" class="feature-button" hidden><i class="fa-solid fa-person-walking-arrow-right"></i><span>Ponto Cego</span><small>Desengajar</small></button>
+        <span class="ne-blind-spot-emblem"><i class="fa-solid fa-eye-slash"></i><strong>Ponto Cego</strong><small>1 vez por turno</small></span>
+        <button type="button" data-action="blind-spot-hide" class="feature-button" hidden><i class="fa-solid fa-user-ninja"></i><span>Hide</span><small>Ponto Cego</small></button>
+        <button type="button" data-action="blind-spot-disengage" class="feature-button" hidden><i class="fa-solid fa-person-running"></i><span>Desengajar</span><small>Ponto Cego</small></button>
         <button type="button" data-action="calculated-evasion" class="feature-button" hidden><i class="fa-solid fa-shield-halved"></i><span>Evasão</span><small>Resolver</small></button>
       </div>
     </details>
@@ -229,13 +238,12 @@ function createPanel(actor) {
       <summary><i class="fa-solid fa-crosshairs"></i><span>Técnicas</span><i class="fa-solid fa-chevron-down"></i></summary>
       <div class="ne-group-body">
         <div data-role="technique-controls" class="technique-controls" hidden>
-          <label for="nova-era-technique-${actor.id}">Exploração Técnica · custo 2</label>
-          <select id="nova-era-technique-${actor.id}" data-role="technique">
-            <option value="perfuracao-precisa">Perfuração Precisa</option>
-            <option value="quebra-ritmo">Quebra de Ritmo</option>
-            <option value="corte-passo">Corte de Passo</option>
-          </select>
-          <button type="button" data-action="technical-exploitation"><i class="fa-solid fa-burst"></i> Executar Técnica</button>
+          <span class="ne-technique-cost">Exploração Técnica · custo 2</span>
+          <div class="ne-technique-grid">
+            <button type="button" data-action="technical-exploitation" data-technique="perfuracao-precisa"><i class="fa-solid fa-bolt"></i><span>Perfuração</span><small>Precisa</small></button>
+            <button type="button" data-action="technical-exploitation" data-technique="quebra-ritmo"><i class="fa-solid fa-burst"></i><span>Quebra</span><small>de Ritmo</small></button>
+            <button type="button" data-action="technical-exploitation" data-technique="corte-passo"><i class="fa-solid fa-shoe-prints"></i><span>Corte</span><small>de Passo</small></button>
+          </div>
         </div>
         <button type="button" data-action="deciphered-strike" class="feature-button" hidden><i class="fa-solid fa-crosshairs"></i> Golpe Decifrado · +2d6</button>
       </div>
@@ -308,11 +316,12 @@ function createPanel(actor) {
     event.preventDefault();
     await requestSneakAttack(actor, selectedTarget());
   });
-  panel.querySelector("[data-action='technical-exploitation']").addEventListener("click", async event => {
-    event.preventDefault();
-    const techniqueId = panel.querySelector("[data-role='technique']").value;
-    await requestSneakAttack(actor, selectedTarget(), techniqueId);
-  });
+  for (const button of panel.querySelectorAll("[data-action='technical-exploitation']")) {
+    button.addEventListener("click", async event => {
+      event.preventDefault();
+      await requestSneakAttack(actor, selectedTarget(), button.dataset.technique);
+    });
+  }
   panel.querySelector("[data-action='test-blade']").addEventListener("click", async event => {
     event.preventDefault();
     await requestTestBlade(actor, selectedTarget());
@@ -425,7 +434,7 @@ function expandSheet(app, root) {
   windowElement.dataset.novaEraExpanded = "true";
   const currentWidth = windowElement.getBoundingClientRect().width;
   const maximumWidth = Math.max(currentWidth, window.innerWidth - 24);
-  const width = Math.min(currentWidth + 325, maximumWidth);
+  const width = Math.min(currentWidth + 395, maximumWidth);
   if (width <= currentWidth + 10 || typeof app.setPosition !== "function") return;
   const currentLeft = app.position?.left ?? windowElement.getBoundingClientRect().left;
   const left = Math.max(12, currentLeft - ((width - currentWidth) / 2));
