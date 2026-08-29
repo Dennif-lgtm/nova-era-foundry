@@ -361,3 +361,247 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Painel premium do Ladino — Nova Era. */
+.dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
+  grid-template-columns: minmax(218px, 238px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+}
+
+.dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel,
+.nova-era.exposure-panel {
+  --ne-accent: #c99a4a;
+  --ne-accent-bright: #f3cc77;
+  --ne-subclass: #7a211c;
+  --ne-defense: #74aab0;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid #9f7839;
+  border-radius: 3px;
+  background:
+    linear-gradient(135deg, transparent 9px, #9c7437 10px, transparent 11px) top left / 22px 22px no-repeat,
+    linear-gradient(225deg, transparent 9px, #9c7437 10px, transparent 11px) top right / 22px 22px no-repeat,
+    linear-gradient(45deg, transparent 9px, #9c7437 10px, transparent 11px) bottom left / 22px 22px no-repeat,
+    linear-gradient(315deg, transparent 9px, #9c7437 10px, transparent 11px) bottom right / 22px 22px no-repeat,
+    radial-gradient(circle at 50% 0, rgba(141, 36, 27, 0.2), transparent 32%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 5px),
+    #0b0d0f;
+  color: #e9ddc5;
+  box-shadow: 0 8px 20px rgba(0,0,0,.58), inset 0 0 0 3px #15191c, inset 0 0 0 4px rgba(193,145,67,.48);
+  font-family: var(--dnd5e-font-roboto-slab, "Roboto Slab", serif);
+}
+
+.nova-era.exposure-panel[data-subclass="fantasma"] { --ne-subclass: #47326d; --ne-accent: #a68bd3; }
+.nova-era.exposure-panel[data-subclass="rastreador"] { --ne-subclass: #284d35; --ne-accent: #9bb873; }
+.nova-era.exposure-panel[data-subclass="assassino"] { --ne-subclass: #761f1b; --ne-accent: #d05c45; }
+
+.nova-era.exposure-panel::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  border: 1px solid rgba(225,181,100,.26);
+  box-shadow: inset 0 0 20px rgba(0,0,0,.72);
+}
+
+.nova-era.exposure-panel button,
+.nova-era.exposure-panel select,
+.nova-era.exposure-panel summary {
+  font-family: inherit;
+}
+
+.nova-era .ne-panel-brand {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px 1fr 14px;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  margin: 4px 4px 6px;
+  padding: 7px 9px;
+  border: 1px solid #6e542d;
+  background: linear-gradient(90deg, #111518, #1b1716 52%, #111518);
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  box-shadow: inset 0 0 0 2px #090b0d, inset 0 -12px 22px rgba(0,0,0,.45);
+}
+
+.nova-era .ne-panel-brand small,
+.nova-era .ne-panel-brand strong { display: block; }
+.nova-era .ne-panel-brand small { color: #a88d5e; font-size: 8px; line-height: 1.1; }
+.nova-era .ne-panel-brand strong { color: #ead7b3; font-size: 17px; line-height: 1.2; text-shadow: 0 1px #000; }
+.nova-era .ne-brand-crest {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #b18442;
+  transform: rotate(45deg);
+  background: radial-gradient(circle, #30251e, #0b0e10 70%);
+  box-shadow: 0 0 10px rgba(197,143,61,.2);
+}
+.nova-era .ne-brand-crest i { transform: rotate(-45deg); color: #e0bd78; font-size: 17px; }
+.nova-era .ne-brand-gem { color: var(--ne-subclass); filter: drop-shadow(0 0 4px var(--ne-subclass)); }
+
+.nova-era .ne-target-card,
+.nova-era .ne-exposure-block {
+  position: relative;
+  margin: 0 4px 6px;
+  padding: 9px 10px;
+  border: 1px solid #4e4433;
+  background: linear-gradient(105deg, rgba(24,27,29,.98), rgba(10,12,14,.98));
+  box-shadow: inset 0 0 0 1px #07090a;
+}
+.nova-era .ne-section-kicker { display: block; color: #bda36f; font-size: 8px; text-transform: uppercase; letter-spacing: .13em; }
+.nova-era .ne-target-card strong { display: block; overflow: hidden; margin-top: 3px; color: #f0e4cf; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+
+.nova-era .ne-ornament-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #d8bc7d;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+}
+.nova-era .ne-ornament-title::before,
+.nova-era .ne-ornament-title::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #98713b); }
+.nova-era .ne-ornament-title::after { background: linear-gradient(90deg, #98713b, transparent); }
+.nova-era .ne-exposure-gems { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.nova-era .ne-exposure-gems span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 42px;
+  color: #302c26;
+  border: 1px solid #4c4437;
+  border-radius: 52% 0;
+  transform: rotate(45deg);
+  background: radial-gradient(circle, #16191b, #090b0d 72%);
+  box-shadow: inset 0 0 8px #000;
+  transition: color .2s, border-color .2s, filter .2s;
+}
+.nova-era .ne-exposure-gems span::after { content: attr(data-stage); position: absolute; right: -13px; bottom: -13px; transform: rotate(-45deg); color: #75694f; font-size: 8px; }
+.nova-era .ne-exposure-gems i { transform: rotate(-45deg); font-size: 18px; }
+.nova-era .ne-exposure-gems span.active {
+  color: #fff0ac;
+  border-color: #e1ad46;
+  background: radial-gradient(circle, #ffdf68 0, #a9620c 42%, #2b1807 76%);
+  box-shadow: inset 0 0 12px #ffdb5d, 0 0 10px rgba(235,164,42,.52);
+  animation: ne-exposure-awaken .35s ease-out;
+}
+@keyframes ne-exposure-awaken { from { filter: brightness(1.9); transform: rotate(45deg) scale(1.14); } }
+.nova-era .ne-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.nova-era .ne-primary-actions {
+  display: grid !important;
+  grid-template-columns: .82fr 1.18fr;
+  gap: 5px !important;
+  margin: 0 4px 6px;
+}
+.nova-era.exposure-panel .ne-action,
+.nova-era.exposure-panel .feature-button,
+.nova-era.exposure-panel .advanced-controls button,
+.nova-era.exposure-panel .rule-reminder button,
+.nova-era.exposure-panel .technique-controls button {
+  min-height: 36px;
+  margin: 0;
+  border: 1px solid #665638;
+  border-radius: 1px;
+  background: linear-gradient(#25292b, #111416);
+  color: #e8dcc5;
+  box-shadow: inset 0 0 0 1px #080a0b;
+  text-shadow: 0 1px #000;
+  transition: border-color .15s, background .15s, box-shadow .15s, transform .1s;
+}
+.nova-era.exposure-panel .ne-action { display: grid; grid-template-columns: 24px 1fr; align-content: center; align-items: center; padding: 5px 7px; text-align: left; }
+.nova-era.exposure-panel .ne-action i { grid-row: 1 / 3; color: var(--ne-accent-bright); text-align: center; }
+.nova-era.exposure-panel .ne-action span { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.nova-era.exposure-panel .ne-action small { color: #ab9c83; font-size: 7px; }
+.nova-era.exposure-panel .ne-action-primary { border-color: #9f4e38; background: linear-gradient(135deg, #531c18, #211315); }
+.nova-era.exposure-panel button:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--ne-accent-bright); box-shadow: inset 0 0 0 1px #090a0b, 0 0 8px color-mix(in srgb, var(--ne-accent) 40%, transparent); }
+.nova-era.exposure-panel button:disabled { opacity: .36; filter: grayscale(.72); cursor: not-allowed; }
+
+.nova-era .ne-panel-group { margin: 0 4px 5px; border: 1px solid #4b4232; background: rgba(8,10,11,.82); }
+.nova-era .ne-panel-group[hidden] { display: none; }
+.nova-era .ne-panel-group summary {
+  display: grid;
+  grid-template-columns: 16px 1fr 12px;
+  align-items: center;
+  gap: 5px;
+  min-height: 27px;
+  padding: 4px 7px;
+  color: #c9af78;
+  background: linear-gradient(90deg, #1c2022, #101315);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  list-style: none;
+}
+.nova-era .ne-panel-group summary::-webkit-details-marker { display: none; }
+.nova-era .ne-panel-group summary i:first-child { color: var(--ne-accent); }
+.nova-era .ne-panel-group summary i:last-child { font-size: 8px; transition: transform .18s; }
+.nova-era .ne-panel-group[open] summary i:last-child { transform: rotate(180deg); }
+.nova-era .ne-group-movement summary { color: #8fc1c4; }
+.nova-era .ne-group-movement summary i:first-child { color: var(--ne-defense); }
+.nova-era .ne-group-subclass { border-color: color-mix(in srgb, var(--ne-subclass) 72%, #6d552e); }
+.nova-era .ne-group-subclass summary { color: #ebd8b8; background: linear-gradient(90deg, color-mix(in srgb, var(--ne-subclass) 66%, #111), #111416); }
+.nova-era .ne-group-body { display: grid; gap: 4px; padding: 5px; }
+.nova-era .ne-button-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.nova-era.exposure-panel .feature-button { display: grid; grid-template-columns: 18px 1fr; align-items: center; min-width: 0; padding: 5px; font-size: 9px; }
+.nova-era.exposure-panel .feature-button i { grid-row: 1 / 3; color: var(--ne-defense); }
+.nova-era.exposure-panel .feature-button small { color: #9da6a4; font-size: 7px; }
+.nova-era.exposure-panel .feature-button.danger { border-color: #8d3a2e; background: linear-gradient(#521d1a, #211113); color: #ffd2c3; }
+
+.nova-era.exposure-panel .technique-controls { display: grid; gap: 4px; margin: 0; padding: 0; border: 0; }
+.nova-era.exposure-panel .technique-controls[hidden] { display: none; }
+.nova-era.exposure-panel .technique-controls label { margin: 0; color: #bda36f; font-size: 8px; }
+.nova-era.exposure-panel .technique-controls select { height: 29px; margin: 0; padding: 0 6px; border: 1px solid #5f523a; border-radius: 1px; background: #111517; color: #eadfca; font-size: 9px; }
+.nova-era.exposure-panel .technique-controls button { width: 100%; }
+
+.nova-era.exposure-panel .rule-reminder,
+.nova-era.exposure-panel .advanced-controls { gap: 4px; padding: 5px; border: 0; border-radius: 0; background: transparent; }
+.nova-era.exposure-panel .rule-reminder strong,
+.nova-era.exposure-panel .advanced-controls strong { color: var(--ne-accent-bright); font-size: 9px; letter-spacing: .04em; }
+.nova-era.exposure-panel .rule-reminder small { font-size: 7px; }
+.nova-era.exposure-panel .advanced-controls button,
+.nova-era.exposure-panel .rule-reminder button { min-height: 31px; padding: 4px; font-size: 8px; }
+
+.nova-era .ne-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 6px 4px 4px;
+  padding: 5px;
+  border: 1px solid #5f4c2d;
+  background: linear-gradient(90deg, #0e1113, #221b15, #0e1113);
+}
+.nova-era.exposure-panel .ne-status-bar span {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 4px;
+  border-color: #544a37;
+  background: rgba(8,10,11,.7);
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.nova-era .ne-reaction-status { color: #cdb277 !important; }
+
+@media (max-width: 1080px) {
+  .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-exposure-panel {
+    grid-template-columns: var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+  }
+  .dnd5e2.sheet.actor.character .main-content > .nova-era.exposure-panel { grid-column: 1 / -1; max-width: 480px; justify-self: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nova-era .ne-exposure-gems span.active { animation: none; }
+  .nova-era.exposure-panel button { transition: none; }
+}

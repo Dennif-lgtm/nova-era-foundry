@@ -107,9 +107,18 @@ function refreshPanel(panel, actor) {
   const ghostControls = panel.querySelector("[data-role='ghost-controls']");
   const assassinControls = panel.querySelector("[data-role='assassin-controls']");
   const trackerControls = panel.querySelector("[data-role='tracker-controls']");
+  const movementGroup = panel.querySelector(".ne-group-movement");
+  const techniqueGroup = panel.querySelector(".ne-group-techniques");
+  const readingGroup = panel.querySelector(".ne-group-reading");
+  const subclassGroup = panel.querySelector(".ne-group-subclass");
+  const reactionStatus = panel.querySelector("[data-role='reaction-status']");
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
   pipLabel.textContent = pips;
   pipLabel.setAttribute("aria-label", `${value} de ${EXPOSURE_MAX} Exposições`);
+  panel.dataset.exposure = String(value);
+  for (const [index, gem] of [...panel.querySelectorAll("[data-role='exposure-gem']")].entries()) {
+    gem.classList.toggle("active", index < value);
+  }
   analyzeButton.disabled = !target;
   sneakDice.textContent = `${sneakAttackDice(actor)}d6`;
   sneakButton.disabled = !target || value < 1 || sneakUsed;
@@ -148,11 +157,26 @@ function refreshPanel(panel, actor) {
   ghostControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "entre-olhares");
   assassinControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "brecha-mortal");
   trackerControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "instinto-caca");
+  const subclass = !ghostControls.hidden ? "fantasma" : !assassinControls.hidden ? "assassino" : !trackerControls.hidden ? "rastreador" : "ladino";
+  panel.dataset.subclass = subclass;
+  panel.querySelector("[data-role='subclass-title']").textContent = subclass === "ladino"
+    ? "Recursos avançados"
+    : subclass[0].toUpperCase() + subclass.slice(1);
   const hunt = trackerState(actor, target);
   panel.querySelector("[data-role='pressure']").textContent = `Pressão ${hunt.pressure}`;
   panel.querySelector("[data-action='choose-prey']").disabled = !target || value < 1;
   panel.querySelector("[data-action='pressure-damage']").disabled = !hunt.isPrey || hunt.pressure < 1;
   panel.querySelector("[data-action='persistent-hunt']").disabled = !hunt.isPrey;
+  movementGroup.hidden = testBladeButton.hidden && blindSpotButtons.every(button => button.hidden) && evasionButton.hidden;
+  techniqueGroup.hidden = techniqueControls.hidden && decipheredButton.hidden;
+  readingGroup.hidden = readingControls.hidden && anticipationControls.hidden
+    && firstImpressionButton.hidden && noticedErrorButton.hidden && fatalFlawButton.hidden;
+  subclassGroup.hidden = ghostControls.hidden && assassinControls.hidden && trackerControls.hidden;
+  const reactionReady = canUseAnticipation(actor, target);
+  reactionStatus.classList.toggle("active", reactionReady);
+  reactionStatus.innerHTML = reactionReady
+    ? '<i class="fa-solid fa-hourglass-half"></i> Reação disponível'
+    : '<i class="fa-solid fa-hourglass"></i> Reação não preparada';
 }
 
 function createPanel(actor) {
@@ -160,85 +184,116 @@ function createPanel(actor) {
   panel.className = "nova-era exposure-panel";
   panel.dataset.actorUuid = actor.uuid;
   panel.innerHTML = `
-    <div class="exposure-panel-heading">
-      <strong>Nova Era — Exposição</strong>
-      <span data-role="pips" class="exposure-pips" aria-live="polite">○○○</span>
+    <header class="ne-panel-brand">
+      <span class="ne-brand-crest"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i></span>
+      <span><small>Nova Era</small><strong>Ladino</strong></span>
+      <i class="fa-solid fa-diamond ne-brand-gem" aria-hidden="true"></i>
+    </header>
+
+    <section class="ne-target-card">
+      <span class="ne-section-kicker"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Alvo</span>
+      <strong data-role="target" class="exposure-target"></strong>
+    </section>
+
+    <section class="ne-exposure-block">
+      <div class="ne-ornament-title"><span>Exposição</span></div>
+      <div class="ne-exposure-gems" aria-hidden="true">
+        <span data-role="exposure-gem" data-stage="I"><i class="fa-solid fa-eye"></i></span>
+        <span data-role="exposure-gem" data-stage="II"><i class="fa-solid fa-eye"></i></span>
+        <span data-role="exposure-gem" data-stage="III"><i class="fa-solid fa-eye"></i></span>
+      </div>
+      <span data-role="pips" class="exposure-pips ne-visually-hidden" aria-live="polite">○○○</span>
+    </section>
+
+    <div class="ne-primary-actions exposure-panel-controls">
+      <button type="button" data-action="analyze" class="ne-action ne-action-analyze">
+        <i class="fa-solid fa-eye" aria-hidden="true"></i><span>Analisar</span><small>Gerar Exposição</small>
+      </button>
+      <button type="button" data-action="sneak-attack" class="ne-action ne-action-primary sneak-attack-button">
+        <i class="fa-solid fa-khanda" aria-hidden="true"></i><span>Ataque Furtivo</span>
+        <small><span data-role="sneak-dice">1d6</span> · passivo</small>
+      </button>
     </div>
-    <div class="exposure-panel-controls">
-      <span class="exposure-target"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> <span data-role="target"></span></span>
-      <button type="button" data-action="analyze"><i class="fa-solid fa-eye" aria-hidden="true"></i> Analisar</button>
-      <button type="button" data-action="test-blade" class="feature-button" hidden>
-        <i class="fa-solid fa-khanda" aria-hidden="true"></i> Lâmina de Teste · +1
-      </button>
-      <button type="button" data-action="sneak-attack" class="sneak-attack-button">
-        <i class="fa-solid fa-burst" aria-hidden="true"></i>
-        <span>Ataque Furtivo</span>
-        <small><span data-role="sneak-dice">1d6</span> · passivo · 0 Exposição</small>
-      </button>
-      <div data-role="technique-controls" class="technique-controls" hidden>
-        <label for="nova-era-technique-${actor.id}">Exploração Técnica</label>
-        <select id="nova-era-technique-${actor.id}" data-role="technique">
-          <option value="perfuracao-precisa">Perfuração Precisa</option>
-          <option value="quebra-ritmo">Quebra de Ritmo</option>
-          <option value="corte-passo">Corte de Passo</option>
-        </select>
-        <button type="button" data-action="technical-exploitation">
-          <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Usar Técnica · −2
-        </button>
+
+    <details class="ne-panel-group ne-group-movement" open>
+      <summary><i class="fa-solid fa-person-running"></i><span>Movimento & Defesa</span><i class="fa-solid fa-chevron-down"></i></summary>
+      <div class="ne-group-body ne-button-grid">
+        <button type="button" data-action="test-blade" class="feature-button" hidden><i class="fa-solid fa-khanda"></i><span>Lâmina de Teste</span><small>+1 Exposição</small></button>
+        <button type="button" data-action="blind-spot-hide" class="feature-button" hidden><i class="fa-solid fa-user-ninja"></i><span>Ponto Cego</span><small>Hide</small></button>
+        <button type="button" data-action="blind-spot-disengage" class="feature-button" hidden><i class="fa-solid fa-person-walking-arrow-right"></i><span>Ponto Cego</span><small>Desengajar</small></button>
+        <button type="button" data-action="calculated-evasion" class="feature-button" hidden><i class="fa-solid fa-shield-halved"></i><span>Evasão</span><small>Resolver</small></button>
       </div>
-      <button type="button" data-action="blind-spot-hide" class="feature-button" hidden>
-        <i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Ponto Cego · Hide
-      </button>
-      <button type="button" data-action="blind-spot-disengage" class="feature-button" hidden>
-        <i class="fa-solid fa-person-walking-arrow-right" aria-hidden="true"></i> Ponto Cego · Disengage
-      </button>
-      <button type="button" data-action="deciphered-strike" class="feature-button" hidden>
-        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Golpe Decifrado · +2d6
-      </button>
-      <button type="button" data-action="calculated-evasion" class="feature-button" hidden>
-        <i class="fa-solid fa-person-running" aria-hidden="true"></i> Resolver Evasão
-      </button>
-      <div data-role="reading-controls" class="rule-reminder" hidden>
-        <strong>Leitura Completa ativa</strong>
-        <small>Primeiro ataque do turno: +2 · Resistências provocadas pelo alvo: +2 · O alvo não recebe Vantagem contra você.</small>
-        <button type="button" data-action="reading-attack">Preparar ataque · +2</button>
-        <button type="button" data-action="reading-save">Preparar resistência · +2</button>
+    </details>
+
+    <details class="ne-panel-group ne-group-techniques" open>
+      <summary><i class="fa-solid fa-crosshairs"></i><span>Técnicas</span><i class="fa-solid fa-chevron-down"></i></summary>
+      <div class="ne-group-body">
+        <div data-role="technique-controls" class="technique-controls" hidden>
+          <label for="nova-era-technique-${actor.id}">Exploração Técnica · custo 2</label>
+          <select id="nova-era-technique-${actor.id}" data-role="technique">
+            <option value="perfuracao-precisa">Perfuração Precisa</option>
+            <option value="quebra-ritmo">Quebra de Ritmo</option>
+            <option value="corte-passo">Corte de Passo</option>
+          </select>
+          <button type="button" data-action="technical-exploitation"><i class="fa-solid fa-burst"></i> Executar Técnica</button>
+        </div>
+        <button type="button" data-action="deciphered-strike" class="feature-button" hidden><i class="fa-solid fa-crosshairs"></i> Golpe Decifrado · +2d6</button>
       </div>
-      <div data-role="anticipation-controls" class="advanced-controls" hidden>
-        <strong>Antecipação · Reação</strong>
-        <button type="button" data-action="anticipate-attack">Golpe · +4 CA</button>
-        <button type="button" data-action="anticipate-movement">Movimento · metade</button>
-        <button type="button" data-action="anticipate-technique">Técnica · +4 resistência</button>
+    </details>
+
+    <details class="ne-panel-group ne-group-reading">
+      <summary><i class="fa-solid fa-eye"></i><span>Leitura & Reações</span><i class="fa-solid fa-chevron-down"></i></summary>
+      <div class="ne-group-body">
+        <div data-role="reading-controls" class="rule-reminder" hidden>
+          <strong>Leitura Completa ativa</strong>
+          <small>Primeiro ataque +2 · Resistência +2 · sem Vantagem contra você</small>
+          <button type="button" data-action="reading-attack">Preparar ataque · +2</button>
+          <button type="button" data-action="reading-save">Preparar resistência · +2</button>
+        </div>
+        <div data-role="anticipation-controls" class="advanced-controls" hidden>
+          <strong>Antecipação · Reação</strong>
+          <button type="button" data-action="anticipate-attack">Golpe · +4 CA</button>
+          <button type="button" data-action="anticipate-movement">Movimento · metade</button>
+          <button type="button" data-action="anticipate-technique">Técnica · +4 resistência</button>
+        </div>
+        <button type="button" data-action="first-impression" class="feature-button" hidden>Primeira Impressão · Analisar</button>
+        <button type="button" data-action="noticed-error" class="feature-button" hidden>Nenhum Erro Passa Despercebido · +1</button>
+        <button type="button" data-action="fatal-flaw" class="feature-button danger" hidden>Falha Fatal · −3</button>
       </div>
-      <button type="button" data-action="first-impression" class="feature-button" hidden>Primeira Impressão · Analisar</button>
-      <button type="button" data-action="noticed-error" class="feature-button" hidden>Nenhum Erro Passa Despercebido · +1</button>
-      <button type="button" data-action="fatal-flaw" class="feature-button danger" hidden>Falha Fatal · −3</button>
-      <div data-role="ghost-controls" class="advanced-controls" hidden>
-        <strong>Fantasma</strong>
-        <button type="button" data-action="unreachable-presence">Presença Inalcançável</button>
-        <button type="button" data-action="fade">Desvanecer</button>
-        <button type="button" data-action="ghost-form">Forma Fantasma</button>
+    </details>
+
+    <details class="ne-panel-group ne-group-subclass" open>
+      <summary><i class="fa-solid fa-khanda"></i><span data-role="subclass-title">Subclasse</span><i class="fa-solid fa-chevron-down"></i></summary>
+      <div class="ne-group-body">
+        <div data-role="ghost-controls" class="advanced-controls" hidden>
+          <strong>Artes do Fantasma</strong>
+          <button type="button" data-action="unreachable-presence">Presença Inalcançável</button>
+          <button type="button" data-action="fade">Desvanecer</button>
+          <button type="button" data-action="ghost-form">Forma Fantasma</button>
+        </div>
+        <div data-role="assassin-controls" class="advanced-controls" hidden>
+          <strong>Artes do Assassino</strong>
+          <button type="button" data-action="mortal-breach-1">Brecha Mortal · −1</button>
+          <button type="button" data-action="mortal-breach-2">Brecha Mortal · −2</button>
+          <button type="button" data-action="mortal-patience">Paciência Mortal</button>
+        </div>
+        <div data-role="tracker-controls" class="advanced-controls" hidden>
+          <strong>Caçada · <span data-role="pressure">Pressão 0</span></strong>
+          <button type="button" data-action="choose-prey">Escolher Presa</button>
+          <button type="button" data-action="pressure-damage">Dano de Pressão</button>
+          <button type="button" data-action="persistent-hunt">Caçada Persistente</button>
+          <button type="button" data-action="maintain-pressure">Manter Pressão</button>
+          <button type="button" data-action="recycle-exposure">Leitura Incansável</button>
+          <button type="button" data-action="abandon-prey">Abandonar Presa</button>
+        </div>
       </div>
-      <div data-role="assassin-controls" class="advanced-controls" hidden>
-        <strong>Assassino</strong>
-        <button type="button" data-action="mortal-breach-1">Brecha Mortal · −1</button>
-        <button type="button" data-action="mortal-breach-2">Brecha Mortal · −2</button>
-        <button type="button" data-action="mortal-patience">Paciência Mortal</button>
-      </div>
-      <div data-role="tracker-controls" class="advanced-controls" hidden>
-        <strong>Rastreador · <span data-role="pressure">Pressão 0</span></strong>
-        <button type="button" data-action="choose-prey">Escolher Presa</button>
-        <button type="button" data-action="pressure-damage">Dano de Pressão</button>
-        <button type="button" data-action="persistent-hunt">Caçada Persistente</button>
-        <button type="button" data-action="maintain-pressure">Manter Pressão</button>
-        <button type="button" data-action="recycle-exposure">Leitura Incansável</button>
-        <button type="button" data-action="abandon-prey">Abandonar Presa</button>
-      </div>
-      <div class="passive-statuses">
-        <span data-role="calculated-evasion" hidden><i class="fa-solid fa-person-running"></i> Evasão</span>
-        <span data-role="complete-reading" hidden><i class="fa-solid fa-eye"></i> Leitura Completa</span>
-      </div>
-    </div>`;
+    </details>
+
+    <footer class="passive-statuses ne-status-bar">
+      <span data-role="calculated-evasion" hidden><i class="fa-solid fa-shield-halved"></i> Evasão</span>
+      <span data-role="complete-reading" hidden><i class="fa-solid fa-eye"></i> Leitura Completa</span>
+      <span data-role="reaction-status" class="ne-reaction-status"><i class="fa-solid fa-hourglass"></i> Reação não preparada</span>
+    </footer>`;
 
   panel.querySelector("[data-action='analyze']").addEventListener("click", async event => {
     event.preventDefault();
@@ -370,7 +425,7 @@ function expandSheet(app, root) {
   windowElement.dataset.novaEraExpanded = "true";
   const currentWidth = windowElement.getBoundingClientRect().width;
   const maximumWidth = Math.max(currentWidth, window.innerWidth - 24);
-  const width = Math.min(currentWidth + 190, maximumWidth);
+  const width = Math.min(currentWidth + 245, maximumWidth);
   if (width <= currentWidth + 10 || typeof app.setPosition !== "function") return;
   const currentLeft = app.position?.left ?? windowElement.getBoundingClientRect().left;
   const left = Math.max(12, currentLeft - ((width - currentWidth) / 2));
