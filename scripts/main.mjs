@@ -7,6 +7,8 @@ import { registerExposurePanel } from "./ui/exposure-panel.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
 import { registerSecondaryEffects, secondaryMacroApi } from "./features/secondary-effects.mjs";
+import { baseMacroApi } from "./features/macro-actions.mjs";
+import { registerSubclassAutomation, subclassMacroApi } from "./features/subclass-features.mjs";
 import { ensureRogueContent, installRogueContent } from "./content/rogue-installer.mjs";
 import { ensureRogueMacros, installRogueMacros } from "./content/macro-installer.mjs";
 
@@ -48,17 +50,36 @@ Hooks.once("ready", async () => {
       postCard: postExposureCard
     },
     content: { installRogue: installRogueContent, installRogueMacros },
-    macros: secondaryMacroApi
+    macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
 
-  await ensureRogueContent();
-  await ensureRogueMacros();
   registerAnalyzeAutomation();
   registerSneakAttackAutomation();
   registerExposurePanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();
+  registerSubclassAutomation();
+
+  // A interface e as automacoes precisam continuar disponiveis mesmo quando
+  // um documento antigo do mundo impede uma migracao de conteudo.
+  try {
+    await ensureRogueContent();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Ladino`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Ladino. O painel continua disponível; consulte o console para detalhes.");
+    }
+  }
+
+  try {
+    await ensureRogueMacros();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar as macros do Ladino`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar algumas macros do Ladino. Consulte o console para detalhes.");
+    }
+  }
 
   console.info(`${MODULE_ID} | API disponível em game.novaEra`);
 });

@@ -60,6 +60,6 @@ A versão 0.10.0 instala a pasta **Nova Era — Macros do Ladino** e adiciona ga
 
 A versão 0.11.0 alinha o módulo às regras consolidadas: Ataque Furtivo passivo e gratuito; Evasão padrão do D&D; Ponto Cego liberado ao gerar ou gastar Exposição, com escolha entre Hide e Disengage; Exploração Técnica com custo próprio de 2 Exposições; Brecha Mortal e Falha Fatal adaptadas ao novo núcleo. A migração também atualiza as descrições já presentes nas fichas.
 
-## Próximo marco
+A versão 0.12.0 amplia a pasta **Nova Era — Macros do Ladino** para 31 macros e adiciona controles de subclasse ao painel. O Fantasma recebe Presença Inalcançável, Desvanecer e Forma Fantasma; o Assassino recebe Brecha Mortal de 1 ou 2 Exposições e Paciência Mortal; o Rastreador recebe escolha de Presa, Pressão, dano de Pressão, Caçada Persistente, Pressão Ininterrupta, Leitura Incansável e abandono da caçada. A inicialização do painel também fica isolada das migrações, evitando que um item antigo esconda a interface inteira.
 
-Automatizar as subclasses sobre o núcleo consolidado.
+Movimentos que dependem do tabuleiro e decisões do Mestre são apresentados como resoluções guiadas no chat; dados, custos, efeitos, limites de turno, Descanso Longo, Exposição e Pressão são tratados pelo módulo.

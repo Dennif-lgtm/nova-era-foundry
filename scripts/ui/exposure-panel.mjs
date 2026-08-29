@@ -36,6 +36,20 @@ import {
   prepareReadingAttack,
   prepareReadingSave
 } from "../features/secondary-effects.mjs";
+import {
+  abandonPrey,
+  choosePrey,
+  maintainPressure,
+  prepareMortalPatience,
+  recycleExposure,
+  trackerState,
+  toggleGhostForm,
+  useFade,
+  useMortalBreach,
+  usePersistentHunt,
+  usePressureDamage,
+  useUnreachablePresence
+} from "../features/subclass-features.mjs";
 
 function isNovaEraRogue(actor) {
   return actor?.items?.some(item => item.type === "class" && item.system.identifier === "ladino-nova-era");
@@ -90,6 +104,9 @@ function refreshPanel(panel, actor) {
   const firstImpressionButton = panel.querySelector("[data-action='first-impression']");
   const noticedErrorButton = panel.querySelector("[data-action='noticed-error']");
   const fatalFlawButton = panel.querySelector("[data-action='fatal-flaw']");
+  const ghostControls = panel.querySelector("[data-role='ghost-controls']");
+  const assassinControls = panel.querySelector("[data-role='assassin-controls']");
+  const trackerControls = panel.querySelector("[data-role='tracker-controls']");
   targetLabel.textContent = target?.name ?? "Selecione exatamente um alvo";
   pipLabel.textContent = pips;
   pipLabel.setAttribute("aria-label", `${value} de ${EXPOSURE_MAX} Exposições`);
@@ -128,6 +145,14 @@ function refreshPanel(panel, actor) {
   noticedErrorButton.disabled = !canNoticeError(actor, target);
   fatalFlawButton.hidden = !hasPredator;
   fatalFlawButton.disabled = !canUseFatalFlaw(actor, target);
+  ghostControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "entre-olhares");
+  assassinControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "brecha-mortal");
+  trackerControls.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "instinto-caca");
+  const hunt = trackerState(actor, target);
+  panel.querySelector("[data-role='pressure']").textContent = `Pressão ${hunt.pressure}`;
+  panel.querySelector("[data-action='choose-prey']").disabled = !target || value < 1;
+  panel.querySelector("[data-action='pressure-damage']").disabled = !hunt.isPrey || hunt.pressure < 1;
+  panel.querySelector("[data-action='persistent-hunt']").disabled = !hunt.isPrey;
 }
 
 function createPanel(actor) {
@@ -188,6 +213,27 @@ function createPanel(actor) {
       <button type="button" data-action="first-impression" class="feature-button" hidden>Primeira Impressão · Analisar</button>
       <button type="button" data-action="noticed-error" class="feature-button" hidden>Nenhum Erro Passa Despercebido · +1</button>
       <button type="button" data-action="fatal-flaw" class="feature-button danger" hidden>Falha Fatal · −3</button>
+      <div data-role="ghost-controls" class="advanced-controls" hidden>
+        <strong>Fantasma</strong>
+        <button type="button" data-action="unreachable-presence">Presença Inalcançável</button>
+        <button type="button" data-action="fade">Desvanecer</button>
+        <button type="button" data-action="ghost-form">Forma Fantasma</button>
+      </div>
+      <div data-role="assassin-controls" class="advanced-controls" hidden>
+        <strong>Assassino</strong>
+        <button type="button" data-action="mortal-breach-1">Brecha Mortal · −1</button>
+        <button type="button" data-action="mortal-breach-2">Brecha Mortal · −2</button>
+        <button type="button" data-action="mortal-patience">Paciência Mortal</button>
+      </div>
+      <div data-role="tracker-controls" class="advanced-controls" hidden>
+        <strong>Rastreador · <span data-role="pressure">Pressão 0</span></strong>
+        <button type="button" data-action="choose-prey">Escolher Presa</button>
+        <button type="button" data-action="pressure-damage">Dano de Pressão</button>
+        <button type="button" data-action="persistent-hunt">Caçada Persistente</button>
+        <button type="button" data-action="maintain-pressure">Manter Pressão</button>
+        <button type="button" data-action="recycle-exposure">Leitura Incansável</button>
+        <button type="button" data-action="abandon-prey">Abandonar Presa</button>
+      </div>
       <div class="passive-statuses">
         <span data-role="calculated-evasion" hidden><i class="fa-solid fa-person-running"></i> Evasão</span>
         <span data-role="complete-reading" hidden><i class="fa-solid fa-eye"></i> Leitura Completa</span>
@@ -266,6 +312,54 @@ function createPanel(actor) {
     event.preventDefault();
     await useFatalFlaw(actor, selectedTarget());
   });
+  panel.querySelector("[data-action='unreachable-presence']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useUnreachablePresence(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='fade']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useFade(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='ghost-form']").addEventListener("click", async event => {
+    event.preventDefault();
+    await toggleGhostForm(actor);
+  });
+  panel.querySelector("[data-action='mortal-breach-1']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useMortalBreach(actor, selectedTarget(), 1);
+  });
+  panel.querySelector("[data-action='mortal-breach-2']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useMortalBreach(actor, selectedTarget(), 2);
+  });
+  panel.querySelector("[data-action='mortal-patience']").addEventListener("click", async event => {
+    event.preventDefault();
+    await prepareMortalPatience(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='choose-prey']").addEventListener("click", async event => {
+    event.preventDefault();
+    await choosePrey(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='pressure-damage']").addEventListener("click", async event => {
+    event.preventDefault();
+    await usePressureDamage(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='persistent-hunt']").addEventListener("click", async event => {
+    event.preventDefault();
+    await usePersistentHunt(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='maintain-pressure']").addEventListener("click", async event => {
+    event.preventDefault();
+    await maintainPressure(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='recycle-exposure']").addEventListener("click", async event => {
+    event.preventDefault();
+    await recycleExposure(actor, selectedTarget());
+  });
+  panel.querySelector("[data-action='abandon-prey']").addEventListener("click", async event => {
+    event.preventDefault();
+    await abandonPrey(actor);
+  });
   refreshPanel(panel, actor);
   return panel;
 }
@@ -324,4 +418,5 @@ export function registerExposurePanel() {
   Hooks.on("updateActor", refreshExposurePanels);
   Hooks.on("updateCombat", refreshExposurePanels);
   Hooks.on("novaEraBaseFeatureChanged", refreshExposurePanels);
+  Hooks.on("novaEraSubclassChanged", refreshExposurePanels);
 }
