@@ -100,16 +100,19 @@ async function executeSneakAttack(sourceActor, targetActor, techniqueId = null) 
     ui.notifications.warn("Nova Era: o Ataque Furtivo já foi usado neste turno.");
     return;
   }
-  const exposureCost = technique ? 2 : 1;
+  const exposureCost = technique ? 2 : 0;
   const exposureBefore = ExposureStore.get(targetActor, sourceActor);
-  if (exposureBefore < exposureCost) {
+  const requiredExposure = technique ? 2 : 1;
+  if (exposureBefore < requiredExposure) {
     ui.notifications.warn("Nova Era: o alvo não possui Exposição suficiente.");
     return;
   }
 
-  const consumed = await ExposureStore.consume(targetActor, sourceActor, exposureCost);
-  if (!consumed) return;
-  await sourceActor.unsetFlag(MODULE_ID, "pendingDaggerHit");
+  if (exposureCost > 0) {
+    const consumed = await ExposureStore.consume(targetActor, sourceActor, exposureCost);
+    if (!consumed) return;
+    await sourceActor.unsetFlag(MODULE_ID, "pendingDaggerHit");
+  }
   const current = turnKey();
   if (current) await sourceActor.setFlag(MODULE_ID, TURN_FLAG, current);
 
@@ -121,7 +124,7 @@ async function executeSneakAttack(sourceActor, targetActor, techniqueId = null) 
     value: ExposureStore.get(targetActor, sourceActor),
     reason: technique
       ? `Ataque Furtivo com ${technique.name}: 2 Exposições consumidas; ${technique.reason}`
-      : `Ataque Furtivo: 1 Exposição consumida para causar ${dice}d6 de dano adicional.`
+      : `Ataque Furtivo passivo: ${dice}d6 de dano adicional, sem consumir Exposição.`
   });
   const roll = await new Roll(`${dice}d6`, sourceActor.getRollData()).evaluate();
   await sourceActor.setFlag(MODULE_ID, "lastSneakAttack", {

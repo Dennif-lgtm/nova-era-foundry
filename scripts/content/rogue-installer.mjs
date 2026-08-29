@@ -1,7 +1,7 @@
 import { MODULE_ID } from "../constants.mjs";
 import { ROGUE_CLASS, ROGUE_FEATURES, ROGUE_SUBCLASSES } from "./rogue-data.mjs";
 
-const CONTENT_VERSION = "5";
+const CONTENT_VERSION = "6";
 const ANALYZE_ACTIVITY_ID = "novaeraAnalyze01";
 
 const CONTENT_ICONS = {
@@ -126,15 +126,23 @@ async function upsertItem(source) {
   return Item.create(source);
 }
 
-async function updateEmbeddedExposureItems(source) {
+async function updateEmbeddedContentItems(sources) {
+  const byKey = new Map(sources.map(source => [source.flags[MODULE_ID].contentKey, source]));
   for (const actor of game.actors) {
-    const items = actor.items.filter(item => item.getFlag(MODULE_ID, "contentKey") === "exposicao");
-    for (const item of items) {
-      await item.update({
-        "system.activities": source.system.activities,
+    const updates = actor.items.flatMap(item => {
+      const source = byKey.get(item.getFlag(MODULE_ID, "contentKey"));
+      if (!source) return [];
+      const update = {
+        _id: item.id,
+        name: source.name,
+        "system.description": source.system.description,
         [`flags.${MODULE_ID}.contentVersion`]: CONTENT_VERSION
-      });
-    }
+      };
+      if (source.img) update.img = source.img;
+      if (source.system.activities) update["system.activities"] = source.system.activities;
+      return [update];
+    });
+    if (updates.length) await actor.updateEmbeddedDocuments("Item", updates);
   }
 }
 
@@ -156,7 +164,7 @@ export async function installRogueContent({ notify = true } = {}) {
   for (const source of sources) results.push(await upsertItem(source));
   const itemsByKey = new Map(results.map(item => [item.getFlag(MODULE_ID, "contentKey"), item]));
   await configureAdvancement(itemsByKey);
-  await updateEmbeddedExposureItems(sources.find(source => source.flags[MODULE_ID].contentKey === "exposicao"));
+  await updateEmbeddedContentItems(sources);
   await updateEmbeddedIdentityIcons();
   await game.settings.set(MODULE_ID, "rogueContentVersion", CONTENT_VERSION);
   if (notify) ui.notifications.info(`Nova Era: Ladino completo instalado/atualizado (${results.length} itens).`);

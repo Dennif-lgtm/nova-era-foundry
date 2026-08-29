@@ -39,10 +39,8 @@ export function pendingTestBlade(actor, targetActor) {
 
 export function canUseBlindSpot(actor) {
   if (!hasFeature(actor, "ponto-cego")) return false;
-  const current = turnKey();
-  return !!current
-    && actor.getFlag(MODULE_ID, "exposureConsumedTurn") === current
-    && actor.getFlag(MODULE_ID, FLAGS.blindSpot) !== current;
+  const trigger = actor.getFlag(MODULE_ID, "pointBlindTrigger");
+  return !!trigger && actor.getFlag(MODULE_ID, FLAGS.blindSpot) !== trigger;
 }
 
 export function hasCalculatedEvasion(actor) {
@@ -87,16 +85,26 @@ export async function requestTestBlade(sourceActor, targetActor) {
   });
 }
 
-export async function useBlindSpot(actor) {
+export async function useBlindSpot(actor, option = "hide") {
   if (!canUseBlindSpot(actor)) {
-    ui.notifications.warn("Nova Era: Ponto Cego exige consumo de Exposição neste turno.");
-    return;
+    ui.notifications.warn("Nova Era: Ponto Cego exige gerar ou gastar Exposição e só pode ser usado uma vez por turno.");
+    return false;
   }
-  const current = turnKey();
-  await actor.setFlag(MODULE_ID, FLAGS.blindSpot, current);
-  await actor.rollSkill({ skill: "ste" });
-  ui.notifications.info("Nova Era: teste de Furtividade realizado com Ponto Cego. Confirme se existe uma condição válida para se esconder.");
+  if (!["hide", "disengage"].includes(option)) return false;
+  const trigger = actor.getFlag(MODULE_ID, "pointBlindTrigger");
+  await actor.setFlag(MODULE_ID, FLAGS.blindSpot, trigger);
+  if (option === "hide") {
+    await actor.rollSkill({ skill: "ste" });
+    ui.notifications.info("Nova Era: Hide realizado com Ponto Cego. Confirme se existe uma condição válida para se esconder.");
+  } else if (option === "disengage") {
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      content: `<section class="nova-era exposure-card"><header>Ponto Cego — Desengajar</header><p>${actor.name} Desengaja imediatamente, sem gastar uma ação.</p></section>`
+    });
+    ui.notifications.info("Nova Era: Disengage realizado com Ponto Cego, sem gastar ação.");
+  }
   Hooks.callAll("novaEraBaseFeatureChanged", { sourceActor: actor, feature: "blindSpot" });
+  return true;
 }
 
 export async function useDecipheredStrike(actor, targetActor) {

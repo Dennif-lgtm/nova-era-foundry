@@ -10,6 +10,12 @@ function sourceKey(sourceActor) {
   return sourceActor.uuid.replaceAll(".", "__");
 }
 
+function exposureTriggerKey() {
+  const combat = game.combat;
+  if (combat?.started) return `${combat.id}:${combat.round}:${combat.turn}`;
+  return `free:${foundry.utils.randomID()}`;
+}
+
 /**
  * Stores Exposure on the target Actor, separated by the observing rogue UUID.
  * This prevents two rogues from sharing the same reading of one creature.
@@ -35,7 +41,10 @@ export class ExposureStore {
   }
 
   static async add(targetActor, sourceActor, amount = 1) {
-    return this.set(targetActor, sourceActor, this.get(targetActor, sourceActor) + amount);
+    const current = this.get(targetActor, sourceActor);
+    const value = await this.set(targetActor, sourceActor, current + amount);
+    if (value > current) await sourceActor.setFlag(MODULE_ID, "pointBlindTrigger", exposureTriggerKey());
+    return value;
   }
 
   static async consume(targetActor, sourceActor, amount = 1) {
@@ -45,10 +54,9 @@ export class ExposureStore {
       return false;
     }
     await this.set(targetActor, sourceActor, current - amount);
-    const combat = game.combat;
-    if (combat?.started) {
-      await sourceActor.setFlag(MODULE_ID, "exposureConsumedTurn", `${combat.id}:${combat.round}:${combat.turn}`);
-    }
+    const trigger = exposureTriggerKey();
+    await sourceActor.setFlag(MODULE_ID, "pointBlindTrigger", trigger);
+    await sourceActor.setFlag(MODULE_ID, "exposureConsumedTurn", trigger);
     return true;
   }
 

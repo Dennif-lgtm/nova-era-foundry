@@ -50,18 +50,16 @@ Selecione exatamente um token como alvo e use a atividade **Analisar** dentro da
 
 O painel **Nova Era — Exposição** na ficha mostra o alvo selecionado, a quantidade atual de Exposição e um botão rápido para Analisar.
 
-Depois de confirmar um acerto, o botão **Ataque Furtivo** consome 1 Exposição e rola automaticamente o dano adequado ao nível do Ladino. Durante o combate, o botão permite apenas um uso por turno.
+Depois de confirmar um acerto contra uma criatura Exposta, o botão **Ataque Furtivo** rola automaticamente o dano adequado ao nível do Ladino. Ele é passivo, não consome Exposição e continua limitado a uma vez por turno.
 
 A partir do nível 6, **Exploração Técnica** permite consumir 2 Exposições no Ataque Furtivo e escolher Perfuração Precisa, Quebra de Ritmo ou Corte de Passo. Os efeitos temporários são acompanhados pelo módulo até o início do turno correspondente.
 
-A ficha do Ladino possui tema próprio em grafite, preto e dourado envelhecido. O painel também acompanha Lâmina de Teste, Ponto Cego, Evasão Calculada, Leitura Completa e Golpe Decifrado conforme essas características entram na progressão.
-
-A versão 0.9.0 acrescenta ícones próprios para o Ladino, Fantasma, Assassino e Rastreador. Também adiciona resolução guiada de Evasão Calculada, lembretes completos de Leitura Completa, as três opções de Antecipação e os controles de Primeira Impressão, Nenhum Erro Passa Despercebido e Falha Fatal. Quando o D&D5e não informa ao módulo a criatura que originou um efeito, o alvo selecionado funciona como confirmação explícita da origem.
-
-A versão 0.9.1 corrige a sequência de Falha Fatal para considerar como parte das 3 Exposições aquela já consumida pelo Ataque Furtivo. Também torna visualmente evidente quando os botões de Antecipação estão bloqueados.
+A ficha do Ladino possui tema próprio em grafite, preto e dourado envelhecido. O painel também acompanha Lâmina de Teste, Ponto Cego, Evasão, Leitura Completa e Golpe Decifrado conforme essas características entram na progressão.
 
 A versão 0.10.0 instala a pasta **Nova Era — Macros do Ladino** e adiciona gatilhos de efeitos secundários. Leitura Completa pode preparar +2 para o próximo ataque ou resistência; Antecipar Golpe aplica +4 CA temporário; Antecipar Técnica aplica +4 à próxima resistência; Antecipar Movimento registra a Reação. Os efeitos de ataque e resistência são removidos depois da rolagem correspondente.
 
+A versão 0.11.0 alinha o módulo às regras consolidadas: Ataque Furtivo passivo e gratuito; Evasão padrão do D&D; Ponto Cego liberado ao gerar ou gastar Exposição, com escolha entre Hide e Disengage; Exploração Técnica com custo próprio de 2 Exposições; Brecha Mortal e Falha Fatal adaptadas ao novo núcleo. A migração também atualiza as descrições já presentes nas fichas.
+
 ## Próximo marco
 
-Integrar o consumo de Exposição ao Ataque Furtivo.
+Automatizar as subclasses sobre o núcleo consolidado.

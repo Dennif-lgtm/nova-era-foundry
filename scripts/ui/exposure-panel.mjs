@@ -80,7 +80,7 @@ function refreshPanel(panel, actor) {
   const techniqueButton = panel.querySelector("[data-action='technical-exploitation']");
   const sneakUsed = sneakAttackUsedThisTurn(actor);
   const testBladeButton = panel.querySelector("[data-action='test-blade']");
-  const blindSpotButton = panel.querySelector("[data-action='blind-spot']");
+  const blindSpotButtons = [...panel.querySelectorAll("[data-action^='blind-spot-']")];
   const decipheredButton = panel.querySelector("[data-action='deciphered-strike']");
   const evasionStatus = panel.querySelector("[data-role='calculated-evasion']");
   const readingStatus = panel.querySelector("[data-role='complete-reading']");
@@ -98,19 +98,22 @@ function refreshPanel(panel, actor) {
   sneakButton.disabled = !target || value < 1 || sneakUsed;
   sneakButton.title = sneakUsed
     ? "Ataque Furtivo já usado neste turno"
-    : value < 1 ? "O alvo precisa possuir ao menos 1 Exposição" : "Consome 1 Exposição";
+    : value < 1 ? "O alvo precisa possuir ao menos 1 Exposição" : "Passivo: não consome Exposição";
   techniqueControls.hidden = !hasTechnicalExploitation(actor);
   techniqueButton.disabled = !target || value < 2 || sneakUsed;
   techniqueButton.title = sneakUsed
     ? "Ataque Furtivo já usado neste turno"
     : value < 2 ? "O alvo precisa possuir ao menos 2 Exposições" : "Consome 2 Exposições";
   testBladeButton.hidden = !pendingTestBlade(actor, target);
-  blindSpotButton.hidden = !actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "ponto-cego");
-  blindSpotButton.disabled = !canUseBlindSpot(actor);
+  const hasBlindSpot = actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === "ponto-cego");
+  for (const button of blindSpotButtons) {
+    button.hidden = !hasBlindSpot;
+    button.disabled = !canUseBlindSpot(actor);
+  }
   decipheredButton.hidden = !hasDecipheredStrike(actor);
   decipheredButton.disabled = !canUseDecipheredStrike(actor, target);
   evasionStatus.hidden = !hasCalculatedEvasion(actor);
-  evasionStatus.classList.toggle("active", !!target && value >= 1);
+  evasionStatus.classList.toggle("active", hasCalculatedEvasion(actor));
   readingStatus.hidden = !hasCompleteReading(actor);
   readingStatus.classList.toggle("active", completeReadingState(actor, target));
   evasionButton.hidden = !hasCalculatedEvasion(actor);
@@ -145,7 +148,7 @@ function createPanel(actor) {
       <button type="button" data-action="sneak-attack" class="sneak-attack-button">
         <i class="fa-solid fa-burst" aria-hidden="true"></i>
         <span>Ataque Furtivo</span>
-        <small><span data-role="sneak-dice">1d6</span> · −1 Exposição</small>
+        <small><span data-role="sneak-dice">1d6</span> · passivo · 0 Exposição</small>
       </button>
       <div data-role="technique-controls" class="technique-controls" hidden>
         <label for="nova-era-technique-${actor.id}">Exploração Técnica</label>
@@ -158,14 +161,17 @@ function createPanel(actor) {
           <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Usar Técnica · −2
         </button>
       </div>
-      <button type="button" data-action="blind-spot" class="feature-button" hidden>
+      <button type="button" data-action="blind-spot-hide" class="feature-button" hidden>
         <i class="fa-solid fa-user-ninja" aria-hidden="true"></i> Ponto Cego · Hide
+      </button>
+      <button type="button" data-action="blind-spot-disengage" class="feature-button" hidden>
+        <i class="fa-solid fa-person-walking-arrow-right" aria-hidden="true"></i> Ponto Cego · Disengage
       </button>
       <button type="button" data-action="deciphered-strike" class="feature-button" hidden>
         <i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Golpe Decifrado · +2d6
       </button>
       <button type="button" data-action="calculated-evasion" class="feature-button" hidden>
-        <i class="fa-solid fa-person-running" aria-hidden="true"></i> Resolver Evasão Calculada
+        <i class="fa-solid fa-person-running" aria-hidden="true"></i> Resolver Evasão
       </button>
       <div data-role="reading-controls" class="rule-reminder" hidden>
         <strong>Leitura Completa ativa</strong>
@@ -183,7 +189,7 @@ function createPanel(actor) {
       <button type="button" data-action="noticed-error" class="feature-button" hidden>Nenhum Erro Passa Despercebido · +1</button>
       <button type="button" data-action="fatal-flaw" class="feature-button danger" hidden>Falha Fatal · −3</button>
       <div class="passive-statuses">
-        <span data-role="calculated-evasion" hidden><i class="fa-solid fa-person-running"></i> Evasão Calculada</span>
+        <span data-role="calculated-evasion" hidden><i class="fa-solid fa-person-running"></i> Evasão</span>
         <span data-role="complete-reading" hidden><i class="fa-solid fa-eye"></i> Leitura Completa</span>
       </div>
     </div>`;
@@ -210,9 +216,13 @@ function createPanel(actor) {
     event.preventDefault();
     await requestTestBlade(actor, selectedTarget());
   });
-  panel.querySelector("[data-action='blind-spot']").addEventListener("click", async event => {
+  panel.querySelector("[data-action='blind-spot-hide']").addEventListener("click", async event => {
     event.preventDefault();
-    await useBlindSpot(actor);
+    await useBlindSpot(actor, "hide");
+  });
+  panel.querySelector("[data-action='blind-spot-disengage']").addEventListener("click", async event => {
+    event.preventDefault();
+    await useBlindSpot(actor, "disengage");
   });
   panel.querySelector("[data-action='deciphered-strike']").addEventListener("click", async event => {
     event.preventDefault();

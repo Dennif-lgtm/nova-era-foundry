@@ -3,7 +3,6 @@ import { ExposureStore } from "../exposure/exposure-store.mjs";
 import { postExposureCard } from "../exposure/exposure-chat.mjs";
 
 const FLAGS = {
-  evasion: "calculatedEvasionTurn",
   anticipation: "anticipationRound",
   firstImpression: "firstImpressionCombat",
   noticedError: "noticedErrorRound",
@@ -50,22 +49,17 @@ async function sendRuleCard(actor, title, body) {
 }
 
 export function canUseCalculatedEvasion(actor, targetActor) {
-  if (!hasFeature(actor, "evasao-calculada") || !targetActor) return false;
-  if (ExposureStore.get(targetActor, actor) < 1) return false;
-  const current = turnKey();
-  return !current || actor.getFlag(MODULE_ID, FLAGS.evasion) !== current;
+  return hasFeature(actor, "evasao-calculada");
 }
 
 export async function useCalculatedEvasion(actor, targetActor) {
   if (!canUseCalculatedEvasion(actor, targetActor)) {
-    ui.notifications.warn("Nova Era: Evasão Calculada exige uma criatura selecionada com ao menos 1 Exposição.");
+    ui.notifications.warn("Nova Era: o Ladino ainda não possui Evasão.");
     return;
   }
   const roll = await rollDexteritySave(actor);
   if (!roll) return;
-  const current = turnKey();
-  if (current) await actor.setFlag(MODULE_ID, FLAGS.evasion, current);
-  await sendRuleCard(actor, "Evasão Calculada", `Resultado do teste de Destreza: <strong>${roll.total}</strong>. Se o efeito foi originado diretamente por ${targetActor.name}, o Ladino sofre <strong>0 de dano em sucesso</strong> ou <strong>metade em falha</strong>. A Exposição não é consumida.`);
+  await sendRuleCard(actor, "Evasão", `Resultado do teste de Destreza: <strong>${roll.total}</strong>. Contra um efeito que normalmente causaria metade do dano em um sucesso, o Ladino sofre <strong>0 de dano em sucesso</strong> ou <strong>metade em falha</strong>. Evasão não depende de Exposição.`);
   Hooks.callAll("novaEraBaseFeatureChanged", { sourceActor: actor, targetActor, feature: "calculatedEvasion" });
 }
 
@@ -147,6 +141,7 @@ export function canUseFatalFlaw(actor, targetActor) {
     && lastSneakAttack?.exposureBefore === 3
     && lastSneakAttack?.turn === turnKey()
     && lastSneakAttack?.targetActorUuid === targetActor.uuid
+    && lastSneakAttack?.exposureCost === 0
     && !actor.getFlag(MODULE_ID, FLAGS.fatalFlaw);
 }
 
@@ -170,11 +165,12 @@ async function executeTargetChange(sourceActor, targetActor, type, data = {}) {
       const consumed = await ExposureStore.consume(targetActor, sourceActor, remainingExposure);
       if (!consumed) return;
     }
+    await sourceActor.unsetFlag(MODULE_ID, "pendingDaggerHit");
     await sourceActor.setFlag(MODULE_ID, FLAGS.fatalFlaw, true);
     const sneakAttack = sourceActor.getFlag(MODULE_ID, "lastSneakAttack");
     const maximum = Number(sneakAttack?.dice ?? 0) * 6;
     const adjustment = Math.max(0, maximum - Number(sneakAttack?.total ?? 0));
-    await sendRuleCard(sourceActor, "Falha Fatal", `As 3 Exposições de ${targetActor.name}, incluindo a usada pelo Ataque Furtivo, foram consumidas. O Ataque Furtivo passa para <strong>${maximum} de dano</strong>; acrescente <strong>${adjustment}</strong> ao resultado já rolado. Aplique também uma Técnica de Exploração sem custo adicional.`);
+    await sendRuleCard(sourceActor, "Falha Fatal", `As 3 Exposições de ${targetActor.name} foram consumidas. O Ataque Furtivo passa para <strong>${maximum} de dano</strong>; acrescente <strong>${adjustment}</strong> ao resultado já rolado. Aplique também uma Técnica de Exploração sem custo adicional.`);
   }
   Hooks.callAll("novaEraBaseFeatureChanged", { sourceActor, targetActor, feature: type });
 }
