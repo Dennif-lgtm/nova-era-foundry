@@ -24,6 +24,12 @@ Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automat
 - Acrescenta um medalhão menor com o ícone da subclasse ativa.
 - Alterna automaticamente entre Fantasma, Assassino e Rastreador.
 
+### v0.13.4 — Analisar para jogadores
+
+- Habilita oficialmente o canal de comunicação do módulo no Foundry.
+- Permite que o Mestre aplique a Exposição solicitada por um jogador sem permissão sobre o alvo.
+- Mostra um aviso quando a ação exige um Mestre conectado.
+
 ## Instalação pelo Foundry
 
 Na tela **Instalar Módulo**, cole no campo **URL do Manifesto**:

@@ -55,6 +55,10 @@ async function analyze(activity) {
     if (game.user.isGM || targetActor.isOwner) {
       await applySuccessfulAnalysis(sourceActor, targetActor, dc, roll.total);
     } else {
+      if (!game.users.activeGM) {
+        ui.notifications.error("Nova Era: é necessário um Mestre conectado para aplicar Exposição a este alvo.");
+        return;
+      }
       game.socket.emit(`module.${MODULE_ID}`, {
         type: "successfulAnalysis",
         sourceActorUuid: sourceActor.uuid,
@@ -86,5 +90,10 @@ export function registerAnalyzeAutomation() {
   Hooks.on("dnd5e.postUseActivity", activity => {
     if (isAnalyzeActivity(activity)) void analyze(activity);
   });
-  game.socket.on(`module.${MODULE_ID}`, payload => void handleSocket(payload));
+  game.socket.on(`module.${MODULE_ID}`, payload => {
+    void handleSocket(payload).catch(error => {
+      console.error("Nova Era | Falha ao processar Analisar pelo socket.", error);
+      if (game.user.isGM) ui.notifications.error("Nova Era: não foi possível aplicar a Exposição solicitada pelo jogador.");
+    });
+  });
 }
