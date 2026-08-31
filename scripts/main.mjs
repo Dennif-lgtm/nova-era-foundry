@@ -11,6 +11,7 @@ import { baseMacroApi } from "./features/macro-actions.mjs";
 import { registerSubclassAutomation, subclassMacroApi } from "./features/subclass-features.mjs";
 import { ensureRogueContent, installRogueContent } from "./content/rogue-installer.mjs";
 import { ensureRogueMacros, installRogueMacros } from "./content/macro-installer.mjs";
+import { ensureChronomancerContent, installChronomancerContent } from "./content/chronomancer-installer.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -37,6 +38,13 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+
+  game.settings.register(MODULE_ID, "chronomancerContentVersion", {
+    scope: "world",
+    config: false,
+    type: String,
+    default: ""
+  });
 });
 
 Hooks.once("ready", async () => {
@@ -49,7 +57,11 @@ Hooks.once("ready", async () => {
       clearAll: ExposureStore.clearAll.bind(ExposureStore),
       postCard: postExposureCard
     },
-    content: { installRogue: installRogueContent, installRogueMacros },
+    content: {
+      installRogue: installRogueContent,
+      installRogueMacros,
+      installChronomancer: installChronomancerContent
+    },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
 
@@ -78,6 +90,15 @@ Hooks.once("ready", async () => {
     console.error(`${MODULE_ID} | Falha ao atualizar as macros do Ladino`, error);
     if (game.user.isGM) {
       ui.notifications.error("Nova Era: não foi possível atualizar algumas macros do Ladino. Consulte o console para detalhes.");
+    }
+  }
+
+  try {
+    await ensureChronomancerContent();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Cronomante`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Cronomante. Consulte o console para detalhes.");
     }
   }
 

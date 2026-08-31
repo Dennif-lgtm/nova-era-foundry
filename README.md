@@ -9,6 +9,16 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.14.0 — Cronomante completo
+
+- Instala a classe Cronomante — Nova Era com progressão do nível 1 ao 20.
+- Configura d8, conjuração completa por Inteligência e escolha de Tratado no nível 3.
+- Adiciona os Tratados da Precedência, das Possibilidades e da Continuidade.
+- Concede automaticamente as características de Tratado nos níveis 3, 10, 15 e 18.
+- Instala as 28 Intervenções da Biblioteca como itens individuais.
+- Inclui Pontos Temporais, Rastros, Dez Confluências, Cinco Leis e regras completas das Intervenções.
+- Expõe a instalação manual em `game.novaEra.content.installChronomancer()`.
+
 ### v0.13.2 — Painel ilustrado
 
 - Reconstrói o painel conforme a referência visual aprovada de Nova Era.
