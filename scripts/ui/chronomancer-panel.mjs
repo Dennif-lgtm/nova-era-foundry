@@ -101,7 +101,11 @@ async function activateIntervention(actor, entry) {
 
 function interventionButtons(entries) {
   return entries.slice(0, 12).map((entry, index) => {
-    const angle = index * (360 / Math.max(entries.length, 1));
+    const count = Math.min(entries.length, 12);
+    let angle = 0;
+    if (count === 2) angle = index === 0 ? -42 : 42;
+    else if (count === 3) angle = -58 + (index * 58);
+    else if (count > 3) angle = -132 + (index * (264 / (count - 1)));
     return `<button type="button" class="ne-crono-intervention" style="--angle:${angle}deg" data-item-id="${entry.item.id}" title="${entry.item.name} — ${entry.cost} PT">
       <i class="fa-solid ${ICONS[index % ICONS.length]}"></i><span>${entry.item.name}</span><small>${entry.cost} PT</small>
     </button>`;
@@ -115,6 +119,7 @@ function createPanel(actor) {
   panel.dataset.actorUuid = actor.uuid;
   panel.innerHTML = `
     <div class="ne-crono-clock">
+      <div class="ne-crono-stars" aria-hidden="true"></div>
       <header class="ne-crono-title"><i class="fa-solid fa-clock"></i><strong>Nova Era — Cronomante</strong></header>
       <div class="ne-crono-category-ring" aria-hidden="true">
         <span>Fundamentos</span><span>Disciplinas</span><span>Grandes Teorias</span><span>Paradoxos</span>

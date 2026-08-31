@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.15.1 — Acabamento do Relógio
+
+- Reduz o painel do Cronomante e melhora sua proporção em relação à ficha.
+- Reposiciona categorias para evitar textos cortados.
+- Distribui poucas Intervenções de forma simétrica no arco superior.
+- Reforça a leitura do núcleo, do Tratado e da Reação Temporal.
+
 ### v0.15.0 — Relógio do Cronomante
 
 - Painel circular próprio para personagens da classe Cronomante — Nova Era.

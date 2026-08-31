@@ -1047,3 +1047,98 @@
   .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-chronomancer-panel { grid-template-columns: var(--dnd5e-sheet-sidebar-width) minmax(0,1fr); }
   .dnd5e2.sheet.actor.character .main-content > .nova-era.chronomancer-panel { grid-column: 1 / -1; }
 }
+
+/* v0.15.1 — proporção e acabamento do mostrador. */
+.dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-chronomancer-panel {
+  grid-template-columns: minmax(438px, 452px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+}
+
+.nova-era.chronomancer-panel {
+  width: 444px;
+  min-width: 438px;
+  height: 444px;
+  padding: 3px;
+  overflow: visible;
+}
+
+.nova-era .ne-crono-clock {
+  transform: scale(.84);
+  transform-origin: top left;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 17%, rgba(100,151,255,.24) 17.4% 17.8%, transparent 18.2% 28%, rgba(174,119,255,.2) 28.4% 28.9%, transparent 29.4% 40.6%, rgba(224,190,117,.28) 41% 41.5%, transparent 42%),
+    repeating-conic-gradient(from -1deg, rgba(229,199,137,.72) 0 .6deg, transparent .8deg 30deg),
+    radial-gradient(circle at 50% 45%, #162541 0, #0b1424 38%, #060a12 73%, #030508 100%);
+  box-shadow: 0 0 0 3px #080a0d, 0 0 0 6px #6d5229, 0 0 0 8px #090b0e, 0 14px 34px #000, inset 0 0 58px #000;
+}
+
+.nova-era .ne-crono-stars {
+  position: absolute;
+  z-index: 1;
+  inset: 68px;
+  border: 1px solid rgba(121,162,231,.22);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 29%, #d9edff 0 1px, transparent 2px),
+    radial-gradient(circle at 77% 22%, #ae88ff 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 67%, #d9edff 0 1px, transparent 2px),
+    radial-gradient(circle at 27% 79%, #ae88ff 0 1px, transparent 2px);
+  box-shadow: inset 0 0 30px rgba(80,115,208,.13);
+}
+
+.nova-era .ne-crono-clock::before { inset: 10px; border-width: 2px; }
+.nova-era .ne-crono-clock::after { inset: 104px; border-color: rgba(143,184,255,.5); }
+
+.nova-era .ne-crono-title {
+  top: 18px;
+  left: 78px;
+  width: 364px;
+  min-height: 46px;
+  border-color: #bd9451;
+  background: linear-gradient(90deg,#080d16,#1d2949 48%,#10152a 70%,#080d16);
+  box-shadow: inset 0 0 0 2px #05070b, 0 0 13px rgba(94,115,213,.25);
+}
+.nova-era .ne-crono-title strong { font-size: 20px; }
+
+.nova-era .ne-crono-category-ring span { z-index: 4; font-size: 12px; text-shadow: 0 2px 3px #000; }
+.nova-era .ne-crono-category-ring span:nth-child(1) { top: 107px; left: 79px; transform: rotate(-42deg); }
+.nova-era .ne-crono-category-ring span:nth-child(2) { top: 107px; right: 83px; transform: rotate(42deg); }
+.nova-era .ne-crono-category-ring span:nth-child(3) { bottom: 105px; left: 59px; transform: rotate(39deg); }
+.nova-era .ne-crono-category-ring span:nth-child(4) { right: 76px; bottom: 101px; transform: rotate(-39deg); }
+
+.nova-era .ne-crono-intervention {
+  width: 66px;
+  height: 66px;
+  margin: -33px;
+  transform: rotate(var(--angle)) translateY(-188px) rotate(calc(-1 * var(--angle)));
+  border: 2px solid #9d7b42;
+  background: radial-gradient(circle at 50% 36%,#263e69,#10182a 54%,#070a10 78%);
+  box-shadow: 0 0 0 2px #05070a, 0 0 12px rgba(91,135,255,.42), inset 0 0 12px #000;
+}
+.nova-era .ne-crono-intervention:hover { transform: rotate(var(--angle)) translateY(-188px) rotate(calc(-1 * var(--angle))) scale(1.1); }
+.nova-era .ne-crono-intervention i { font-size: 19px; }
+.nova-era .ne-crono-intervention span { width: 57px; font-size: 8px; }
+.nova-era .ne-crono-intervention small { font-size: 8px; }
+
+.nova-era .ne-crono-resource-ring { top: 50%; }
+.nova-era .ne-crono-core {
+  border-color: #d0aa61;
+  background: radial-gradient(circle,#213d6f 0,#0d1830 48%,#050912 78%);
+  box-shadow: 0 0 28px rgba(86,145,255,.55), inset 0 0 20px #000;
+}
+.nova-era .ne-crono-core small { font-size: 11px; }
+.nova-era .ne-crono-core strong { font-size: 35px; }
+
+.nova-era .ne-crono-confluence { top: 137px; padding: 5px 12px; }
+.nova-era .ne-crono-confluence small { font-size: 10px; }
+.nova-era .ne-crono-trail { top: 342px; left: 118px; width: 284px; padding: 6px 10px; }
+.nova-era .ne-crono-trail > span { font-size: 10px; }
+.nova-era .ne-crono-trail button { width: 30px; height: 30px; }
+
+.nova-era .ne-crono-clock footer { bottom: 20px; left: 91px; width: 338px; gap: 5px; }
+.nova-era .ne-crono-clock footer button { min-height: 35px; border-color: #a17b3e; font-size: 11px; }
+.nova-era .ne-crono-clock footer .ne-crono-reaction.active { background: linear-gradient(90deg,#09111f,#1c3157,#09111f); }
+
+@media (max-width: 1160px) {
+  .dnd5e2.sheet.actor.character .main-content > .nova-era.chronomancer-panel { width: 444px; min-width: 438px; }
+}
