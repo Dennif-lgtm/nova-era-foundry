@@ -9,6 +9,16 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.17.0 — Relógio Interativo
+
+- O anel externo gira entre as quatro categorias de Intervenções.
+- O anel interno gira apenas entre as Intervenções conhecidas pelo personagem.
+- Clique, roda do mouse, arraste e setas oferecem maneiras diferentes de navegar.
+- O núcleo mostra a Intervenção selecionada sem gastar recursos.
+- Uma área de comando apresenta custo, ação, Leis, descrição e previsão de Confluência antes da execução.
+- A execução valida PT e disponibilidade da Reação Temporal.
+- Inclui uma lista compacta alternativa para acessibilidade e seleção rápida.
+
 ### v0.16.0 — Relógio ilustrado
 
 - Substitui o mostrador desenhado somente em CSS por uma moldura artística própria.
