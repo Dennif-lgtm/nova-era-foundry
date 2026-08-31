@@ -5,6 +5,7 @@ import { registerAnalyzeAutomation } from "./exposure/analyze.mjs";
 import { registerSneakAttackAutomation } from "./exposure/sneak-attack.mjs";
 import { registerExposurePanel } from "./ui/exposure-panel.mjs";
 import { registerChronomancerPanel } from "./ui/chronomancer-panel.mjs";
+import { registerChronomancerLibraryAndPrompts } from "./chronomancer/library-and-prompts.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
 import { registerSecondaryEffects, secondaryMacroApi } from "./features/secondary-effects.mjs";
@@ -70,6 +71,7 @@ Hooks.once("ready", async () => {
   registerSneakAttackAutomation();
   registerExposurePanel();
   registerChronomancerPanel();
+  registerChronomancerLibraryAndPrompts();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();

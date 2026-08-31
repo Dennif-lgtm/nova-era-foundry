@@ -9,6 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.18.0 — Biblioteca e Fraturas Reativas
+
+- Abre uma janela de escolha da Biblioteca Pessoal quando o Cronomante conquista uma nova Intervenção.
+- Respeita a progressão: Fundamentos nos níveis 1, 2, 5 e 9; Disciplina no 11; Grande Teoria no 17; Paradoxo no 20.
+- Exclui conhecimentos já registrados e adiciona a escolha diretamente à ficha.
+- Reconhece escolhas pendentes em fichas antigas sem duplicar Intervenções.
+- Oferece janelas contextuais para Acelerar, Reflexos Temporais, Reverberação, Suspensão Temporal, Lacuna Temporal, Linha Restaurada, Linha Alternativa e Horizonte Congelado.
+- Reconhece Fratura Crítica em acertos críticos e quando uma criatura chega a 0 PV, respeitando o limite de uma recuperação por turno.
+- Verifica dono da ficha, alcance, PT e Reação antes de oferecer uma habilidade.
+- Adiciona versos originais de Cronomancia ao chat, variando conforme a Lei temporal utilizada.
+
 ### v0.17.0 — Relógio Interativo
 
 - O anel externo gira entre as quatro categorias de Intervenções.

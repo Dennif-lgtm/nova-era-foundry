@@ -5,6 +5,38 @@ const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
 const CATEGORY_LABELS = ["Fundamentos", "Disciplinas", "Grandes Teorias", "Paradoxos"];
 const LAW_ICONS = ["fa-bolt", "fa-hourglass-half", "fa-repeat", "fa-shield-halved", "fa-burst"];
 const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
+const TEMPORAL_VERSES = {
+  "Precedência": [
+    "Antes do gesto, a intenção. Antes do instante, minha vontade.",
+    "O futuro ainda não chegou, mas já conhece o meu nome.",
+    "Dou ao próximo segundo a ordem de nascer primeiro."
+  ],
+  "Atraso": [
+    "Que o instante hesite e a consequência perca o caminho.",
+    "Entre a causa e o efeito, imponho um horizonte sem fim.",
+    "O tempo avança para todos — menos para aquilo que eu detenho."
+  ],
+  "Repetição": [
+    "Se o destino falou uma vez, que responda novamente.",
+    "Nenhum momento desaparece; alguns apenas esperam ser chamados.",
+    "O eco recorda a possibilidade que o mundo tentou esquecer."
+  ],
+  "Continuidade": [
+    "Permaneça. Ainda não concedi ao fim o direito de chegar.",
+    "Enquanto minha memória sustentar o instante, nada se desfaz.",
+    "A linha não se rompe onde minha vontade a mantém inteira."
+  ],
+  "Ruptura": [
+    "Toda sequência possui uma fratura; eu apenas escolho onde tocar.",
+    "Quebre-se o elo, e que a consequência jamais encontre sua causa.",
+    "O inevitável é somente aquilo que ninguém ousou interromper."
+  ],
+  "Paradoxo": [
+    "Hoje recordarei o amanhã que nunca aconteceu.",
+    "Sou a testemunha de um instante que o próprio tempo negou.",
+    "Quando todas as possibilidades são impossíveis, escolho a que permanece."
+  ]
+};
 
 function isNovaEraChronomancer(actor) {
   return actor?.items?.some(item => item.type === "class" && item.system.identifier === "cronomante-nova-era");
@@ -22,8 +54,8 @@ function temporalMaximum(actor) {
   return Math.max(1, Number(actor.system?.attributes?.prof ?? 0) + Number(actor.system?.abilities?.int?.mod ?? 0));
 }
 
-function interventionData(item) {
-  const description = item.system?.description?.value ?? "";
+export function chronomancerInterventionData(item) {
+  const description = item.system?.description?.value ?? item.description ?? "";
   const heading = description.match(/<strong>(.*?)<\/strong>/i)?.[1] ?? "";
   const fields = heading.split("•").map(part => part.trim());
   const cost = Number(fields.find(part => /\d+\s*PT/i.test(part))?.match(/\d+/)?.[0] ?? 0);
@@ -37,7 +69,7 @@ function interventionData(item) {
 function actorInterventions(actor) {
   return actor.items
     .filter(item => String(item.getFlag(MODULE_ID, "contentKey") ?? "").startsWith("crono-intervencao-"))
-    .map(item => ({ item, ...interventionData(item) }))
+    .map(item => ({ item, ...chronomancerInterventionData(item) }))
     .sort((left, right) => left.item.name.localeCompare(right.item.name, "pt-BR"));
 }
 
@@ -45,7 +77,7 @@ function treatise(actor) {
   return actor.items.find(item => item.type === "subclass" && item.system.classIdentifier === "cronomante-nova-era") ?? null;
 }
 
-function state(actor) {
+export function chronomancerState(actor) {
   const maximum = temporalMaximum(actor);
   const stored = actor.getFlag(MODULE_ID, "chronomancerState") ?? {};
   return {
@@ -57,9 +89,9 @@ function state(actor) {
   };
 }
 
-async function updateState(actor, changes) {
+export async function updateChronomancerState(actor, changes) {
   if (!actor.isOwner) return ui.notifications.warn("Nova Era: você não pode alterar os recursos desta ficha.");
-  const current = state(actor);
+  const current = chronomancerState(actor);
   const next = { ...current, ...changes };
   next.points = Math.max(0, Math.min(current.maximum, Number(next.points)));
   next.confluences = Math.max(0, Number(next.confluences));
@@ -82,10 +114,22 @@ function willConverge(entry, currentTrail) {
   return Boolean(currentTrail && law && law !== currentTrail);
 }
 
+function temporalVerse(item, data) {
+  const theme = data.category === "Paradoxo" ? "Paradoxo" : data.laws?.[0] ?? "Continuidade";
+  const verses = TEMPORAL_VERSES[theme] ?? TEMPORAL_VERSES.Continuidade;
+  const seed = [...String(item.id ?? item.name ?? "tempo")].reduce((total, character) => total + character.charCodeAt(0), 0);
+  return verses[seed % verses.length];
+}
+
 async function postIntervention(actor, item, data) {
+  const verse = temporalVerse(item, data);
   if (typeof item.use === "function") {
     try {
       await item.use();
+      await ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor }),
+        content: `<section class="nova-era chronomancer-chat ne-temporal-verse"><i class="fa-solid fa-hourglass-half"></i><blockquote>“${verse}”</blockquote><small>— ${actor.name}, ao fraturar o instante</small></section>`
+      });
       return;
     } catch (error) {
       console.debug(`${MODULE_ID} | Item.use indisponível para ${item.name}`, error);
@@ -93,18 +137,18 @@ async function postIntervention(actor, item, data) {
   }
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<section class="nova-era chronomancer-chat"><h2>${item.name}</h2><p><strong>${data.cost} PT • ${data.execution}</strong></p>${item.system?.description?.value ?? ""}</section>`
+    content: `<section class="nova-era chronomancer-chat"><h2>${item.name}</h2><blockquote class="ne-chronomancy-verse">“${verse}”</blockquote><p><strong>${data.cost} PT • ${data.execution}</strong></p>${item.system?.description?.value ?? ""}</section>`
   });
 }
 
-async function activateIntervention(actor, entry) {
-  const current = state(actor);
+export async function activateChronomancerIntervention(actor, entry) {
+  const current = chronomancerState(actor);
   if (!entry) return;
   if (current.points < entry.cost) return ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${entry.cost} PT.`);
   if (/Reação/i.test(entry.execution) && !current.reaction) return ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada.");
   const law = generatedLaw(entry, current.trail);
   const confluence = willConverge(entry, current.trail);
-  await updateState(actor, {
+  await updateChronomancerState(actor, {
     points: current.points - entry.cost,
     trail: law || current.trail,
     confluences: current.confluences + (confluence ? 1 : 0),
@@ -146,7 +190,7 @@ function lawBadges(entry) {
 }
 
 function renderSelection(panel, actor, entry = selectedEntry(actor, panel)) {
-  const current = state(actor);
+  const current = chronomancerState(actor);
   const reactionBlocked = Boolean(entry && /Reação/i.test(entry.execution) && !current.reaction);
   const insufficient = Boolean(entry && current.points < entry.cost);
   const execute = panel.querySelector("[data-action='execute-intervention']");
@@ -222,7 +266,7 @@ function createPanel(actor) {
     const button = event.target.closest("button");
     if (!button) return;
     event.preventDefault();
-    const current = state(actor);
+    const current = chronomancerState(actor);
     const action = button.dataset.action;
     if (action === "category") { panel.dataset.categoryIndex = button.dataset.categoryIndex; delete panel.dataset.selectedItemId; renderSelector(panel, actor); }
     else if (action === "category-prev") rotateCategory(panel, actor, -1);
@@ -230,14 +274,14 @@ function createPanel(actor) {
     else if (action === "intervention-prev") rotateIntervention(panel, actor, -1);
     else if (action === "intervention-next") rotateIntervention(panel, actor, 1);
     else if (action === "select-intervention") { panel.dataset.selectedItemId = button.dataset.itemId; renderSelector(panel, actor); }
-    else if (action === "execute-intervention") await activateIntervention(actor, selectedEntry(actor, panel));
+    else if (action === "execute-intervention") await activateChronomancerIntervention(actor, selectedEntry(actor, panel));
     else if (action === "open-intervention") selectedEntry(actor, panel)?.item.sheet?.render(true);
-    else if (action === "points-minus") await updateState(actor, { points: current.points - 1 });
-    else if (action === "points-plus") await updateState(actor, { points: current.points + 1 });
-    else if (action === "trail") { const confluence = Boolean(current.trail && current.trail !== button.dataset.law); await updateState(actor, { trail: button.dataset.law, confluences: current.confluences + (confluence ? 1 : 0) }); }
-    else if (action === "trail-clear") await updateState(actor, { trail: "" });
-    else if (action === "confluence-clear") await updateState(actor, { confluences: 0 });
-    else if (action === "reaction") await updateState(actor, { reaction: !current.reaction });
+    else if (action === "points-minus") await updateChronomancerState(actor, { points: current.points - 1 });
+    else if (action === "points-plus") await updateChronomancerState(actor, { points: current.points + 1 });
+    else if (action === "trail") { const confluence = Boolean(current.trail && current.trail !== button.dataset.law); await updateChronomancerState(actor, { trail: button.dataset.law, confluences: current.confluences + (confluence ? 1 : 0) }); }
+    else if (action === "trail-clear") await updateChronomancerState(actor, { trail: "" });
+    else if (action === "confluence-clear") await updateChronomancerState(actor, { confluences: 0 });
+    else if (action === "reaction") await updateChronomancerState(actor, { reaction: !current.reaction });
     else if (action === "open-treatise") treatise(actor)?.sheet?.render(true);
   });
 
@@ -259,7 +303,7 @@ function createPanel(actor) {
 }
 
 function refreshPanel(panel, actor) {
-  const current = state(actor);
+  const current = chronomancerState(actor);
   panel.querySelector("[data-role='points']").textContent = `${current.points} / ${current.maximum}`;
   panel.querySelector("[data-role='confluences']").textContent = current.confluences;
   panel.querySelector("[data-role='treatise']").textContent = treatise(actor)?.name ?? "Tratado não escolhido";
