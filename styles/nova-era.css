@@ -1142,3 +1142,102 @@
 @media (max-width: 1160px) {
   .dnd5e2.sheet.actor.character .main-content > .nova-era.chronomancer-panel { width: 444px; min-width: 438px; }
 }
+
+/* v0.16.0 — moldura artística real com controles HTML sobrepostos. */
+.nova-era .ne-crono-clock {
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: #05070b url("../assets/ui/chronomancer-clock-frame.png") center / 100% 100% no-repeat;
+  box-shadow: 0 15px 34px rgba(0,0,0,.82), 0 0 18px rgba(73,106,184,.22);
+}
+.nova-era .ne-crono-clock::before,
+.nova-era .ne-crono-clock::after,
+.nova-era .ne-crono-stars { display: none; }
+
+.nova-era .ne-crono-title {
+  top: 22px;
+  left: 109px;
+  grid-template-columns: 22px 1fr;
+  gap: 4px;
+  width: 302px;
+  min-height: 36px;
+  padding: 4px 13px;
+  border: 0;
+  clip-path: none;
+  background: transparent;
+  box-shadow: none;
+}
+.nova-era .ne-crono-title i { color: #9fbfff; font-size: 18px; }
+.nova-era .ne-crono-title strong { overflow: visible; font-size: 14px; letter-spacing: .055em; text-shadow: 0 2px 4px #000; white-space: nowrap; }
+
+.nova-era .ne-crono-category-ring span {
+  z-index: 4;
+  width: 122px;
+  color: #dec58e;
+  font-size: 10px;
+  text-align: center;
+  text-shadow: 0 2px 4px #000;
+}
+.nova-era .ne-crono-category-ring span:nth-child(1) { top: 91px; left: 47px; transform: none; }
+.nova-era .ne-crono-category-ring span:nth-child(2) { top: 91px; right: 47px; transform: none; }
+.nova-era .ne-crono-category-ring span:nth-child(3) { bottom: 95px; left: 47px; transform: none; }
+.nova-era .ne-crono-category-ring span:nth-child(4) { right: 47px; bottom: 95px; transform: none; }
+
+.nova-era .ne-crono-intervention {
+  top: var(--slot-y);
+  left: var(--slot-x);
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 4px;
+  transform: translate(-50%,-50%);
+  border: 1px solid #b28b4a;
+  background: radial-gradient(circle at 45% 35%,#334d7f,#10172a 57%,#05070c 82%);
+  box-shadow: inset 0 0 10px #000, 0 0 9px rgba(97,139,255,.35);
+}
+.nova-era .ne-crono-intervention:hover {
+  transform: translate(-50%,-50%) scale(1.13);
+  box-shadow: inset 0 0 10px #000, 0 0 15px #6f79e3;
+}
+.nova-era .ne-crono-intervention i { font-size: 18px; }
+.nova-era .ne-crono-intervention span { display: none; }
+.nova-era .ne-crono-intervention small { color: #f0d494; font-size: 8px; }
+
+.nova-era .ne-crono-resource-ring { top: 50%; }
+.nova-era .ne-crono-resource-ring > button { border-color: #a17c42; background: rgba(5,9,17,.94); }
+.nova-era .ne-crono-core {
+  width: 139px;
+  height: 139px;
+  border: 0;
+  background: radial-gradient(circle,rgba(34,69,125,.82),rgba(5,10,21,.78) 70%);
+  box-shadow: inset 0 0 26px #000, 0 0 22px rgba(80,138,255,.3);
+}
+.nova-era .ne-crono-core small { font-size: 12px; }
+.nova-era .ne-crono-core strong { font-size: 38px; }
+
+.nova-era .ne-crono-confluence {
+  top: 130px;
+  border-color: #a37d43;
+  background: rgba(5,9,17,.92);
+  box-shadow: 0 0 10px rgba(80,118,218,.22);
+}
+.nova-era .ne-crono-trail {
+  top: 351px;
+  left: 118px;
+  border-color: #a37d43;
+  background: rgba(5,9,17,.94);
+  box-shadow: 0 0 10px rgba(85,117,210,.2);
+}
+
+.nova-era .ne-crono-clock footer { bottom: 12px; left: 92px; width: 336px; gap: 2px; }
+.nova-era .ne-crono-clock footer button {
+  border: 0;
+  background: rgba(4,8,15,.78);
+  color: #ead29c;
+  box-shadow: none;
+  text-shadow: 0 2px 4px #000;
+}
+.nova-era .ne-crono-clock footer button:first-child { min-height: 27px; font-size: 10px; }
+.nova-era .ne-crono-clock footer .ne-crono-reaction { min-height: 30px; font-size: 10px; }
+.nova-era .ne-crono-clock footer .ne-crono-reaction.active { background: rgba(15,34,67,.82); box-shadow: inset 0 0 12px rgba(89,142,255,.2); }

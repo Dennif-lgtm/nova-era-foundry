@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.16.0 — Relógio ilustrado
+
+- Substitui o mostrador desenhado somente em CSS por uma moldura artística própria.
+- Usa o código apenas para dados e controles dinâmicos, preservando nitidez e automação.
+- Posiciona até 12 Intervenções nos encaixes laterais da arte.
+- Mantém Pontos Temporais, Rastro, Confluências, Tratado e Reação como elementos reais da interface.
+
 ### v0.15.1 — Acabamento do Relógio
 
 - Reduz o painel do Cronomante e melhora sua proporção em relação à ficha.
