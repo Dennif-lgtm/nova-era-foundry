@@ -835,3 +835,215 @@
     grid-template-columns:minmax(325px,350px) var(--dnd5e-sheet-sidebar-width) minmax(0,1fr);
   }
 }
+
+/* Relógio funcional do Cronomante. */
+.dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-chronomancer-panel {
+  grid-template-columns: minmax(500px, 530px) var(--dnd5e-sheet-sidebar-width) minmax(0, 1fr);
+}
+
+.nova-era.chronomancer-panel {
+  --crono-gold: #c9a96a;
+  --crono-gold-dark: #684d25;
+  --crono-blue: #75bfff;
+  --crono-violet: #a875ff;
+  align-self: start;
+  width: min(520px, 100%);
+  min-width: 500px;
+  margin: 0 auto;
+  color: #eee2c8;
+  font-family: var(--dnd5e-font-roboto-slab, "Roboto Slab", serif);
+}
+
+.nova-era .ne-crono-clock {
+  position: relative;
+  width: 520px;
+  height: 520px;
+  border: 3px solid var(--crono-gold);
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 17%, rgba(76,109,180,.16) 17.5% 18%, transparent 18.5% 28%, rgba(165,113,255,.14) 28.5% 29%, transparent 29.5% 41%, rgba(201,169,106,.2) 41.5% 42%, transparent 42.5%),
+    repeating-conic-gradient(from -1deg, rgba(222,190,126,.65) 0 1deg, transparent 1deg 30deg),
+    radial-gradient(circle, #111a2a 0, #080d17 58%, #05070b 100%);
+  box-shadow: 0 0 0 3px #080a0d, 0 0 0 5px #58411f, 0 13px 34px #000, inset 0 0 45px #000;
+}
+
+.nova-era .ne-crono-clock::before,
+.nova-era .ne-crono-clock::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.nova-era .ne-crono-clock::before { inset: 12px; border: 1px solid #94743d; box-shadow: inset 0 0 0 4px #080b11, inset 0 0 0 5px #3b4560; }
+.nova-era .ne-crono-clock::after { inset: 99px; border: 1px solid rgba(135,180,255,.38); box-shadow: 0 0 18px rgba(92,135,255,.2), inset 0 0 22px rgba(150,93,255,.16); }
+
+.nova-era .ne-crono-title {
+  position: absolute;
+  z-index: 8;
+  top: 14px;
+  left: 83px;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  width: 354px;
+  min-height: 42px;
+  padding: 5px 15px;
+  border: 1px solid #96723b;
+  clip-path: polygon(6% 0,94% 0,100% 50%,94% 100%,6% 100%,0 50%);
+  background: linear-gradient(90deg,#0b1019,#17203a 50%,#0b1019);
+  box-shadow: inset 0 0 0 2px #05070b;
+  color: #f0d7a1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.nova-era .ne-crono-title i { color: var(--crono-violet); font-size: 22px; filter: drop-shadow(0 0 6px #7746d9); }
+.nova-era .ne-crono-title strong { font-family: var(--dnd5e-font-modesto,"Cinzel",serif); font-size: 18px; font-weight: 500; }
+
+.nova-era .ne-crono-category-ring span {
+  position: absolute;
+  z-index: 3;
+  color: #ceb47f;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.nova-era .ne-crono-category-ring span:nth-child(1) { top: 88px; left: 48px; transform: rotate(-45deg); }
+.nova-era .ne-crono-category-ring span:nth-child(2) { top: 88px; right: 51px; transform: rotate(45deg); }
+.nova-era .ne-crono-category-ring span:nth-child(3) { bottom: 89px; left: 30px; transform: rotate(43deg); }
+.nova-era .ne-crono-category-ring span:nth-child(4) { right: 52px; bottom: 82px; transform: rotate(-43deg); }
+
+.nova-era .ne-crono-intervention-ring { position: absolute; z-index: 5; inset: 0; }
+.nova-era .ne-crono-intervention {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: -31px;
+  padding: 4px;
+  transform: rotate(var(--angle)) translateY(-198px) rotate(calc(-1 * var(--angle)));
+  border: 1px solid #8d7446;
+  border-radius: 50%;
+  background: radial-gradient(circle,#18233b,#080c13 72%);
+  color: #e7d7b8;
+  box-shadow: 0 0 0 2px #05070a, 0 0 8px rgba(92,128,255,.28), inset 0 0 9px #000;
+  line-height: 1;
+}
+.nova-era .ne-crono-intervention i { color: #9ccaff; font-size: 17px; }
+.nova-era .ne-crono-intervention span { display: block; width: 52px; overflow: hidden; font-size: 7px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.nova-era .ne-crono-intervention small { color: #c7a966; font-size: 7px; }
+.nova-era .ne-crono-intervention:hover { z-index: 12; transform: rotate(var(--angle)) translateY(-198px) rotate(calc(-1 * var(--angle))) scale(1.1); border-color: #d7b875; box-shadow: 0 0 16px #5b69d5; }
+
+.nova-era .ne-crono-resource-ring {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  grid-template-columns: 31px 132px 31px;
+  align-items: center;
+  gap: 5px;
+  transform: translate(-50%,-50%);
+}
+.nova-era .ne-crono-resource-ring > button,
+.nova-era .ne-crono-confluence button,
+.nova-era .ne-crono-trail button {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  border: 1px solid #715b38;
+  border-radius: 50%;
+  background: #0b111d;
+  color: #cbb27d;
+}
+.nova-era .ne-crono-resource-ring > button { width: 31px; height: 31px; }
+.nova-era .ne-crono-resource-ring > button:disabled { opacity: .35; }
+.nova-era .ne-crono-core {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  border: 2px solid #aa8d53;
+  border-radius: 50%;
+  background: radial-gradient(circle,#182c50,#080c17 70%);
+  box-shadow: 0 0 22px rgba(89,143,255,.38), inset 0 0 18px #000;
+  text-align: center;
+}
+.nova-era .ne-crono-core small { color: #d8c391; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.nova-era .ne-crono-core strong { color: #ecf5ff; font-size: 32px; text-shadow: 0 0 10px #65a8ff; }
+
+.nova-era .ne-crono-trail {
+  position: absolute;
+  z-index: 7;
+  top: 337px;
+  left: 128px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  width: 264px;
+  padding: 5px 8px;
+  border: 1px solid #655638;
+  border-radius: 22px;
+  background: rgba(5,8,13,.93);
+}
+.nova-era .ne-crono-trail > span { color: #cbb078; font-size: 9px; text-transform: uppercase; }
+.nova-era .ne-crono-trail > div { display: flex; gap: 4px; }
+.nova-era .ne-crono-trail button { width: 27px; height: 27px; padding: 0; }
+.nova-era .ne-crono-trail button.active { border-color: #bda3ff; background: radial-gradient(circle,#8d61e7,#182342 70%); color: #fff; box-shadow: 0 0 9px #724fd0; }
+.nova-era .ne-crono-trail .ne-crono-clear { width: 22px; height: 22px; font-size: 8px; }
+
+.nova-era .ne-crono-confluence {
+  position: absolute;
+  z-index: 7;
+  top: 143px;
+  left: 50%;
+  display: grid;
+  grid-template-columns: auto auto 22px;
+  align-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+  padding: 4px 9px;
+  border: 1px solid #6a5131;
+  border-radius: 17px;
+  background: rgba(5,8,14,.9);
+}
+.nova-era .ne-crono-confluence small { color: #ba9ee7; font-size: 9px; text-transform: uppercase; }
+.nova-era .ne-crono-confluence strong { color: #e8d9ff; font-size: 16px; }
+.nova-era .ne-crono-confluence button { width: 22px; height: 22px; padding: 0; font-size: 8px; }
+
+.nova-era .ne-crono-clock footer {
+  position: absolute;
+  z-index: 9;
+  bottom: 17px;
+  left: 101px;
+  display: grid;
+  gap: 4px;
+  width: 318px;
+}
+.nova-era .ne-crono-clock footer button {
+  min-height: 31px;
+  margin: 0;
+  border: 1px solid #7d6236;
+  border-radius: 15px;
+  background: linear-gradient(90deg,#090d15,#18203a,#090d15);
+  color: #d7bf8a;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.nova-era .ne-crono-clock footer button i { margin-right: 6px; color: #9c7bdf; }
+.nova-era .ne-crono-clock footer .ne-crono-reaction.active { border-color: #809dd1; color: #d9ecff; box-shadow: 0 0 9px rgba(102,145,255,.35); }
+.nova-era .ne-crono-empty { margin: 7px 24px; color: #cbb47f; font-size: 10px; text-align: center; }
+
+.chronomancer-chat { border: 1px solid #7759a8; padding: 8px; background: linear-gradient(135deg,#10192a,#1d1230); color: #eee3ca; }
+.chronomancer-chat h2 { color: #cdb3ff; }
+
+@media (max-width: 1160px) {
+  .dnd5e2.sheet.actor.character .sheet-body .main-content.nova-era-has-chronomancer-panel { grid-template-columns: var(--dnd5e-sheet-sidebar-width) minmax(0,1fr); }
+  .dnd5e2.sheet.actor.character .main-content > .nova-era.chronomancer-panel { grid-column: 1 / -1; }
+}

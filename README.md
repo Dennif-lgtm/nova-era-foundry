@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.15.0 — Relógio do Cronomante
+
+- Painel circular próprio para personagens da classe Cronomante — Nova Era.
+- Controle de Pontos Temporais com máximo automático de Proficiência + Inteligência.
+- Rastros, Confluências e Reação Temporal acompanhados diretamente na ficha.
+- Até 12 Intervenções conhecidas aparecem como atalhos no mostrador e podem ser ativadas pelo relógio.
+- O custo em PT e o fluxo de Rastros/Confluências são atualizados ao usar uma Intervenção.
+
 ### v0.14.0 — Cronomante completo
 
 - Instala a classe Cronomante — Nova Era com progressão do nível 1 ao 20.

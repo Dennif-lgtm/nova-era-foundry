@@ -4,6 +4,7 @@ import { postExposureCard } from "./exposure/exposure-chat.mjs";
 import { registerAnalyzeAutomation } from "./exposure/analyze.mjs";
 import { registerSneakAttackAutomation } from "./exposure/sneak-attack.mjs";
 import { registerExposurePanel } from "./ui/exposure-panel.mjs";
+import { registerChronomancerPanel } from "./ui/chronomancer-panel.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
 import { registerSecondaryEffects, secondaryMacroApi } from "./features/secondary-effects.mjs";
@@ -68,6 +69,7 @@ Hooks.once("ready", async () => {
   registerAnalyzeAutomation();
   registerSneakAttackAutomation();
   registerExposurePanel();
+  registerChronomancerPanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();
