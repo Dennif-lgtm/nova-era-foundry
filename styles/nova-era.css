@@ -1765,3 +1765,110 @@
 @media (max-width:1220px) {
   .nova-era.chronomancer-panel.ne-crono-standalone { grid-template-columns:230px 520px 350px; width:1148px; min-width:1148px; }
 }
+
+/* v0.21.0 — implementação fiel da prancha aprovada. */
+.nova-era.chronomancer-panel.ne-crono-standalone {
+  display:block;
+  width:1229px;
+  min-width:1229px;
+  min-height:819px;
+  margin:0 auto;
+  padding:0;
+  background:transparent;
+}
+.ne-bp-surface {
+  position:relative;
+  width:1229px;
+  height:819px;
+  overflow:hidden;
+  background:#03080c url("../assets/ui/chronomancer-panel-plate-v1.png") center / 100% 100% no-repeat;
+  color:#eadfc7;
+  font-family:var(--dnd5e-font-roboto-condensed,serif);
+  isolation:isolate;
+}
+.ne-bp-surface button { margin:0; border:0; background:transparent; color:inherit; box-shadow:none; }
+.ne-bp-surface h2,.ne-bp-surface h3,.ne-bp-surface p { margin:0; }
+.ne-bp-points { position:absolute; left:22.2%; top:2.4%; display:grid; grid-template-columns:5% 12% 1fr 5%; align-items:center; width:55.5%; height:10.5%; padding:0 3%; }
+.ne-bp-points>strong { color:#f1e8d4; font-family:serif; font-size:28px; font-weight:400; text-align:center; text-shadow:0 0 10px #5ea7e8; }
+.ne-bp-points h2 { color:#e8d8b8; font-family:serif; font-size:14px; font-weight:400; letter-spacing:.14em; text-align:center; text-transform:uppercase; }
+.ne-bp-points>button { opacity:0; height:40px; cursor:pointer; }
+.ne-bp-points>button:hover { opacity:1; color:#a9e7ff; }
+.ne-bp-points .ne-crono-crystals { gap:12px; min-height:36px; }
+.ne-bp-points .ne-crono-crystals span { width:20px; height:35px; }
+
+.ne-bp-card { position:absolute; display:grid; align-content:start; text-align:center; }
+.ne-bp-card h3,.ne-bp-interventions>h3,.ne-bp-parallel h3,.ne-bp-treatise h3,.ne-bp-timeline h3 { color:#dfc997; font-family:serif; font-size:14px; font-weight:400; letter-spacing:.1em; text-transform:uppercase; }
+.ne-bp-trail { left:2.2%; top:14.8%; width:19.3%; height:23.5%; grid-template-columns:62px 1fr; align-items:center; padding:0 15px; }
+.ne-bp-trail h3 { grid-column:1/-1; margin-bottom:17px; }
+.ne-bp-trail>i { grid-row:2/4; display:grid; place-items:center; width:58px; height:58px; color:#9de9ff; font-size:27px; }
+.ne-bp-trail strong { font-family:serif; font-size:18px; }
+.ne-bp-trail small { color:#b9c2c8; font-size:10px; }
+.ne-bp-trail button,.ne-bp-confluence button { align-self:end; color:#8fa9bb; font-size:8px; text-transform:uppercase; }
+.ne-bp-confluence { left:2.2%; top:47%; width:19.3%; height:22.5%; padding:0 19px; }
+.ne-bp-confluence h3 { margin-bottom:56px; }
+.ne-bp-confluence strong { color:#efdfb5; font-family:serif; font-size:16px; }
+.ne-bp-confluence .ne-crono-preview { min-height:30px; margin:6px 0; border:0; background:transparent; color:#9dd7ef; font-size:9px; }
+.ne-bp-confluence small { color:#bdc0c0; font-size:9px; }
+.ne-bp-affinity { left:2.2%; top:80.2%; width:19.3%; height:14.5%; grid-template-columns:67px 1fr; align-items:center; padding:0 16px; }
+.ne-bp-affinity h3 { grid-column:1/-1; }
+.ne-bp-affinity>i { grid-row:2/4; color:#f0c65a; font-size:27px; }
+.ne-bp-affinity strong { font-family:serif; font-size:14px; }
+.ne-bp-affinity small { color:#aab5bd; font-size:9px; }
+
+.ne-bp-clock { position:absolute; left:25.1%; top:13%; width:44.5%; height:69%; }
+.ne-bp-law { position:absolute; width:19%; height:18%; border-radius:50% !important; cursor:pointer; }
+.ne-bp-law span { position:absolute; left:50%; top:88%; width:150%; transform:translateX(-50%); color:#d9c697; font-family:serif; font-size:12px; text-shadow:0 1px 3px #000; }
+.ne-bp-law:hover,.ne-bp-law.active { box-shadow:0 0 24px rgba(113,205,255,.55),inset 0 0 18px rgba(255,230,154,.3); }
+.ne-bp-law-0 { left:40.5%; top:0; }
+.ne-bp-law-1 { left:72%; top:68%; }
+.ne-bp-law-2 { left:80%; top:34%; }
+.ne-bp-law-3 { left:1%; top:34%; }
+.ne-bp-law-4 { left:9%; top:68%; }
+.ne-bp-core { position:absolute; left:31%; top:35%; display:grid; place-items:center; width:38%; height:29%; border-radius:50%; text-align:center; pointer-events:none; }
+.ne-bp-core small { color:#7fa7c2; font-size:8px; letter-spacing:.12em; text-transform:uppercase; }
+.ne-bp-core strong { max-width:155px; color:#efe4c8; font-family:serif; font-size:14px; }
+
+.ne-bp-interventions { position:absolute; left:72.2%; top:14.2%; width:25.3%; height:43%; padding:0 10px; }
+.ne-bp-interventions>h3 { height:28px; text-align:center; }
+.ne-bp-categories { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; height:55px; }
+.ne-bp-categories button { display:grid; place-items:center; color:#cfc2a7; cursor:pointer; }
+.ne-bp-categories button span { display:grid; gap:2px; font-size:8px; text-align:center; }
+.ne-bp-categories button i { font-size:17px; }
+.ne-bp-categories button.active { color:#9fe7ff; text-shadow:0 0 8px #4ca8cd; }
+.ne-bp-interventions>[data-role="active-category"] { display:none; }
+.ne-bp-list { display:grid; gap:3px; margin-top:4px; }
+.ne-bp-list>button { display:grid; grid-template-columns:1fr auto; align-items:center; min-height:39px; padding:0 17px 0 55px; color:#ddceb0; font-family:serif; font-size:12px; text-align:left; cursor:pointer; }
+.ne-bp-list>button small { color:#9bdcf0; }
+.ne-bp-list>button:hover,.ne-bp-list>button.active { color:#fff3d3; text-shadow:0 0 7px #ba803e; }
+.ne-bp-list>p { margin-top:65px; color:#9ba5aa; font-size:11px; text-align:center; }
+
+.ne-bp-parallel { position:absolute; left:72.7%; top:63.3%; width:24.5%; height:11.5%; padding:0 16px; }
+.ne-bp-parallel h3 { text-align:center; }
+.ne-bp-parallel>div { display:grid; gap:8px; margin:15px 0 0 70px; }
+.ne-bp-parallel span { color:#c9c4b7; font-size:10px; }
+.ne-bp-selected { position:absolute; left:72.2%; top:48.6%; width:25.5%; height:12%; padding:5px 14px; background:linear-gradient(90deg,rgba(3,8,13,.92),rgba(9,18,27,.94)); }
+.ne-bp-selected header { display:grid; grid-template-columns:1fr 28px; }
+.ne-bp-selected header small,.ne-bp-selected p { display:none; }
+.ne-bp-selected header strong { display:block; overflow:hidden; color:#efdeb8; font-family:serif; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.ne-bp-selected .ne-crono-laws { margin:2px 0; }
+.ne-bp-selected .ne-crono-execute { width:100%; min-height:32px; border:1px solid #785f34; background:#0a1119; font-size:10px; }
+
+.ne-bp-treatise { position:absolute; left:74.5%; top:81.5%; width:15.5%; height:11.5%; padding-left:58px; }
+.ne-bp-treatise h3 { text-align:center; }
+.ne-bp-treatise button { display:grid; grid-template-columns:25px 1fr; align-items:center; height:70px; color:#d9cdb2; font-family:serif; font-size:11px; text-align:left; cursor:pointer; }
+.ne-bp-timeline { position:absolute; left:24%; top:85%; width:46%; height:10%; }
+.ne-bp-timeline h3 { text-align:center; }
+.ne-bp-timeline>div { display:flex; justify-content:center; gap:32px; margin-top:23px; }
+.ne-bp-timeline span { display:grid; justify-items:center; width:58px; }
+.ne-bp-timeline i { display:grid; place-items:center; width:31px; height:31px; border:1px solid #70bdd8; border-radius:50%; background:#07121b; color:#7ed8ef; font-size:7px; }
+.ne-bp-timeline small { width:58px; overflow:hidden; color:#c9c7bc; font-size:8px; text-align:center; text-overflow:ellipsis; white-space:nowrap; }
+.ne-bp-timeline span.active i { border-color:#e6a746; color:#ffca61; box-shadow:0 0 12px #d07834; }
+.ne-bp-utility { position:absolute; right:1.4%; top:81.7%; display:grid; align-content:center; gap:12px; width:4%; height:14%; }
+.ne-bp-utility button { height:29px; color:#a9d7e7; cursor:pointer; }
+.ne-bp-utility button:hover,.ne-bp-utility button.active { color:#ffd47a; text-shadow:0 0 8px #d68b31; }
+.ne-bp-compat { display:none; }
+.nova-era.chronomancer-panel.ne-crono-standalone.ne-bp-compact { width:620px; min-width:620px; min-height:116px; }
+.ne-bp-compact .ne-bp-surface { width:620px; height:116px; background-position:49% 0; background-size:759px 506px; }
+.ne-bp-compact .ne-bp-surface>*:not(.ne-bp-points):not(.ne-bp-utility) { display:none; }
+.ne-bp-compact .ne-bp-points { left:3%; top:10%; width:88%; height:75%; }
+.ne-bp-compact .ne-bp-utility { right:1%; top:10%; height:75%; }

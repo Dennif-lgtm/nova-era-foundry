@@ -205,6 +205,44 @@ function combatTimeline() {
   return turns.slice(0, 8).map(combatant => `<span class="${combatant.id === active ? "active" : ""}" data-combatant-id="${combatant.id}"><i class="fa-solid ${combatant.id === active ? "fa-location-arrow" : "fa-circle"}"></i><small></small></span>`).join("");
 }
 
+function standalonePanelMarkup() {
+  return `<div class="ne-bp-surface">
+    <header class="ne-bp-points">
+      <button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button>
+      <strong data-role="points">0 / 0</strong>
+      <div><h2>Pontos Temporais</h2><div class="ne-crono-crystals" data-role="temporal-crystals"></div></div>
+      <button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button>
+    </header>
+    <section class="ne-bp-card ne-bp-trail"><h3>Rastro Temporal</h3><i data-role="trail-icon" class="fa-solid fa-hourglass-half"></i><strong data-role="trail-display">Nenhum Rastro</strong><small>Expira no início do seu turno</small><button type="button" data-action="trail-clear">Limpar Rastro</button></section>
+    <section class="ne-bp-card ne-bp-confluence"><h3>Confluência</h3><strong data-role="confluence-display">Nenhuma disponível</strong><div data-role="confluence-preview" class="ne-crono-preview"></div><small data-role="confluence-hint">A interface indicará combinações válidas.</small><button type="button" data-action="confluence-clear">Zerar contador</button></section>
+    <section class="ne-bp-card ne-bp-affinity"><h3>Afinidade</h3><i class="fa-solid fa-star"></i><strong data-role="affinity"></strong><small>Passivo temporal</small></section>
+    <section class="ne-bp-clock" data-role="clock">
+      ${LAWS.map((law, index) => `<button type="button" class="ne-bp-law ne-bp-law-${index}" data-action="trail" data-law="${law}" title="Definir Rastro: ${law}"><span>${law}</span></button>`).join("")}
+      <div class="ne-bp-core"><small>Estado Temporal</small><strong data-role="selected-name">Nenhuma Intervenção</strong></div>
+    </section>
+    <section class="ne-bp-interventions">
+      <h3>Intervenções</h3>
+      <nav class="ne-bp-categories">${categoryButtons()}</nav>
+      <strong data-role="active-category">Fundamentos</strong>
+      <div data-role="category-list" class="ne-bp-list"></div>
+      <div data-role="intervention-ring" hidden></div>
+    </section>
+    <section class="ne-bp-parallel">
+      <h3>Paralelismo Temporal</h3>
+      <div><span>Intervenção I</span><span>Intervenção II</span></div>
+    </section>
+    <section class="ne-bp-selected">
+      <header><div><small>Intervenção selecionada</small><strong data-role="command-name"></strong><small data-role="selected-meta"></small></div><button type="button" data-action="open-intervention" title="Abrir descrição"><i class="fa-solid fa-book"></i></button></header>
+      <div data-role="selected-laws" class="ne-crono-laws"></div><p data-role="selected-description"></p>
+      <button type="button" data-action="execute-intervention" class="ne-crono-execute"><i class="fa-solid fa-hourglass-start"></i><span>Executar Intervenção</span></button>
+    </section>
+    <section class="ne-bp-treatise"><h3>Tratado</h3><button type="button" data-action="open-treatise"><i class="fa-solid fa-book-open"></i><span data-role="treatise"></span></button></section>
+    <footer class="ne-bp-timeline"><h3>Linha do Tempo</h3><div data-role="combat-timeline">${combatTimeline()}</div></footer>
+    <nav class="ne-bp-utility"><button type="button" data-action="reaction" title="Alternar Reação Temporal"><i class="fa-solid fa-hourglass"></i></button><button type="button" data-action="toggle-compact" title="Modo compacto"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></button><button type="button" data-action="open-treatise" title="Abrir Tratado"><i class="fa-solid fa-circle-info"></i></button></nav>
+    <div class="ne-bp-compat" aria-hidden="true"><span data-role="points-top"></span><span data-role="compact-points"></span><span data-role="compact-name"></span><span data-role="confluences"></span><span data-role="reaction"></span><button data-action="toggle-drawer"></button></div>
+  </div>`;
+}
+
 function renderSelection(panel, actor, entry = selectedEntry(actor, panel)) {
   const current = chronomancerState(actor);
   const reactionBlocked = Boolean(entry && /Reação/i.test(entry.execution) && !current.reaction);
@@ -284,6 +322,8 @@ function createPanel(actor, { standalone = false } = {}) {
     <section class="ne-crono-command" data-role="command-drawer"><header><div><small class="ne-crono-drawer-kicker">Intervenções</small><strong data-role="command-name"></strong><small data-role="selected-meta"></small><div data-role="selected-laws" class="ne-crono-laws"></div></div><div class="ne-crono-drawer-actions"><button type="button" data-action="open-intervention" title="Abrir descrição completa"><i class="fa-solid fa-book"></i></button><button type="button" data-action="toggle-drawer" title="Recolher comandos"><i class="fa-solid fa-chevron-right"></i></button></div></header><p data-role="selected-description"></p><div data-role="confluence-preview" class="ne-crono-preview"></div><button type="button" data-action="execute-intervention" class="ne-crono-execute"><i class="fa-solid fa-hourglass-start"></i><span>Executar Intervenção</span></button><details class="ne-crono-library" open><summary><i class="fa-solid fa-list"></i> Biblioteca da categoria</summary><div data-role="category-list"></div></details></section>
     ${standalone ? `<footer class="ne-crono-timeline"><h3>Linha do Tempo</h3><div data-role="combat-timeline">${combatTimeline()}</div></footer>` : ""}`;
 
+  if (standalone) panel.innerHTML = standalonePanelMarkup();
+
   panel.addEventListener("click", async event => {
     const button = event.target.closest("button");
     if (!button) return;
@@ -309,6 +349,7 @@ function createPanel(actor, { standalone = false } = {}) {
     else if (action === "trail-clear") await updateChronomancerState(actor, { trail: "" });
     else if (action === "confluence-clear") await updateChronomancerState(actor, { confluences: 0 });
     else if (action === "reaction") await updateChronomancerState(actor, { reaction: !current.reaction });
+    else if (action === "toggle-compact") panel.classList.toggle("ne-bp-compact");
     else if (action === "open-treatise") treatise(actor)?.sheet?.render(true);
   });
   panel.addEventListener("keydown", event => {
@@ -346,8 +387,8 @@ class ChronomancerClockApplication extends FoundryApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["nova-era-window", "nova-era-chronomancer-clock-window"],
-      width: 1280,
-      height: 820,
+      width: 1320,
+      height: 900,
       resizable: true,
       minimizable: true,
       popOut: true
@@ -407,6 +448,8 @@ function refreshPanel(panel, actor) {
   for (const button of panel.querySelectorAll("[data-action='trail']")) button.classList.toggle("active", button.dataset.law === current.trail);
   const trailDisplay = panel.querySelector("[data-role='trail-display']");
   if (trailDisplay) trailDisplay.textContent = current.trail || "Nenhum Rastro";
+  const trailIcon = panel.querySelector("[data-role='trail-icon']");
+  if (trailIcon) trailIcon.className = `fa-solid ${current.trail ? LAW_ICONS[LAWS.indexOf(current.trail)] : "fa-minus"}`;
   const confluenceDisplay = panel.querySelector("[data-role='confluence-display']");
   if (confluenceDisplay) confluenceDisplay.textContent = current.confluences ? `${current.confluences} Confluência${current.confluences === 1 ? "" : "s"}` : "Nenhuma disponível";
   const affinityDisplay = panel.querySelector("[data-role='affinity']");
