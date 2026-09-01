@@ -2,11 +2,11 @@
   "id": "nova-era",
   "title": "Nova Era / KY'rassel",
   "description": "Regras, compêndios e automações de Nova Era para o sistema D&D5e.",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "socket": true,
   "url": "https://github.com/Dennif-lgtm/nova-era-foundry",
   "manifest": "https://github.com/Dennif-lgtm/nova-era-foundry/releases/latest/download/module.json",
-  "download": "https://github.com/Dennif-lgtm/nova-era-foundry/releases/download/v0.21.0/nova-era.zip",
+  "download": "https://github.com/Dennif-lgtm/nova-era-foundry/releases/download/v0.22.0/nova-era.zip",
   "compatibility": {
     "minimum": "13",
     "verified": "13.351"

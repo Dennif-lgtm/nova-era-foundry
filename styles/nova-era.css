@@ -1872,3 +1872,55 @@
 .ne-bp-compact .ne-bp-surface>*:not(.ne-bp-points):not(.ne-bp-utility) { display:none; }
 .ne-bp-compact .ne-bp-points { left:3%; top:10%; width:88%; height:75%; }
 .ne-bp-compact .ne-bp-utility { right:1%; top:10%; height:75%; }
+
+/* Cronomante — relógio circular independente (v2) */
+.nova-era-chronomancer-clock-window .window-content { padding: 0; overflow: hidden; background: radial-gradient(circle at 42% 45%, #0b1830 0, #040912 54%, #020409 100%); }
+.chronomancer-panel.ne-crono-standalone { width: 100%; min-height: 100%; color: #ead7a2; background: none; }
+.ne-v2-shell { position: relative; display: grid; grid-template-columns: minmax(620px, 1fr) 370px; grid-template-rows: minmax(0, 1fr) 76px; gap: 10px; width: 100%; height: 100%; min-height: 820px; padding: 12px 16px; overflow: hidden; }
+.ne-v2-clock { --pointer-angle: 0deg; position: relative; width: min(78vh, 790px); aspect-ratio: 1; align-self: center; justify-self: center; user-select: none; }
+.ne-v2-plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 12px 26px #000); }
+.ne-v2-clock button { font: inherit; color: #ecd79f; }
+.ne-v2-mode { position: absolute; z-index: 7; border: 0; background: transparent; color: transparent !important; cursor: pointer; opacity: .12; transition: opacity .2s, filter .2s; }
+.ne-v2-mode:hover,.ne-v2-mode.active { opacity: 1; filter: drop-shadow(0 0 12px #66cfff); }
+.ne-v2-mode-essential { left: 35%; top: 2%; width: 30%; height: 14%; }
+.ne-v2-mode-0 { left: 4%; top: 13%; width: 23%; height: 24%; }
+.ne-v2-mode-1 { right: 4%; top: 13%; width: 23%; height: 24%; }
+.ne-v2-mode-2 { left: 4%; bottom: 12%; width: 24%; height: 25%; }
+.ne-v2-mode-3 { right: 4%; bottom: 12%; width: 24%; height: 25%; }
+.ne-v2-pointer { position: absolute; z-index: 6; left: calc(50% - 13px); top: 17%; width: 26px; height: 34%; transform-origin: 50% 97%; transform: rotate(var(--pointer-angle)); transition: transform .38s cubic-bezier(.22,.8,.2,1); pointer-events: none; color: #8fe8ff; text-shadow: 0 0 10px #42bfff; }
+.ne-v2-pointer i { font-size: 25px; transform: rotate(-45deg); }
+.ne-v2-core { position: absolute; z-index: 8; left: 39.2%; top: 39%; width: 21.6%; height: 21.6%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #9c762a; border-radius: 50%; background: radial-gradient(circle,#071b39 0,#030817 70%); box-shadow: inset 0 0 25px #2668b555,0 0 18px #5dafff55; text-align: center; }
+.ne-v2-core small { font-family: serif; text-transform: uppercase; letter-spacing: .08em; }
+.ne-v2-core strong { font: 700 38px/1.1 serif; color: #dff4ff; text-shadow: 0 0 9px #70bfff; }
+.ne-v2-core div { display: flex; gap: 38px; margin-top: 6px; }
+.ne-v2-core button { width: 25px; height: 25px; border: 1px solid #a98532; border-radius: 50%; background: #07101e; cursor: pointer; }
+.ne-v2-trails,.ne-v2-confluences { position: absolute; z-index: 8; top: 30%; width: 17%; height: 34%; display: flex; flex-direction: column; justify-content: space-around; }
+.ne-v2-trails { left: 21%; }.ne-v2-confluences { right: 20%; }
+.ne-v2-trails h3,.ne-v2-confluences h3 { position: absolute; width: 100%; top: -22px; margin: 0; font: 700 12px serif; text-align: center; text-transform: uppercase; letter-spacing: .12em; }
+.ne-v2-law { display: flex; align-items: center; gap: 5px; width: 100%; height: 38px; padding: 0; border: 0; background: transparent; cursor: pointer; opacity: .36; transition: opacity .2s, filter .2s, transform .2s; }
+.ne-v2-law img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.ne-v2-law span { display: none; }
+.ne-v2-trails .ne-v2-law.active { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 9px #59c9ff); }
+.ne-v2-confluences .ne-v2-law.ready { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 10px #c06cff); }
+.ne-v2-confluences .ne-v2-law.blocked { opacity: .62; filter: drop-shadow(0 0 5px #744ba8); }
+.ne-v2-confluences .ne-v2-law.dark { opacity: .18; filter: grayscale(1); }
+.ne-v2-quick { position: absolute; z-index: 9; left: 34%; top: 17%; width: 32%; height: 18%; display: flex; justify-content: space-between; align-items: flex-start; }
+.ne-v2-quick button { width: 31%; height: 100%; padding: 6px; border: 1px solid transparent; background: transparent; cursor: pointer; text-shadow: 0 1px 2px #000; }
+.ne-v2-quick button:hover,.ne-v2-quick button.active { border-color: #8ae8ff88; border-radius: 50%; background: #07213f99; box-shadow: 0 0 15px #54bfff88; }
+.ne-v2-quick small { display: block; font: 700 17px serif; }.ne-v2-quick span { display: block; margin-top: 42px; font-size: 10px; line-height: 1.05; overflow: hidden; max-height: 22px; }
+.ne-v2-essential .ne-v2-quick { opacity: 0; pointer-events: none; }
+.ne-v2-treatise,.ne-v2-reaction { position: absolute; z-index: 8; border: 1px solid #88671d; background: #050b14dd; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ne-v2-treatise { left: 34%; bottom: 9%; width: 32%; height: 5%; }.ne-v2-reaction { left: 31%; bottom: 3.7%; width: 38%; height: 4%; }
+.ne-v2-reaction.active { color: #fff1b2; box-shadow: 0 0 10px #a67f24; }
+.ne-v2-feedback { position: absolute; z-index: 8; left: 36%; top: 64%; width: 28%; min-height: 42px; padding: 5px 8px; border: 1px solid #77581c; border-radius: 20px; background: #030713e8; text-align: center; }
+.ne-v2-feedback strong,.ne-v2-feedback small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }.ne-v2-feedback small { color: #9fc3d4; font-size: 10px; }
+.ne-v2-library { align-self: center; height: min(76vh,760px); border: 1px solid #a27a25; background: linear-gradient(155deg,#081323f5,#040711f5); box-shadow: inset 0 0 28px #14345f66,0 10px 24px #000b; clip-path: polygon(5% 0,100% 0,100% 96%,95% 100%,0 100%,0 4%); opacity: .32; transition: opacity .25s; }
+.ne-v2-library.available,.ne-v2-library-open .ne-v2-library { opacity: 1; }
+.ne-v2-library header { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #8d681f; }.ne-v2-library header small,.ne-v2-library header strong { display: block; }.ne-v2-library header small { color:#89d9e7; text-transform: uppercase; letter-spacing:.12em; }.ne-v2-library header button { width:32px;height:32px;border:1px solid #87651e;background:#08101d;color:#ead7a2; }
+.ne-v2-list { max-height: 360px; overflow: auto; padding: 10px; }.ne-v2-list>p { padding: 24px; color:#9aa7b7; text-align:center; }
+.ne-v2-library-entry { display:grid;grid-template-columns:1fr 36px;border-bottom:1px solid #72592655; }.ne-v2-library-entry.active { background:#183b5a88; }.ne-v2-library-entry button { min-height:40px;border:0;background:transparent;color:#ead7a2;text-align:left;cursor:pointer; }.ne-v2-library-entry button:first-child { display:flex;justify-content:space-between;align-items:center; }.ne-v2-library-entry small { color:#80dff1; }
+.ne-v2-selected { margin: 8px 12px; padding: 10px; border: 1px solid #785b22; background: #020711aa; }.ne-v2-selected p { max-height: 86px; overflow:auto; color:#bbc7d2; font-size:12px; }
+.ne-v2-library footer { display:flex;gap:8px;padding:0 12px; }.ne-v2-library footer button { min-height:42px;border:1px solid #8b6924;background:#0a1422;color:#ead7a2; }.ne-v2-library footer .ne-crono-execute { flex:1; }
+.ne-v2-timeline { grid-column: 1 / -1; display:grid;grid-template-columns:150px 1fr;align-items:center;border-top:1px solid #8e6b25;border-bottom:1px solid #8e6b25;background:#050b15cc;padding:8px 18px; }.ne-v2-timeline h3 { margin:0;font:700 15px serif;text-transform:uppercase;letter-spacing:.1em; }.ne-v2-timeline [data-role='combat-timeline'] { display:flex;justify-content:space-around;gap:8px; }.ne-v2-timeline [data-combatant-id] { min-width:70px;max-width:120px;display:grid;place-items:center;color:#83bcd2; }.ne-v2-timeline [data-combatant-id].active { color:#ffd071;text-shadow:0 0 8px #ff9b29; }.ne-v2-timeline small { width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center; }
+.ne-bp-compat { display:none !important; }
+@media (max-width: 1050px) { .ne-v2-shell { grid-template-columns: minmax(560px,1fr) 310px; }.ne-v2-clock { width:min(72vh,700px); }.ne-v2-library { height:min(72vh,700px); } }

@@ -5,6 +5,22 @@ const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
 const CATEGORY_LABELS = ["Fundamentos", "Disciplinas", "Grandes Teorias", "Paradoxos"];
 const LAW_ICONS = ["fa-bolt", "fa-hourglass-half", "fa-repeat", "fa-shield-halved", "fa-burst"];
 const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
+const CLOCK_MODES = ["Essencial", ...CATEGORIES];
+const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
+const LAW_SLUGS = ["precedencia", "atraso", "repeticao", "continuidade", "ruptura"];
+const MODE_ANGLES = [0, -55, 55, -125, 125];
+const CONFLUENCE_NAMES = {
+  "Atraso|Precedência": "Equilíbrio Causal",
+  "Precedência|Repetição": "Impulso Temporal",
+  "Continuidade|Precedência": "Instante Preservado",
+  "Precedência|Ruptura": "Causalidade Invertida",
+  "Atraso|Repetição": "Horizonte Ecoante",
+  "Atraso|Continuidade": "Horizonte Suspenso",
+  "Atraso|Ruptura": "Instante Perdido",
+  "Continuidade|Repetição": "Linha Convergente",
+  "Repetição|Ruptura": "Eco Fraturado",
+  "Continuidade|Ruptura": "Ponto de Ruptura"
+};
 const TEMPORAL_VERSES = {
   "Precedência": [
     "Antes do gesto, a intenção. Antes do instante, minha vontade.",
@@ -79,6 +95,14 @@ function treatise(actor) {
   return actor.items.find(item => item.type === "subclass" && item.system.classIdentifier === "cronomante-nova-era") ?? null;
 }
 
+function hasContent(actor, key) {
+  return actor.items.some(item => item.getFlag(MODULE_ID, "contentKey") === key);
+}
+
+function temporalTurnKey() {
+  return game.combat?.started ? `${game.combat.id}:${game.combat.round}:${game.combat.turn}` : "";
+}
+
 export function chronomancerState(actor) {
   const maximum = temporalMaximum(actor);
   const stored = actor.getFlag(MODULE_ID, "chronomancerState") ?? {};
@@ -87,7 +111,12 @@ export function chronomancerState(actor) {
     points: Math.max(0, Math.min(maximum, Number(stored.points ?? maximum))),
     trail: LAWS.includes(stored.trail) ? stored.trail : "",
     confluences: Math.max(0, Number(stored.confluences ?? 0)),
-    reaction: stored.reaction !== false
+    reaction: stored.reaction !== false,
+    clockMode: Math.max(0, Math.min(CLOCK_MODES.length - 1, Number(stored.clockMode ?? 0))),
+    quickSlots: stored.quickSlots && typeof stored.quickSlots === "object" ? stored.quickSlots : {},
+    parallelTurnKey: String(stored.parallelTurnKey ?? ""),
+    parallelUses: Array.isArray(stored.parallelUses) ? stored.parallelUses.slice(0, 2) : [],
+    lastAction: stored.lastAction && typeof stored.lastAction === "object" ? stored.lastAction : null
   };
 }
 
@@ -97,6 +126,7 @@ export async function updateChronomancerState(actor, changes) {
   const next = { ...current, ...changes };
   next.points = Math.max(0, Math.min(current.maximum, Number(next.points)));
   next.confluences = Math.max(0, Number(next.confluences));
+  next.clockMode = Math.max(0, Math.min(CLOCK_MODES.length - 1, Number(next.clockMode ?? 0)));
   await actor.setFlag(MODULE_ID, "chronomancerState", next);
   Hooks.callAll("novaEraChronomancerChanged", actor);
 }
@@ -146,15 +176,30 @@ async function postIntervention(actor, item, data) {
 export async function activateChronomancerIntervention(actor, entry) {
   const current = chronomancerState(actor);
   if (!entry) return;
-  if (current.points < entry.cost) return ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${entry.cost} PT.`);
-  if (/Reação/i.test(entry.execution) && !current.reaction) return ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada.");
+  const turnKey = temporalTurnKey();
+  const uses = turnKey && current.parallelTurnKey === turnKey ? [...current.parallelUses] : [];
+  const parallelI = hasContent(actor, "crono-paralelismo-1");
+  const parallelII = hasContent(actor, "crono-paralelismo-2");
   const law = generatedLaw(entry, current.trail);
+  if (turnKey && uses.length >= 1) {
+    if (!parallelI || uses.length >= 2) return ui.notifications.warn("Nova Era: você já realizou o máximo de Intervenções neste turno.");
+    const allowedCategories = parallelII ? ["Fundamento", "Disciplina"] : ["Fundamento"];
+    if (!allowedCategories.includes(uses[0].category) || !allowedCategories.includes(entry.category)) return ui.notifications.warn(`Nova Era: seu Paralelismo atual não combina ${uses[0].category} com ${entry.category}.`);
+    if (!law || law === uses[0].law) return ui.notifications.warn("Nova Era: a segunda Intervenção do Paralelismo deve usar uma Lei diferente.");
+  }
+  const actualCost = uses.length === 1 && parallelII ? Math.max(1, entry.cost - 1) : entry.cost;
+  if (current.points < actualCost) return ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${actualCost} PT.`);
+  if (/Reação/i.test(entry.execution) && !current.reaction) return ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada.");
   const confluence = willConverge(entry, current.trail);
+  const nextUses = turnKey ? [...uses, { itemId: entry.item.id, name: entry.item.name, category: entry.category, law }] : [];
   await updateChronomancerState(actor, {
-    points: current.points - entry.cost,
+    points: current.points - actualCost,
     trail: law || current.trail,
     confluences: current.confluences + (confluence ? 1 : 0),
-    reaction: /Reação/i.test(entry.execution) ? false : current.reaction
+    reaction: /Reação/i.test(entry.execution) ? false : current.reaction,
+    parallelTurnKey: turnKey,
+    parallelUses: nextUses,
+    lastAction: { name: entry.item.name, cost: actualCost, law, confluence: confluence ? confluenceName(current.trail, law) : "", at: Date.now() }
   });
   if (confluence) ui.notifications.info(`Nova Era: Confluência entre ${current.trail} e ${law}.`);
   await postIntervention(actor, entry.item, entry);
@@ -243,27 +288,95 @@ function standalonePanelMarkup() {
   </div>`;
 }
 
+function lawIcon(law) {
+  const index = Math.max(0, LAWS.indexOf(law));
+  return `${ICON_ROOT}/leis/${LAW_SLUGS[index]}.webp`;
+}
+
+function confluenceName(first, second) {
+  if (!first || !second || first === second) return "";
+  return CONFLUENCE_NAMES[[first, second].sort((a, b) => a.localeCompare(b, "pt-BR")).join("|")] ?? "Confluência Temporal";
+}
+
+function circularPanelMarkup() {
+  const trailLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="trail" data-law="${law}" title="Definir Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const confluenceLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="confluence-law" data-law="${law}" title="${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  return `<div class="ne-v2-shell">
+    <section class="ne-v2-clock" data-role="clock">
+      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-circular-v1.png" alt="Relógio do Cronomante">
+      <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
+      ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}">${CATEGORY_LABELS[index]}</button>`).join("")}
+      <div class="ne-v2-pointer" data-role="clock-pointer"><i class="fa-solid fa-location-arrow"></i></div>
+      <section class="ne-v2-trails" aria-label="Rastros"><h3>Rastros</h3>${trailLaws}</section>
+      <section class="ne-v2-confluences" aria-label="Confluências"><h3>Confluências</h3>${confluenceLaws}</section>
+      <section class="ne-v2-core">
+        <small>Pontos Temporais</small><strong data-role="points">0 / 0</strong>
+        <div><button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button><button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button></div>
+      </section>
+      <section class="ne-v2-quick" data-role="quick-slots"><button type="button" data-slot="0"><small>XI</small><span>—</span></button><button type="button" data-slot="1"><small>XII</small><span>—</span></button><button type="button" data-slot="2"><small>I</small><span>—</span></button></section>
+      <button type="button" class="ne-v2-treatise" data-action="open-treatise"><i class="fa-solid fa-book-open"></i><span data-role="treatise"></span></button>
+      <button type="button" class="ne-v2-reaction" data-action="reaction"><i class="fa-solid fa-hourglass"></i><span data-role="reaction"></span></button>
+      <div class="ne-v2-feedback"><strong data-role="selected-name">Visão essencial</strong><small data-role="confluence-hint">Gire o anel para consultar a Biblioteca</small></div>
+    </section>
+    <aside class="ne-v2-library" data-role="library-panel">
+      <header><div><small data-role="active-category">Essencial</small><strong data-role="command-name">Relógio do Cronomante</strong></div><button type="button" data-action="toggle-library"><i class="fa-solid fa-chevron-right"></i></button></header>
+      <div data-role="category-list" class="ne-v2-list"></div>
+      <div class="ne-v2-selected"><small data-role="selected-meta"></small><div data-role="selected-laws" class="ne-crono-laws"></div><p data-role="selected-description"></p><div data-role="confluence-preview" class="ne-crono-preview"></div></div>
+      <footer><button type="button" data-action="open-intervention"><i class="fa-solid fa-book"></i> Ver</button><button type="button" data-action="execute-intervention" class="ne-crono-execute"><i class="fa-solid fa-hourglass-start"></i><span>Executar Intervenção</span></button></footer>
+    </aside>
+    <footer class="ne-v2-timeline"><h3>Linha do Tempo</h3><div data-role="combat-timeline">${combatTimeline()}</div></footer>
+    <div class="ne-bp-compat" aria-hidden="true"><span data-role="points-top"></span><span data-role="compact-points"></span><span data-role="compact-name"></span><span data-role="confluences"></span><span data-role="trail-display"></span><span data-role="affinity"></span><div data-role="temporal-crystals"></div><i data-role="trail-icon"></i><strong data-role="confluence-display"></strong><div data-role="intervention-ring"></div><button data-action="toggle-drawer"></button><button data-action="confluence-clear"></button></div>
+  </div>`;
+}
+
 function renderSelection(panel, actor, entry = selectedEntry(actor, panel)) {
   const current = chronomancerState(actor);
+  const turnUses = temporalTurnKey() && current.parallelTurnKey === temporalTurnKey() ? current.parallelUses : [];
+  const displayCost = entry && turnUses.length === 1 && hasContent(actor, "crono-paralelismo-2") ? Math.max(1, entry.cost - 1) : entry?.cost ?? 0;
+  const parallelBlocked = Boolean(entry && turnUses.length >= 1 && (
+    !hasContent(actor, "crono-paralelismo-1") || turnUses.length >= 2 ||
+    !(hasContent(actor, "crono-paralelismo-2") ? ["Fundamento", "Disciplina"] : ["Fundamento"]).includes(entry.category) ||
+    !(hasContent(actor, "crono-paralelismo-2") ? ["Fundamento", "Disciplina"] : ["Fundamento"]).includes(turnUses[0]?.category) ||
+    generatedLaw(entry, current.trail) === turnUses[0]?.law
+  ));
   const reactionBlocked = Boolean(entry && /Reação/i.test(entry.execution) && !current.reaction);
-  const insufficient = Boolean(entry && current.points < entry.cost);
+  const insufficient = Boolean(entry && current.points < displayCost);
   const execute = panel.querySelector("[data-action='execute-intervention']");
   panel.querySelector("[data-role='selected-name']").textContent = entry?.item.name ?? "Nenhuma Intervenção";
   panel.querySelector("[data-role='compact-name']").textContent = entry?.item.name ?? "Intervenções";
   panel.querySelector("[data-role='command-name']").textContent = entry?.item.name ?? "Nenhuma Intervenção";
   panel.querySelector("[data-role='selected-laws']").innerHTML = lawBadges(entry);
-  panel.querySelector("[data-role='selected-meta']").textContent = entry ? `${entry.cost} PT • ${entry.execution}${entry.range ? ` • ${entry.range}` : ""}` : "Escolha uma Intervenção conhecida";
+  panel.querySelector("[data-role='selected-meta']").textContent = entry ? `${displayCost} PT${displayCost !== entry.cost ? " (Paralelismo II)" : ""} • ${entry.execution}${entry.range ? ` • ${entry.range}` : ""}` : "Escolha uma Intervenção conhecida";
   panel.querySelector("[data-role='selected-description']").textContent = entry ? stripHtml(entry.item.system?.description?.value).slice(0, 230) : "Adicione Intervenções à ficha para usá-las pelo relógio.";
   panel.querySelector("[data-role='confluence-preview']").innerHTML = entry && willConverge(entry, current.trail)
     ? `<i class="fa-solid fa-sparkles"></i> Gerará Confluência: ${current.trail} + ${generatedLaw(entry, current.trail)}`
     : entry ? `<i class="fa-solid fa-wave-square"></i> Novo Rastro: ${generatedLaw(entry, current.trail) || "inalterado"}` : "";
-  execute.disabled = !entry || insufficient || reactionBlocked;
-  execute.classList.toggle("ready", Boolean(entry && !insufficient && !reactionBlocked));
-  execute.querySelector("span").textContent = insufficient ? `Faltam ${entry.cost - current.points} PT` : reactionBlocked ? "Reação utilizada" : "Executar Intervenção";
+  execute.disabled = !entry || insufficient || reactionBlocked || parallelBlocked;
+  execute.classList.toggle("ready", Boolean(entry && !insufficient && !reactionBlocked && !parallelBlocked));
+  execute.querySelector("span").textContent = insufficient ? `Faltam ${displayCost - current.points} PT` : reactionBlocked ? "Reação utilizada" : parallelBlocked ? "Paralelismo incompatível" : "Executar Intervenção";
   panel.querySelector("[data-action='open-intervention']").disabled = !entry;
 }
 
 function renderSelector(panel, actor) {
+  const state = chronomancerState(actor);
+  const mode = Number(panel.dataset.clockMode ?? state.clockMode ?? 0);
+  const isCircular = panel.classList.contains("ne-crono-standalone");
+  if (isCircular) {
+    panel.dataset.clockMode = String(mode);
+    panel.classList.toggle("ne-v2-essential", mode === 0);
+    panel.style.setProperty("--pointer-angle", `${MODE_ANGLES[mode] ?? 0}deg`);
+    panel.querySelectorAll("[data-action='clock-mode']").forEach(button => button.classList.toggle("active", Number(button.dataset.mode) === mode));
+    const library = panel.querySelector("[data-role='library-panel']");
+    library?.classList.toggle("available", mode > 0);
+    if (mode === 0) {
+      panel.querySelector("[data-role='active-category']").textContent = "Visão essencial";
+      panel.querySelector("[data-role='category-list']").innerHTML = "<p>Gire o anel para Fundamentos, Disciplinas, Grandes Teorias ou Paradoxos.</p>";
+      panel.querySelector("[data-role='quick-slots']")?.querySelectorAll("button").forEach(button => { button.disabled = true; button.dataset.itemId = ""; button.querySelector("span").textContent = "—"; });
+      renderSelection(panel, actor, null);
+      return;
+    }
+    panel.dataset.categoryIndex = String(mode - 1);
+  }
   const entries = entriesInCategory(actor, panel);
   const selected = selectedEntry(actor, panel);
   if (selected) panel.dataset.selectedItemId = selected.item.id;
@@ -277,8 +390,29 @@ function renderSelector(panel, actor) {
   panel.querySelector("[data-role='active-category']").textContent = CATEGORY_LABELS[categoryIndex];
   panel.querySelector("[data-role='intervention-ring']").innerHTML = interventionButtons(entries, selected);
   const list = panel.querySelector("[data-role='category-list']");
-  list.innerHTML = entries.length ? entries.map(entry => `<button type="button" data-action="select-intervention" data-item-id="${entry.item.id}" class="${entry.item.id === selected?.item.id ? "active" : ""}"><span>${entry.item.name}</span><small>${entry.cost} PT</small></button>`).join("") : `<p>Nenhuma ${CATEGORIES[categoryIndex].toLowerCase()} conhecida.</p>`;
+  const category = CATEGORIES[categoryIndex];
+  const storedQuick = Array.isArray(state.quickSlots?.[category]) ? state.quickSlots[category] : [];
+  const quickIds = [...storedQuick.filter(id => entries.some(entry => entry.item.id === id)), ...entries.map(entry => entry.item.id).filter(id => !storedQuick.includes(id))].slice(0, 3);
+  list.innerHTML = entries.length ? entries.map(entry => `<div class="ne-v2-library-entry ${entry.item.id === selected?.item.id ? "active" : ""}"><button type="button" data-action="select-intervention" data-item-id="${entry.item.id}"><span>${entry.item.name}</span><small>${entry.cost} PT</small></button><button type="button" data-action="toggle-quick" data-item-id="${entry.item.id}" title="${quickIds.includes(entry.item.id) ? "Remover dos atalhos" : "Fixar nos atalhos"}"><i class="fa-${quickIds.includes(entry.item.id) ? "solid" : "regular"} fa-star"></i></button></div>`).join("") : `<p>Nenhuma ${category.toLowerCase()} conhecida.</p>`;
+  const quick = panel.querySelector("[data-role='quick-slots']");
+  quick?.querySelectorAll("button").forEach((button, index) => {
+    const entry = entries.find(candidate => candidate.item.id === quickIds[index]);
+    button.disabled = !entry;
+    button.dataset.action = entry ? "quick-intervention" : "";
+    button.dataset.itemId = entry?.item.id ?? "";
+    button.querySelector("span").textContent = entry?.item.name ?? "—";
+    button.classList.toggle("active", entry?.item.id === selected?.item.id);
+  });
   renderSelection(panel, actor, selected);
+}
+
+async function rotateClockMode(panel, actor, direction) {
+  const current = Number(panel.dataset.clockMode ?? chronomancerState(actor).clockMode ?? 0);
+  const mode = (current + direction + CLOCK_MODES.length) % CLOCK_MODES.length;
+  panel.dataset.clockMode = String(mode);
+  delete panel.dataset.selectedItemId;
+  await updateChronomancerState(actor, { clockMode: mode });
+  renderSelector(panel, actor);
 }
 
 function rotateCategory(panel, actor, direction) {
@@ -322,7 +456,10 @@ function createPanel(actor, { standalone = false } = {}) {
     <section class="ne-crono-command" data-role="command-drawer"><header><div><small class="ne-crono-drawer-kicker">Intervenções</small><strong data-role="command-name"></strong><small data-role="selected-meta"></small><div data-role="selected-laws" class="ne-crono-laws"></div></div><div class="ne-crono-drawer-actions"><button type="button" data-action="open-intervention" title="Abrir descrição completa"><i class="fa-solid fa-book"></i></button><button type="button" data-action="toggle-drawer" title="Recolher comandos"><i class="fa-solid fa-chevron-right"></i></button></div></header><p data-role="selected-description"></p><div data-role="confluence-preview" class="ne-crono-preview"></div><button type="button" data-action="execute-intervention" class="ne-crono-execute"><i class="fa-solid fa-hourglass-start"></i><span>Executar Intervenção</span></button><details class="ne-crono-library" open><summary><i class="fa-solid fa-list"></i> Biblioteca da categoria</summary><div data-role="category-list"></div></details></section>
     ${standalone ? `<footer class="ne-crono-timeline"><h3>Linha do Tempo</h3><div data-role="combat-timeline">${combatTimeline()}</div></footer>` : ""}`;
 
-  if (standalone) panel.innerHTML = standalonePanelMarkup();
+  if (standalone) {
+    panel.innerHTML = circularPanelMarkup();
+    panel.dataset.clockMode = String(chronomancerState(actor).clockMode);
+  }
 
   panel.addEventListener("click", async event => {
     const button = event.target.closest("button");
@@ -341,6 +478,26 @@ function createPanel(actor, { standalone = false } = {}) {
     else if (action === "intervention-prev") rotateIntervention(panel, actor, -1);
     else if (action === "intervention-next") rotateIntervention(panel, actor, 1);
     else if (action === "select-intervention") { panel.dataset.selectedItemId = button.dataset.itemId; renderSelector(panel, actor); }
+    else if (action === "quick-intervention") { panel.dataset.selectedItemId = button.dataset.itemId; renderSelector(panel, actor); }
+    else if (action === "clock-mode") { panel.dataset.clockMode = button.dataset.mode; delete panel.dataset.selectedItemId; await updateChronomancerState(actor, { clockMode: Number(button.dataset.mode) }); renderSelector(panel, actor); }
+    else if (action === "toggle-library") panel.classList.toggle("ne-v2-library-open");
+    else if (action === "toggle-quick") {
+      const category = CATEGORIES[selectedCategory(panel)];
+      const quickSlots = foundry.utils.deepClone(current.quickSlots ?? {});
+      const ids = Array.isArray(quickSlots[category]) ? [...quickSlots[category]] : [];
+      const existing = ids.indexOf(button.dataset.itemId);
+      if (existing >= 0) ids.splice(existing, 1);
+      else { if (ids.length >= 3) ids.shift(); ids.push(button.dataset.itemId); }
+      quickSlots[category] = ids;
+      await updateChronomancerState(actor, { quickSlots });
+      renderSelector(panel, actor);
+    }
+    else if (action === "confluence-law") {
+      if (!current.trail || current.trail === button.dataset.law) return;
+      const candidates = actorInterventions(actor).filter(entry => entry.laws.includes(button.dataset.law));
+      const entry = candidates.find(candidate => candidate.cost <= current.points && (!/Reação/i.test(candidate.execution) || current.reaction)) ?? candidates[0];
+      if (entry) { panel.dataset.clockMode = String(CATEGORIES.indexOf(entry.category) + 1); panel.dataset.categoryIndex = String(CATEGORIES.indexOf(entry.category)); panel.dataset.selectedItemId = entry.item.id; await updateChronomancerState(actor, { clockMode: Number(panel.dataset.clockMode) }); renderSelector(panel, actor); panel.classList.add("ne-v2-library-open"); }
+    }
     else if (action === "execute-intervention") await activateChronomancerIntervention(actor, selectedEntry(actor, panel));
     else if (action === "open-intervention") selectedEntry(actor, panel)?.item.sheet?.render(true);
     else if (action === "points-minus") await updateChronomancerState(actor, { points: current.points - 1 });
@@ -365,12 +522,13 @@ function createPanel(actor, { standalone = false } = {}) {
     const now = Date.now();
     if (now - lastWheel < 180) return;
     lastWheel = now;
-    if (event.shiftKey) rotateCategory(panel, actor, event.deltaY > 0 ? 1 : -1);
+    if (standalone) rotateClockMode(panel, actor, event.deltaY > 0 ? 1 : -1);
+    else if (event.shiftKey) rotateCategory(panel, actor, event.deltaY > 0 ? 1 : -1);
     else rotateIntervention(panel, actor, event.deltaY > 0 ? 1 : -1);
   }, { passive: false });
   let dragStart = null;
   panel.querySelector("[data-role='clock']").addEventListener("pointerdown", event => { dragStart = { x: event.clientX }; });
-  panel.querySelector("[data-role='clock']").addEventListener("pointerup", event => { if (!dragStart) return; const delta = event.clientX - dragStart.x; dragStart = null; if (Math.abs(delta) > 45) rotateIntervention(panel, actor, delta > 0 ? -1 : 1); });
+  panel.querySelector("[data-role='clock']").addEventListener("pointerup", event => { if (!dragStart) return; const delta = event.clientX - dragStart.x; dragStart = null; if (Math.abs(delta) > 45) { if (standalone) rotateClockMode(panel, actor, delta > 0 ? -1 : 1); else rotateIntervention(panel, actor, delta > 0 ? -1 : 1); } });
   refreshPanel(panel, actor);
   renderSelector(panel, actor);
   return panel;
@@ -431,6 +589,7 @@ export function openChronomancerClock(actor) {
 
 function refreshPanel(panel, actor) {
   const current = chronomancerState(actor);
+  if (panel.classList.contains("ne-crono-standalone") && panel.dataset.clockMode === undefined) panel.dataset.clockMode = String(current.clockMode);
   panel.querySelector("[data-role='points']").textContent = `${current.points} / ${current.maximum}`;
   const pointsTop = panel.querySelector("[data-role='points-top']");
   if (pointsTop) pointsTop.textContent = `${current.points} / ${current.maximum}`;
@@ -446,6 +605,19 @@ function refreshPanel(panel, actor) {
   panel.querySelector("[data-action='points-minus']").disabled = current.points <= 0;
   panel.querySelector("[data-action='points-plus']").disabled = current.points >= current.maximum;
   for (const button of panel.querySelectorAll("[data-action='trail']")) button.classList.toggle("active", button.dataset.law === current.trail);
+  const interventions = actorInterventions(actor);
+  for (const button of panel.querySelectorAll("[data-action='confluence-law']")) {
+    const law = button.dataset.law;
+    const same = !current.trail || law === current.trail;
+    const candidates = same ? [] : interventions.filter(entry => entry.laws.includes(law));
+    const ready = candidates.some(entry => entry.cost <= current.points && (!/Reação/i.test(entry.execution) || current.reaction));
+    button.classList.toggle("ready", ready);
+    button.classList.toggle("blocked", !same && candidates.length > 0 && !ready);
+    button.classList.toggle("dark", same || !candidates.length);
+    const name = confluenceName(current.trail, law);
+    const matching = candidates.map(entry => entry.item.name).join(", ");
+    button.title = same ? (current.trail ? "A mesma Lei não forma Confluência" : "Defina um Rastro primeiro") : `${name}${matching ? ` — ${matching}` : " — nenhuma Intervenção conhecida"}`;
+  }
   const trailDisplay = panel.querySelector("[data-role='trail-display']");
   if (trailDisplay) trailDisplay.textContent = current.trail || "Nenhum Rastro";
   const trailIcon = panel.querySelector("[data-role='trail-icon']");
@@ -458,6 +630,12 @@ function refreshPanel(panel, actor) {
     marker.querySelector("small").textContent = game.combat?.combatants?.get(marker.dataset.combatantId)?.name ?? "—";
   }
   renderSelection(panel, actor);
+  const feedback = panel.querySelector("[data-role='confluence-hint']");
+  if (feedback) {
+    const uses = temporalTurnKey() && current.parallelTurnKey === temporalTurnKey() ? current.parallelUses.length : 0;
+    const parallel = uses ? ` • Paralelismo ${uses}/2` : "";
+    feedback.textContent = current.lastAction ? `${current.lastAction.confluence || `Rastro: ${current.lastAction.law || "—"}`} • ${current.lastAction.cost} PT${parallel}` : "Gire o anel para consultar a Biblioteca";
+  }
 }
 
 function renderChronomancerPanel(app, html) {

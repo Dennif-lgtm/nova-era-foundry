@@ -9,6 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.22.0 — Grande Relógio das Cinco Leis
+
+- Reconstrói a janela independente do Cronomante com a arte circular aprovada.
+- Gira o ponteiro por roda do mouse, arraste ou clique entre Essencial, Fundamentos, Disciplinas, Grandes Teorias e Paradoxos.
+- Usa XI, XII e I como três atalhos configuráveis da categoria ativa; a Biblioteca continua oferecendo todas as Intervenções conhecidas.
+- Mostra as cinco Leis em Rastros e destaca a Lei ativa.
+- Mostra as cinco combinações possíveis em Confluências, distinguindo utilizável, válida mas bloqueada e indisponível.
+- Aplica o Icon Pack do Cronomante e organiza os itens em subpastas para os três Tratados.
+- Automatiza o limite de Intervenções por turno e a segunda Intervenção permitida por Paralelismo I/II, incluindo a redução do Paralelismo II.
+- Preserva os gatilhos, janelas de confirmação, PT, Reação Temporal, versos no chat e progressão já existentes.
+
 ### v0.19.0 — Relógio Integrado
 
 - Incorpora o Relógio do Cronomante à barra lateral da própria ficha, junto ao retrato.

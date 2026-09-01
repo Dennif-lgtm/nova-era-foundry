@@ -6,8 +6,23 @@ import {
   CHRONOMANCER_TREATISES
 } from "./chronomancer-data.mjs";
 
-const CONTENT_VERSION = "1";
+const CONTENT_VERSION = "2";
 const ICON = "icons/magic/time/clock-stopwatch-white-blue.webp";
+const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
+const ITEM_ICONS = {
+  "tratado-precedencia": `${ICON_ROOT}/tratados/precedencia.webp`,
+  "tratado-possibilidades": `${ICON_ROOT}/tratados/possibilidades.webp`,
+  "tratado-continuidade": `${ICON_ROOT}/tratados/continuidade.webp`,
+  "crono-pontos-temporais": `${ICON_ROOT}/sistema/pontos-temporais.webp`,
+  "crono-confluencias": `${ICON_ROOT}/sistema/confluencia.webp`,
+  "crono-paralelismo-1": `${ICON_ROOT}/sistema/paralelismo-temporal.webp`,
+  "crono-paralelismo-2": `${ICON_ROOT}/sistema/paralelismo-temporal.webp`,
+  "crono-leitura-fraturas": `${ICON_ROOT}/sistema/fratura-temporal.webp`,
+  ...Object.fromEntries([
+    "acelerar", "antecipacao", "retardar", "inercia-temporal", "eco-temporal",
+    "reverberacao", "ancora-temporal", "permanencia", "colapso", "descontinuidade"
+  ].map(key => [`crono-intervencao-${key}`, `${ICON_ROOT}/fundamentos/${key}.webp`]))
+};
 
 function stableId(seed) {
   let first = 0x811c9dc5;
@@ -61,7 +76,7 @@ function itemSource({ key, name, type = "feat", description, level = 0, group = 
   return {
     name,
     type,
-    img: ICON,
+    img: ITEM_ICONS[key] ?? ITEM_ICONS[group] ?? ICON,
     folder: folder.id,
     system,
     flags: { [MODULE_ID]: { contentKey: key, level, group, contentVersion: CONTENT_VERSION } }
@@ -131,12 +146,20 @@ export async function installChronomancerContent({ notify = true } = {}) {
   let folder = game.folders.find(entry => entry.type === "Item" && entry.name === "Nova Era — Cronomante");
   folder ??= await Folder.create({ name: "Nova Era — Cronomante", type: "Item", sorting: "a" });
 
+  const treatiseFolders = new Map();
+  for (const treatise of CHRONOMANCER_TREATISES) {
+    const parentId = folder.id;
+    let child = game.folders.find(entry => entry.type === "Item" && entry.name === treatise.name && (entry.folder?.id === parentId || entry.folder === parentId));
+    child ??= await Folder.create({ name: treatise.name, type: "Item", sorting: "a", folder: parentId });
+    treatiseFolders.set(treatise.key, child);
+  }
+
   const sources = [
     itemSource({ ...CHRONOMANCER_CLASS, type: "class" }, folder),
     ...CHRONOMANCER_FEATURES.map(entry => itemSource(entry, folder)),
     ...CHRONOMANCER_TREATISES.flatMap(treatise => [
-      itemSource({ ...treatise, type: "subclass", group: "tratado" }, folder),
-      ...treatise.features.map(entry => itemSource(entry, folder))
+      itemSource({ ...treatise, type: "subclass", group: "tratado" }, treatiseFolders.get(treatise.key)),
+      ...treatise.features.map(entry => itemSource(entry, treatiseFolders.get(treatise.key)))
     ]),
     ...CHRONOMANCER_INTERVENTIONS.map(entry => itemSource(entry, folder))
   ];
