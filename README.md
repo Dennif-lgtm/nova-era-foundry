@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.22.1 — Acabamento do Relógio Circular
+
+- Torna invisíveis as áreas clicáveis dos quatro setores, eliminando retângulos sobre a ilustração.
+- Remove títulos e algarismos duplicados que já fazem parte da arte.
+- Centraliza os ícones dinâmicos das cinco Leis nos encaixes de Rastros e Confluências.
+- Mantém apenas o nome dinâmico das Intervenções nos encaixes XI, XII e I.
+- Oculta completamente a Biblioteca no modo Essencial e centraliza o relógio nessa visualização.
+
 ### v0.22.0 — Grande Relógio das Cinco Leis
 
 - Reconstrói a janela independente do Cronomante com a arte circular aprovada.

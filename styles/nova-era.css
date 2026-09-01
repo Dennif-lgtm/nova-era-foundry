@@ -1924,3 +1924,43 @@
 .ne-v2-timeline { grid-column: 1 / -1; display:grid;grid-template-columns:150px 1fr;align-items:center;border-top:1px solid #8e6b25;border-bottom:1px solid #8e6b25;background:#050b15cc;padding:8px 18px; }.ne-v2-timeline h3 { margin:0;font:700 15px serif;text-transform:uppercase;letter-spacing:.1em; }.ne-v2-timeline [data-role='combat-timeline'] { display:flex;justify-content:space-around;gap:8px; }.ne-v2-timeline [data-combatant-id] { min-width:70px;max-width:120px;display:grid;place-items:center;color:#83bcd2; }.ne-v2-timeline [data-combatant-id].active { color:#ffd071;text-shadow:0 0 8px #ff9b29; }.ne-v2-timeline small { width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center; }
 .ne-bp-compat { display:none !important; }
 @media (max-width: 1050px) { .ne-v2-shell { grid-template-columns: minmax(560px,1fr) 310px; }.ne-v2-clock { width:min(72vh,700px); }.ne-v2-library { height:min(72vh,700px); } }
+
+/* v0.22.1 — a arte é a moldura; hotspots nunca podem aparecer como caixas. */
+.nova-era .ne-v2-clock button.ne-v2-mode {
+  appearance:none !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:transparent !important;
+}
+.nova-era .ne-v2-clock button.ne-v2-mode:hover,
+.nova-era .ne-v2-clock button.ne-v2-mode:focus,
+.nova-era .ne-v2-clock button.ne-v2-mode.active { border:0 !important; outline:0 !important; background:transparent !important; box-shadow:none !important; }
+.ne-v2-trails h3,.ne-v2-confluences h3 { display:none; }
+.nova-era .ne-v2-law {
+  appearance:none !important;
+  justify-content:center;
+  width:44px;
+  margin-inline:auto;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:50% !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.nova-era .ne-v2-law:hover,.nova-era .ne-v2-law:focus { border:0 !important; outline:0 !important; background:transparent !important; box-shadow:none !important; }
+.ne-v2-quick small { display:none; }
+.nova-era .ne-v2-quick button {
+  appearance:none !important;
+  border:0 !important;
+  outline:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.nova-era .ne-v2-quick button:hover,.nova-era .ne-v2-quick button:focus,.nova-era .ne-v2-quick button.active { border:0 !important; outline:0 !important; background:radial-gradient(circle,#17395ccc 0,#08101a22 65%,transparent 72%) !important; box-shadow:none !important; }
+.ne-v2-quick span { margin-top:64px; padding:2px 4px; border-radius:8px; background:#030812dd; color:#f0dfb5; font-size:9px; line-height:1.1; text-shadow:0 1px 3px #000; }
+.ne-v2-quick button:disabled span { display:none; }
+.chronomancer-panel.ne-v2-essential .ne-v2-shell { grid-template-columns:1fr; }
+.chronomancer-panel.ne-v2-essential .ne-v2-library { display:none; }
