@@ -4,7 +4,7 @@ import { postExposureCard } from "./exposure/exposure-chat.mjs";
 import { registerAnalyzeAutomation } from "./exposure/analyze.mjs";
 import { registerSneakAttackAutomation } from "./exposure/sneak-attack.mjs";
 import { registerExposurePanel } from "./ui/exposure-panel.mjs";
-import { registerChronomancerPanel } from "./ui/chronomancer-panel.mjs";
+import { openChronomancerClock, registerChronomancerPanel } from "./ui/chronomancer-panel.mjs";
 import { registerChronomancerLibraryAndPrompts } from "./chronomancer/library-and-prompts.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
@@ -63,6 +63,9 @@ Hooks.once("ready", async () => {
       installRogue: installRogueContent,
       installRogueMacros,
       installChronomancer: installChronomancerContent
+    },
+    chronomancer: {
+      openClock: openChronomancerClock
     },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };

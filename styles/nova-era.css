@@ -1575,3 +1575,193 @@
   .nova-era.chronomancer-panel.drawer-open .ne-crono-command { animation:none; }
   .nova-era .ne-crono-compact-status [data-role="drawer-chevron"] { transition:none; }
 }
+
+/* v0.20.0 — lançador na ficha e Relógio do Cronomante independente. */
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher {
+  display: grid;
+  grid-template-columns: 34px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 250px);
+  min-height: 48px;
+  margin: 8px auto 10px;
+  padding: 6px 9px;
+  border: 1px solid #a88642;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 16% 50%, rgba(82,116,194,.28), transparent 25%),
+    linear-gradient(135deg,#070d18,#14223c 52%,#080b12);
+  color: #ead6a2;
+  box-shadow: inset 0 0 0 2px #03060b,0 4px 12px rgba(0,0,0,.55);
+  text-align: left;
+}
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher > i:first-child {
+  color: #9fc9ff;
+  font-size: 22px;
+  filter: drop-shadow(0 0 6px #664fc4);
+}
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher span { min-width:0; }
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher strong,
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher strong { font-family:serif; font-size:12px; letter-spacing:.035em; }
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher small { color:#91a9cd; font-size:9px; }
+.nova-era-chronomancer-sheet .ne-crono-sheet-launcher:hover {
+  border-color:#e0bd6b;
+  box-shadow:inset 0 0 0 2px #03060b,0 0 12px rgba(92,124,214,.5);
+}
+
+.nova-era-chronomancer-clock-window .window-content {
+  padding: 10px;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 38% 42%,rgba(24,49,91,.72),transparent 32%),
+    radial-gradient(circle at 75% 38%,rgba(67,39,105,.22),transparent 28%),
+    linear-gradient(145deg,#03070d,#08111d 55%,#030508);
+}
+.nova-era-chronomancer-clock-window .window-header {
+  border-bottom:1px solid #9b783b;
+  background:linear-gradient(90deg,#050913,#111b2e,#050913);
+  color:#ead5a2;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone {
+  display:grid;
+  grid-template-columns:540px minmax(360px,1fr);
+  grid-template-rows:auto auto;
+  gap:12px;
+  width:max-content;
+  min-width:940px;
+  min-height:570px;
+  margin:0 auto;
+  padding:10px;
+  overflow:visible;
+  background:transparent;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-stage {
+  grid-column:1;
+  grid-row:1 / span 2;
+  width:520px;
+  max-width:none;
+  height:520px;
+  margin:0;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-stage > .ne-crono-clock {
+  top:0;
+  left:0;
+  transform:none;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-compact-status {
+  grid-column:2;
+  grid-row:2;
+  align-self:end;
+  width:100%;
+  margin:0;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-command {
+  position:relative;
+  top:auto;
+  left:auto;
+  grid-column:2;
+  grid-row:1;
+  width:auto;
+  min-width:360px;
+  max-height:510px;
+  opacity:1;
+  transform:none;
+  transform-origin:center;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone.drawer-open .ne-crono-command { animation:ne-crono-window-open .18s ease-out; }
+.nova-era.chronomancer-panel.ne-crono-standalone:not(.drawer-open) .ne-crono-command { display:none; }
+@keyframes ne-crono-window-open {
+  from { opacity:0; transform:translateY(5px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@media (max-width:1050px) {
+  .nova-era.chronomancer-panel.ne-crono-standalone { grid-template-columns:520px; min-width:520px; }
+  .nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-stage { grid-column:1; grid-row:1; }
+  .nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-command { grid-column:1; grid-row:2; max-height:420px; }
+  .nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-compact-status { grid-column:1; grid-row:3; }
+}
+
+/* Blueprint aprovado — composição horizontal do instrumento temporal. */
+.nova-era-chronomancer-clock-window { min-width:980px; }
+.nova-era.chronomancer-panel.ne-crono-standalone {
+  grid-template-columns:260px 520px 380px;
+  grid-template-rows:88px 520px 82px;
+  gap:12px;
+  width:1208px;
+  min-width:1208px;
+  min-height:714px;
+  padding:10px 12px;
+}
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-pt-bar {
+  grid-column:1 / -1;
+  grid-row:1;
+  display:grid;
+  grid-template-columns:112px minmax(0,1fr);
+  align-items:center;
+  width:min(760px,100%);
+  margin:0 auto;
+  padding:7px 18px;
+  border:1px solid #94733b;
+  clip-path:polygon(3% 0,97% 0,100% 50%,97% 100%,3% 100%,0 50%);
+  background:linear-gradient(180deg,rgba(7,18,30,.98),rgba(5,11,19,.98));
+  box-shadow:inset 0 0 0 2px #02050a,0 0 18px rgba(48,105,161,.25);
+}
+.ne-crono-pt-bar h2 { margin:0 0 6px; color:#e8d5a6; font-family:serif; font-size:16px; font-weight:500; letter-spacing:.13em; text-align:center; text-transform:uppercase; }
+.ne-crono-pt-number { display:flex; align-items:baseline; justify-content:center; gap:4px; border-right:1px solid #70582f; }
+.ne-crono-pt-number strong { color:#f0e4c8; font-family:serif; font-size:30px; font-weight:500; text-shadow:0 0 10px #5687cf; }
+.ne-crono-pt-number small { color:#88a9d4; font-size:9px; }
+.ne-crono-crystals { display:flex; align-items:center; justify-content:center; gap:13px; min-height:32px; }
+.ne-crono-crystals span { width:17px; height:30px; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); background:linear-gradient(90deg,#31566d,#a9efff 48%,#35697e); box-shadow:0 0 9px #67cfff; transition:filter .2s,opacity .2s; }
+.ne-crono-crystals span.spent { opacity:.3; filter:grayscale(1); box-shadow:none; }
+
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-left-rail {
+  grid-column:1;
+  grid-row:2;
+  display:grid;
+  grid-template-rows:1fr 1.1fr .8fr;
+  gap:10px;
+}
+.ne-crono-left-rail section {
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr);
+  align-content:center;
+  align-items:center;
+  gap:5px 10px;
+  padding:12px;
+  border:1px solid #7f6435;
+  background:radial-gradient(circle at 20% 45%,rgba(34,83,119,.24),transparent 35%),linear-gradient(145deg,#07101a,#06090e);
+  box-shadow:inset 0 0 0 2px #020407;
+}
+.ne-crono-left-rail h3 { grid-column:1/-1; margin:0 0 8px; padding-bottom:6px; border-bottom:1px solid #4f432d; color:#dcc48c; font-family:serif; font-size:13px; letter-spacing:.12em; text-align:center; text-transform:uppercase; }
+.ne-crono-left-rail section>i { grid-row:2/4; display:grid; place-items:center; width:50px; height:50px; border:1px solid #a17b36; border-radius:50%; color:#8fd9f0; font-size:24px; box-shadow:inset 0 0 12px rgba(43,120,164,.35),0 0 8px rgba(77,135,196,.25); }
+.ne-crono-left-rail strong { color:#eee0bd; font-family:serif; font-size:14px; }
+.ne-crono-left-rail small { color:#90a6bc; font-size:9px; line-height:1.25; }
+.ne-crono-left-rail .ne-crono-affinity>i { color:#edc45d; }
+
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-stage { grid-column:2; grid-row:2; }
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-command { grid-column:3; grid-row:2; min-width:0; max-height:520px; border-color:#92723b; }
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-compact-status { display:none; }
+.nova-era.chronomancer-panel.ne-crono-standalone .ne-crono-timeline {
+  grid-column:1 / -1;
+  grid-row:3;
+  display:grid;
+  grid-template-columns:150px minmax(0,1fr);
+  align-items:center;
+  padding:8px 18px;
+  border:1px solid #866a38;
+  clip-path:polygon(2% 0,98% 0,100% 50%,98% 100%,2% 100%,0 50%);
+  background:linear-gradient(90deg,#050a10,#0b1724 48%,#050a10);
+}
+.ne-crono-timeline h3 { margin:0; color:#d8c18d; font-family:serif; font-size:13px; letter-spacing:.12em; text-align:center; text-transform:uppercase; }
+.ne-crono-timeline>div { display:flex; justify-content:center; align-items:flex-start; gap:26px; position:relative; }
+.ne-crono-timeline>div::before { content:""; position:absolute; top:10px; left:5%; right:5%; height:1px; background:#725a31; }
+.ne-crono-timeline span { position:relative; z-index:1; display:grid; justify-items:center; gap:4px; width:72px; color:#7999b9; }
+.ne-crono-timeline span i { display:grid; place-items:center; width:21px; height:21px; border:1px solid #6685a5; border-radius:50%; background:#07111b; font-size:7px; }
+.ne-crono-timeline span small { width:72px; overflow:hidden; color:#b9c5cd; font-size:8px; text-align:center; text-overflow:ellipsis; white-space:nowrap; }
+.ne-crono-timeline span.active { color:#f0b551; }
+.ne-crono-timeline span.active i { border-color:#e3a94b; box-shadow:0 0 10px #ce7134; }
+
+@media (max-width:1220px) {
+  .nova-era.chronomancer-panel.ne-crono-standalone { grid-template-columns:230px 520px 350px; width:1148px; min-width:1148px; }
+}
