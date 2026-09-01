@@ -195,6 +195,7 @@ function renderSelection(panel, actor, entry = selectedEntry(actor, panel)) {
   const insufficient = Boolean(entry && current.points < entry.cost);
   const execute = panel.querySelector("[data-action='execute-intervention']");
   panel.querySelector("[data-role='selected-name']").textContent = entry?.item.name ?? "Nenhuma Intervenção";
+  panel.querySelector("[data-role='compact-name']").textContent = entry?.item.name ?? "Intervenções";
   panel.querySelector("[data-role='command-name']").textContent = entry?.item.name ?? "Nenhuma Intervenção";
   panel.querySelector("[data-role='selected-laws']").innerHTML = lawBadges(entry);
   panel.querySelector("[data-role='selected-meta']").textContent = entry ? `${entry.cost} PT • ${entry.execution}${entry.range ? ` • ${entry.range}` : ""}` : "Escolha uma Intervenção conhecida";
@@ -246,6 +247,7 @@ function createPanel(actor) {
   panel.dataset.actorUuid = actor.uuid;
   panel.dataset.categoryIndex = "0";
   panel.innerHTML = `
+    <div class="ne-crono-stage">
     <div class="ne-crono-clock" data-role="clock">
       <header class="ne-crono-title"><i class="fa-solid fa-clock"></i><strong>Nova Era — Cronomante</strong></header>
       <div class="ne-crono-category-ring" data-role="category-ring">${categoryButtons()}</div>
@@ -255,12 +257,14 @@ function createPanel(actor) {
       <div class="ne-crono-intervention-ring" data-role="intervention-ring"></div>
       <button type="button" data-action="intervention-prev" class="ne-crono-step ne-crono-step-left" aria-label="Intervenção anterior"><i class="fa-solid fa-rotate-left"></i></button>
       <button type="button" data-action="intervention-next" class="ne-crono-step ne-crono-step-right" aria-label="Próxima Intervenção"><i class="fa-solid fa-rotate-right"></i></button>
-      <div class="ne-crono-resource-ring"><button type="button" data-action="points-minus" aria-label="Gastar um Ponto Temporal"><i class="fa-solid fa-minus"></i></button><div class="ne-crono-core"><small>Pontos Temporais</small><strong data-role="points">0 / 0</strong><span data-role="selected-name"></span></div><button type="button" data-action="points-plus" aria-label="Recuperar um Ponto Temporal"><i class="fa-solid fa-plus"></i></button></div>
+      <div class="ne-crono-resource-ring"><button type="button" data-action="points-minus" aria-label="Gastar um Ponto Temporal"><i class="fa-solid fa-minus"></i></button><div class="ne-crono-core"><small>Pontos Temporais</small><strong data-role="points">0 / 0</strong><span data-role="selected-name"></span><button type="button" data-action="toggle-drawer" class="ne-crono-core-toggle" aria-label="Abrir comandos do Cronomante" aria-expanded="false"></button></div><button type="button" data-action="points-plus" aria-label="Recuperar um Ponto Temporal"><i class="fa-solid fa-plus"></i></button></div>
       <div class="ne-crono-trail"><span>Rastro</span><div>${LAWS.map((law, index) => `<button type="button" data-action="trail" data-law="${law}" title="${law}"><i class="fa-solid ${LAW_ICONS[index]}"></i></button>`).join("")}</div><button type="button" data-action="trail-clear" class="ne-crono-clear" title="Limpar Rastro"><i class="fa-solid fa-xmark"></i></button></div>
       <div class="ne-crono-confluence"><small>Confluências</small><strong data-role="confluences">0</strong><button type="button" data-action="confluence-clear" title="Zerar Confluências"><i class="fa-solid fa-rotate-left"></i></button></div>
       <footer><button type="button" data-action="open-treatise"><i class="fa-solid fa-book-open"></i><span data-role="treatise"></span></button><button type="button" data-action="reaction" class="ne-crono-reaction"><i class="fa-solid fa-hourglass"></i><span data-role="reaction"></span></button></footer>
     </div>
-    <section class="ne-crono-command"><header><div><strong data-role="command-name"></strong><small data-role="selected-meta"></small><div data-role="selected-laws" class="ne-crono-laws"></div></div><button type="button" data-action="open-intervention" title="Abrir descrição completa"><i class="fa-solid fa-book"></i></button></header><p data-role="selected-description"></p><div data-role="confluence-preview" class="ne-crono-preview"></div><button type="button" data-action="execute-intervention" class="ne-crono-execute"><i class="fa-solid fa-hourglass-start"></i><span>Executar Intervenção</span></button><details class="ne-crono-library"><summary><i class="fa-solid fa-list"></i> Lista da categoria</summary><div data-role="category-list"></div></details></section>`;
+    </div>
+    <div class="ne-crono-compact-status"><button type="button" data-action="toggle-drawer" aria-expanded="false"><i class="fa-solid fa-clock-rotate-left"></i><span data-role="compact-name">Intervenções</span><b data-role="compact-points">0/0 PT</b><i class="fa-solid fa-chevron-right" data-role="drawer-chevron"></i></button></div>
+    <section class="ne-crono-command" data-role="command-drawer"><header><div><small class="ne-crono-drawer-kicker">Comando temporal</small><strong data-role="command-name"></strong><small data-role="selected-meta"></small><div data-role="selected-laws" class="ne-crono-laws"></div></div><div class="ne-crono-drawer-actions"><button type="button" data-action="open-intervention" title="Abrir descrição completa"><i class="fa-solid fa-book"></i></button><button type="button" data-action="toggle-drawer" title="Fechar comandos"><i class="fa-solid fa-xmark"></i></button></div></header><p data-role="selected-description"></p><div data-role="confluence-preview" class="ne-crono-preview"></div><button type="button" data-action="execute-intervention" class="ne-crono-execute"><i class="fa-solid fa-hourglass-start"></i><span>Executar Intervenção</span></button><details class="ne-crono-library"><summary><i class="fa-solid fa-list"></i> Lista da categoria</summary><div data-role="category-list"></div></details></section>`;
 
   panel.addEventListener("click", async event => {
     const button = event.target.closest("button");
@@ -268,7 +272,12 @@ function createPanel(actor) {
     event.preventDefault();
     const current = chronomancerState(actor);
     const action = button.dataset.action;
-    if (action === "category") { panel.dataset.categoryIndex = button.dataset.categoryIndex; delete panel.dataset.selectedItemId; renderSelector(panel, actor); }
+    if (action === "toggle-drawer") {
+      const open = !panel.classList.contains("drawer-open");
+      panel.classList.toggle("drawer-open", open);
+      for (const toggle of panel.querySelectorAll('[data-action="toggle-drawer"]')) toggle.setAttribute("aria-expanded", String(open));
+    }
+    else if (action === "category") { panel.dataset.categoryIndex = button.dataset.categoryIndex; delete panel.dataset.selectedItemId; renderSelector(panel, actor); }
     else if (action === "category-prev") rotateCategory(panel, actor, -1);
     else if (action === "category-next") rotateCategory(panel, actor, 1);
     else if (action === "intervention-prev") rotateIntervention(panel, actor, -1);
@@ -283,6 +292,12 @@ function createPanel(actor) {
     else if (action === "confluence-clear") await updateChronomancerState(actor, { confluences: 0 });
     else if (action === "reaction") await updateChronomancerState(actor, { reaction: !current.reaction });
     else if (action === "open-treatise") treatise(actor)?.sheet?.render(true);
+  });
+  panel.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !panel.classList.contains("drawer-open")) return;
+    panel.classList.remove("drawer-open");
+    for (const toggle of panel.querySelectorAll('[data-action="toggle-drawer"]')) toggle.setAttribute("aria-expanded", "false");
+    panel.querySelector('[data-action="toggle-drawer"]')?.focus();
   });
 
   let lastWheel = 0;
@@ -308,22 +323,14 @@ function refreshPanel(panel, actor) {
   panel.querySelector("[data-role='confluences']").textContent = current.confluences;
   panel.querySelector("[data-role='treatise']").textContent = treatise(actor)?.name ?? "Tratado não escolhido";
   panel.querySelector("[data-role='reaction']").textContent = current.reaction ? "Reação Temporal disponível" : "Reação Temporal utilizada";
+  panel.querySelector("[data-role='compact-points']").textContent = `${current.points}/${current.maximum} PT`;
+  panel.querySelector("[data-role='compact-name']").textContent = selectedEntry(actor, panel)?.item.name ?? "Intervenções";
   panel.querySelector("[data-action='reaction']").classList.toggle("active", current.reaction);
+  panel.classList.toggle("reaction-ready", current.reaction);
   panel.querySelector("[data-action='points-minus']").disabled = current.points <= 0;
   panel.querySelector("[data-action='points-plus']").disabled = current.points >= current.maximum;
   for (const button of panel.querySelectorAll("[data-action='trail']")) button.classList.toggle("active", button.dataset.law === current.trail);
   renderSelection(panel, actor);
-}
-
-function expandSheet(app, root) {
-  const windowElement = root.closest(".application, .window-app") ?? root;
-  if (windowElement.dataset.novaEraChronomancerExpanded === "true") return;
-  windowElement.dataset.novaEraChronomancerExpanded = "true";
-  const currentWidth = windowElement.getBoundingClientRect().width;
-  const width = Math.min(currentWidth + 540, Math.max(currentWidth, window.innerWidth - 24));
-  if (width <= currentWidth + 10 || typeof app.setPosition !== "function") return;
-  const left = Math.max(12, (app.position?.left ?? windowElement.getBoundingClientRect().left) - ((width - currentWidth) / 2));
-  app.setPosition({ width, left });
 }
 
 function renderChronomancerPanel(app, html) {
@@ -334,7 +341,14 @@ function renderChronomancerPanel(app, html) {
   (root.closest(".application, .window-app") ?? root).classList.add("nova-era-chronomancer-sheet");
   const panel = createPanel(actor);
   const mainContent = root.querySelector(".sheet-body .main-content");
-  if (mainContent) { mainContent.classList.add("nova-era-has-chronomancer-panel"); mainContent.prepend(panel); expandSheet(app, root); }
+  const sidebar = root.querySelector(".sheet-body .main-content > .sidebar, .sheet-body .main-content .sidebar, [data-application-part='sidebar']");
+  if (sidebar) {
+    panel.classList.add("ne-crono-integrated");
+    const portrait = sidebar.querySelector(".portrait, .profile, .sheet-profile, [data-application-part='portrait']");
+    if (portrait) portrait.after(panel);
+    else sidebar.prepend(panel);
+  }
+  else if (mainContent) { mainContent.classList.add("nova-era-has-chronomancer-panel"); mainContent.prepend(panel); }
   else root.querySelector(".sheet-body, [data-application-part='body'], .tab-body")?.prepend(panel);
 }
 

@@ -9,6 +9,16 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.19.0 — Relógio Integrado
+
+- Incorpora o Relógio do Cronomante à barra lateral da própria ficha, junto ao retrato.
+- Remove a ampliação automática da janela e reduz o mostrador para um medalhão compacto.
+- Mantém a rotação por clique, roda do mouse, arraste e setas.
+- Transforma o centro do relógio e a faixa inferior em controles para abrir uma gaveta de comandos.
+- A gaveta apresenta descrição, custo, Leis, Confluência prevista, execução e Biblioteca da categoria sem ocupar espaço quando fechada.
+- Exibe PT e Intervenção selecionada em uma faixa compacta, com destaque quando a Reação Temporal está disponível.
+- Inclui encaixe alternativo e comportamento responsivo para outras variações da ficha D&D5e.
+
 ### v0.18.0 — Biblioteca e Fraturas Reativas
 
 - Abre uma janela de escolha da Biblioteca Pessoal quando o Cronomante conquista uma nova Intervenção.
