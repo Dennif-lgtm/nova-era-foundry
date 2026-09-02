@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.2 — Ponteiro e Atalhos Visuais do Cronomante
+
+- Adiciona um ponteiro temporal completo, com haste, ponta luminosa e pivô central.
+- Move o ponteiro suavemente entre as cinco posições principais ao girar a roda do mouse.
+- Mantém o encaixe automático em Visão Essencial, Fundamentos, Disciplinas, Grandes Teorias e Paradoxos.
+- Substitui os nomes nos atalhos XI, XII e I pelos ícones das Intervenções equipadas.
+- Exibe nome e custo da Intervenção no tooltip, preservando a leitura limpa da arte.
+
 ### v0.23.1 — Relógio do Cronomante v6
 
 - Substitui a base anterior pela arte transparente v6 com rótulos corrigidos.

@@ -312,14 +312,14 @@ function circularPanelMarkup() {
       <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v6.webp" alt="Relógio do Cronomante">
       <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
       ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
-      <div class="ne-v2-pointer" data-role="clock-pointer"><i class="fa-solid fa-location-arrow"></i></div>
+      <div class="ne-v2-pointer" data-role="clock-pointer" aria-hidden="true"><span class="ne-v2-pointer-tip"></span><span class="ne-v2-pointer-hand"></span><span class="ne-v2-pointer-pivot"></span></div>
       <section class="ne-v4-laws ne-v4-trails" data-role="trail-laws" aria-label="Rastro ativo">${trailLaws}</section>
       <section class="ne-v4-laws ne-v4-confluences" data-role="confluence-laws" aria-label="Possibilidades de Confluência">${confluenceLaws}</section>
       <section class="ne-v2-core">
         <small>Pontos Temporais</small><strong data-role="points">0 / 0</strong>
         <div><button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button><button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button></div>
       </section>
-      <section class="ne-v2-quick" data-role="quick-slots"><button type="button" data-slot="0"><small>XI</small><span>—</span></button><button type="button" data-slot="1"><small>XII</small><span>—</span></button><button type="button" data-slot="2"><small>I</small><span>—</span></button></section>
+      <section class="ne-v2-quick" data-role="quick-slots" aria-label="Intervenções rápidas"><button type="button" data-slot="0"><img alt=""></button><button type="button" data-slot="1"><img alt=""></button><button type="button" data-slot="2"><img alt=""></button></section>
       <button type="button" class="ne-v2-treatise" data-action="open-treatise"><img data-role="treatise-icon" src="${ICON_ROOT}/tratados/possibilidades.webp" alt=""><span data-role="treatise"></span></button>
       <button type="button" class="ne-v2-reaction" data-action="reaction"><i class="fa-solid fa-hourglass"></i><span data-role="reaction"></span></button>
       <div class="ne-v2-feedback"><strong data-role="selected-name">Visão essencial</strong><small data-role="confluence-hint">Gire o anel para consultar a Biblioteca</small></div>
@@ -371,13 +371,21 @@ function renderSelector(panel, actor) {
     panel.dataset.clockMode = String(mode);
     panel.classList.toggle("ne-v2-essential", mode === 0);
     panel.style.setProperty("--pointer-angle", `${MODE_ANGLES[mode] ?? 0}deg`);
+    panel.querySelector("[data-role='clock-pointer']")?.setAttribute("data-position", CLOCK_MODES[mode] ?? CLOCK_MODES[0]);
     panel.querySelectorAll("[data-action='clock-mode']").forEach(button => button.classList.toggle("active", Number(button.dataset.mode) === mode));
     const library = panel.querySelector("[data-role='library-panel']");
     library?.classList.toggle("available", mode > 0);
     if (mode === 0) {
       panel.querySelector("[data-role='active-category']").textContent = "Visão essencial";
       panel.querySelector("[data-role='category-list']").innerHTML = "<p>Gire o anel para Fundamentos, Disciplinas, Grandes Teorias ou Paradoxos.</p>";
-      panel.querySelector("[data-role='quick-slots']")?.querySelectorAll("button").forEach(button => { button.disabled = true; button.dataset.itemId = ""; button.querySelector("span").textContent = "—"; });
+      panel.querySelector("[data-role='quick-slots']")?.querySelectorAll("button").forEach(button => {
+        button.disabled = true;
+        button.dataset.itemId = "";
+        button.removeAttribute("title");
+        const image = button.querySelector("img");
+        image.removeAttribute("src");
+        image.alt = "";
+      });
       renderSelection(panel, actor, null);
       return;
     }
@@ -406,7 +414,11 @@ function renderSelector(panel, actor) {
     button.disabled = !entry;
     button.dataset.action = entry ? "quick-intervention" : "";
     button.dataset.itemId = entry?.item.id ?? "";
-    button.querySelector("span").textContent = entry?.item.name ?? "—";
+    button.title = entry ? `${entry.item.name} — ${entry.cost} PT` : "Encaixe de Intervenção vazio";
+    const image = button.querySelector("img");
+    if (entry) image.src = entry.item.img;
+    else image.removeAttribute("src");
+    image.alt = entry?.item.name ?? "";
     button.classList.toggle("active", entry?.item.id === selected?.item.id);
   });
   renderSelection(panel, actor, selected);
