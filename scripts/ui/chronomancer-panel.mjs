@@ -8,8 +8,10 @@ const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
 const CLOCK_MODES = ["Essencial", ...CATEGORIES];
 const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
 const LAW_SLUGS = ["precedencia", "atraso", "repeticao", "continuidade", "ruptura"];
-const TRAIL_ORBIT = [[34.8,30.8],[30.4,36.8],[28.8,44.1],[30.4,51.4],[34.8,57.4]];
-const CONFLUENCE_ORBIT = [[65.2,30.8],[69.6,36.8],[71.2,44.1],[69.6,51.4],[65.2,57.4]];
+const TRAIL_ORBIT = [[33.15,35.86],[29.33,42.48],[28,50],[29.33,57.52],[33.15,64.14]];
+const CONFLUENCE_ORBIT = [[66.85,35.86],[70.67,42.48],[72,50],[70.67,57.52],[66.85,64.14]];
+const TRAIL_ACTIVE_SHIFTS = [[5,4],[6,2],[7,0],[6,-2],[5,-4]];
+const CONFLUENCE_ACTIVE_SHIFTS = [[-5,4],[-6,2],[-7,0],[-6,-2],[-5,-4]];
 const FOUNDATION_ICON_SLUGS = new Set([
   "acelerar", "antecipacao", "retardar", "inercia-temporal", "eco-temporal",
   "reverberacao", "ancora-temporal", "permanencia", "colapso", "descontinuidade"
@@ -642,8 +644,9 @@ function refreshPanel(panel, actor) {
   panel.querySelector("[data-action='points-plus']").disabled = current.points >= current.maximum;
   for (const button of panel.querySelectorAll("[data-action='trail']")) {
     const active = button.dataset.law === current.trail;
+    const [shiftX, shiftY] = TRAIL_ACTIVE_SHIFTS[LAWS.indexOf(button.dataset.law)] ?? [7, 0];
     button.classList.toggle("active", active);
-    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? "translate(-50%,-50%) translateX(7px) scale(1.18)" : "translate(-50%,-50%) scale(1)";
+    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.18)` : "translate(-50%,-50%) scale(1)";
   }
   const interventions = actorInterventions(actor);
   for (const button of panel.querySelectorAll("[data-action='confluence-law']")) {
@@ -655,8 +658,9 @@ function refreshPanel(panel, actor) {
     button.classList.toggle("blocked", !same && candidates.length > 0 && !ready);
     button.classList.toggle("dark", same || !candidates.length);
     button.classList.toggle("active", law === current.trail);
+    const [shiftX, shiftY] = CONFLUENCE_ACTIVE_SHIFTS[LAWS.indexOf(law)] ?? [-7, 0];
     button.style.transform = ready
-      ? "translate(-50%,-50%) translateX(-7px) scale(1.18)"
+      ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.18)`
       : (!same && candidates.length > 0 ? "translate(-50%,-50%) scale(.9)" : "translate(-50%,-50%) scale(.86)");
     const name = confluenceName(current.trail, law);
     const matching = candidates.map(entry => entry.item.name).join(", ");

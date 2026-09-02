@@ -1983,16 +1983,16 @@
 .ne-v3-clock .ne-v2-mode-3 { left:72%; top:66.4%; width:12%; height:12%; }
 .ne-v4-laws { position:absolute; z-index:10; inset:0; width:100%; height:100%; pointer-events:none; }
 .nova-era .ne-v4-laws .ne-v2-law { --law-scale:1; --law-shift-x:0px; position:absolute; width:6.8%; height:6.8%; padding:0; border:0; background:transparent; opacity:.62; transform:translate(calc(-50% + var(--law-shift-x)),-50%) scale(var(--law-scale)); transform-origin:center; transition:opacity .2s,filter .2s,transform .2s; pointer-events:auto; }
-.ne-v4-trails .ne-v2-law:nth-child(1) { left:34.8%; top:30.8%; }
-.ne-v4-trails .ne-v2-law:nth-child(2) { left:30.4%; top:36.8%; }
-.ne-v4-trails .ne-v2-law:nth-child(3) { left:28.8%; top:44.1%; }
-.ne-v4-trails .ne-v2-law:nth-child(4) { left:30.4%; top:51.4%; }
-.ne-v4-trails .ne-v2-law:nth-child(5) { left:34.8%; top:57.4%; }
-.ne-v4-confluences .ne-v2-law:nth-child(1) { left:65.2%; top:30.8%; }
-.ne-v4-confluences .ne-v2-law:nth-child(2) { left:69.6%; top:36.8%; }
-.ne-v4-confluences .ne-v2-law:nth-child(3) { left:71.2%; top:44.1%; }
-.ne-v4-confluences .ne-v2-law:nth-child(4) { left:69.6%; top:51.4%; }
-.ne-v4-confluences .ne-v2-law:nth-child(5) { left:65.2%; top:57.4%; }
+.ne-v4-trails .ne-v2-law:nth-child(1) { left:33.15%; top:35.86%; }
+.ne-v4-trails .ne-v2-law:nth-child(2) { left:29.33%; top:42.48%; }
+.ne-v4-trails .ne-v2-law:nth-child(3) { left:28%; top:50%; }
+.ne-v4-trails .ne-v2-law:nth-child(4) { left:29.33%; top:57.52%; }
+.ne-v4-trails .ne-v2-law:nth-child(5) { left:33.15%; top:64.14%; }
+.ne-v4-confluences .ne-v2-law:nth-child(1) { left:66.85%; top:35.86%; }
+.ne-v4-confluences .ne-v2-law:nth-child(2) { left:70.67%; top:42.48%; }
+.ne-v4-confluences .ne-v2-law:nth-child(3) { left:72%; top:50%; }
+.ne-v4-confluences .ne-v2-law:nth-child(4) { left:70.67%; top:57.52%; }
+.ne-v4-confluences .ne-v2-law:nth-child(5) { left:66.85%; top:64.14%; }
 .ne-v4-laws .ne-v2-law img { width:84%; height:84%; border-radius:50%; object-fit:contain; pointer-events:none; }
 .ne-v4-laws .ne-v2-law span { display:none; }
 .ne-v4-trails .ne-v2-law.active { --law-scale:1.18; --law-shift-x:7px; z-index:2; opacity:1 !important; filter:drop-shadow(0 0 7px #c7f7ff) drop-shadow(0 0 15px #42d9ff) !important; }

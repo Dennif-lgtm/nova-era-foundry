@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.6 — Arcos Concêntricos
+
+- Reconstrói os dois arcos em torno do centro real do relógio.
+- Distribui as cinco Leis por toda a altura útil dos segmentos de Rastros e Confluências.
+- Mantém cada ícone a uma distância consistente do núcleo temporal.
+- Faz ícones destacados avançarem diagonalmente em direção ao centro de acordo com sua posição orbital.
+
 ### v0.23.5 — Lapidação das Órbitas
 
 - Aumenta os ícones de Rastros e Confluências para melhorar a leitura durante o jogo.
