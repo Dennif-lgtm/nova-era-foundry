@@ -8,15 +8,16 @@ const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
 const CLOCK_MODES = ["Essencial", ...CATEGORIES];
 const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
 const LAW_SLUGS = ["precedencia", "atraso", "repeticao", "continuidade", "ruptura"];
-const TRAIL_ORBIT = [[33.15,35.86],[29.33,42.48],[28,50],[29.33,57.52],[33.15,64.14]];
-const CONFLUENCE_ORBIT = [[66.85,35.86],[70.67,42.48],[72,50],[70.67,57.52],[66.85,64.14]];
-const TRAIL_ACTIVE_SHIFTS = [[5,4],[6,2],[7,0],[6,-2],[5,-4]];
-const CONFLUENCE_ACTIVE_SHIFTS = [[-5,4],[-6,2],[-7,0],[-6,-2],[-5,-4]];
+const TRAIL_ORBIT = [[28.23,33.95],[25.32,39.68],[23.15,46.29],[23.63,54.03],[25.24,61.53]];
+const CONFLUENCE_ORBIT = [[74.03,33.87],[77.98,39.68],[79.84,46.37],[79.6,54.03],[77.18,61.53]];
+const TRAIL_ACTIVE_SHIFTS = [[0,0],[0,0],[0,0],[0,0],[0,0]];
+const CONFLUENCE_ACTIVE_SHIFTS = [[0,0],[0,0],[0,0],[0,0],[0,0]];
 const FOUNDATION_ICON_SLUGS = new Set([
   "acelerar", "antecipacao", "retardar", "inercia-temporal", "eco-temporal",
   "reverberacao", "ancora-temporal", "permanencia", "colapso", "descontinuidade"
 ]);
 const MODE_ANGLES = [0, -55, 55, -125, 125];
+const CLOCK_SCROLL_ORDER = [0, 1, 3, 4, 2];
 const CONFLUENCE_NAMES = {
   "Atraso|Precedência": "Equilíbrio Causal",
   "Precedência|Repetição": "Impulso Temporal",
@@ -322,11 +323,11 @@ function confluenceName(first, second) {
 }
 
 function circularPanelMarkup() {
-  const trailLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${TRAIL_ORBIT[index][0]}%;top:${TRAIL_ORBIT[index][1]}%;width:6.8%;height:6.8%;transform:translate(-50%,-50%)" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
-  const confluenceLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${CONFLUENCE_ORBIT[index][0]}%;top:${CONFLUENCE_ORBIT[index][1]}%;width:6.8%;height:6.8%;transform:translate(-50%,-50%)" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const trailLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${TRAIL_ORBIT[index][0]}%;top:${TRAIL_ORBIT[index][1]}%;width:7.5%;height:7.5%;transform:translate(-50%,-50%)" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const confluenceLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${CONFLUENCE_ORBIT[index][0]}%;top:${CONFLUENCE_ORBIT[index][1]}%;width:7.5%;height:7.5%;transform:translate(-50%,-50%)" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
   return `<div class="ne-v2-shell ne-v3-shell">
     <section class="ne-v2-clock ne-v3-clock" data-role="clock">
-      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v6.webp" alt="Relógio do Cronomante">
+      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-functional-v7.webp" alt="Relógio funcional do Cronomante">
       <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
       ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
       <div class="ne-v2-pointer" data-role="clock-pointer" aria-hidden="true"><span class="ne-v2-pointer-tip"></span><span class="ne-v2-pointer-hand"></span><span class="ne-v2-pointer-pivot"></span></div>
@@ -387,7 +388,15 @@ function renderSelector(panel, actor) {
   if (isCircular) {
     panel.dataset.clockMode = String(mode);
     panel.classList.toggle("ne-v2-essential", mode === 0);
-    panel.style.setProperty("--pointer-angle", `${MODE_ANGLES[mode] ?? 0}deg`);
+    const previousAngle = Number(panel.dataset.pointerAngle);
+    let pointerAngle = MODE_ANGLES[mode] ?? 0;
+    if (Number.isFinite(previousAngle) && Number(panel.dataset.pointerMode) !== mode) {
+      const equivalents = [pointerAngle - 360, pointerAngle, pointerAngle + 360];
+      pointerAngle = equivalents.reduce((closest, candidate) => Math.abs(candidate - previousAngle) < Math.abs(closest - previousAngle) ? candidate : closest);
+    } else if (Number(panel.dataset.pointerMode) === mode && Number.isFinite(previousAngle)) pointerAngle = previousAngle;
+    panel.dataset.pointerAngle = String(pointerAngle);
+    panel.dataset.pointerMode = String(mode);
+    panel.style.setProperty("--pointer-angle", `${pointerAngle}deg`);
     panel.querySelector("[data-role='clock-pointer']")?.setAttribute("data-position", CLOCK_MODES[mode] ?? CLOCK_MODES[0]);
     panel.querySelectorAll("[data-action='clock-mode']").forEach(button => button.classList.toggle("active", Number(button.dataset.mode) === mode));
     const library = panel.querySelector("[data-role='library-panel']");
@@ -443,8 +452,15 @@ function renderSelector(panel, actor) {
 
 async function rotateClockMode(panel, actor, direction) {
   const current = Number(panel.dataset.clockMode ?? chronomancerState(actor).clockMode ?? 0);
-  const mode = (current + direction + CLOCK_MODES.length) % CLOCK_MODES.length;
+  const currentPosition = Math.max(0, CLOCK_SCROLL_ORDER.indexOf(current));
+  const mode = CLOCK_SCROLL_ORDER[(currentPosition + direction + CLOCK_SCROLL_ORDER.length) % CLOCK_SCROLL_ORDER.length];
+  const currentAngle = Number(panel.dataset.pointerAngle ?? MODE_ANGLES[current] ?? 0);
+  let pointerAngle = MODE_ANGLES[mode] ?? 0;
+  if (direction > 0) while (pointerAngle >= currentAngle) pointerAngle -= 360;
+  else while (pointerAngle <= currentAngle) pointerAngle += 360;
   panel.dataset.clockMode = String(mode);
+  panel.dataset.pointerMode = String(mode);
+  panel.dataset.pointerAngle = String(pointerAngle);
   delete panel.dataset.selectedItemId;
   await updateChronomancerState(actor, { clockMode: mode });
   renderSelector(panel, actor);
@@ -644,9 +660,9 @@ function refreshPanel(panel, actor) {
   panel.querySelector("[data-action='points-plus']").disabled = current.points >= current.maximum;
   for (const button of panel.querySelectorAll("[data-action='trail']")) {
     const active = button.dataset.law === current.trail;
-    const [shiftX, shiftY] = TRAIL_ACTIVE_SHIFTS[LAWS.indexOf(button.dataset.law)] ?? [7, 0];
+    const [shiftX, shiftY] = TRAIL_ACTIVE_SHIFTS[LAWS.indexOf(button.dataset.law)] ?? [0, 0];
     button.classList.toggle("active", active);
-    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.18)` : "translate(-50%,-50%) scale(1)";
+    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.1)` : "translate(-50%,-50%) scale(1)";
   }
   const interventions = actorInterventions(actor);
   for (const button of panel.querySelectorAll("[data-action='confluence-law']")) {
@@ -658,9 +674,9 @@ function refreshPanel(panel, actor) {
     button.classList.toggle("blocked", !same && candidates.length > 0 && !ready);
     button.classList.toggle("dark", same || !candidates.length);
     button.classList.toggle("active", law === current.trail);
-    const [shiftX, shiftY] = CONFLUENCE_ACTIVE_SHIFTS[LAWS.indexOf(law)] ?? [-7, 0];
+    const [shiftX, shiftY] = CONFLUENCE_ACTIVE_SHIFTS[LAWS.indexOf(law)] ?? [0, 0];
     button.style.transform = ready
-      ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.18)`
+      ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.1)`
       : (!same && candidates.length > 0 ? "translate(-50%,-50%) scale(.9)" : "translate(-50%,-50%) scale(.86)");
     const name = confluenceName(current.trail, law);
     const matching = candidates.map(entry => entry.item.name).join(", ");

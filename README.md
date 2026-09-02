@@ -9,6 +9,16 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.24.0 — Relógio Funcional v7 do Cronomante
+
+- Redesenha a base do relógio como uma interface funcional sem abandonar sua identidade visual.
+- Distribui as cinco Leis de Rastro e as cinco possibilidades de Confluência em arcos espelhados com encaixes próprios.
+- Cria medalhões dedicados para Fundamentos, Disciplinas, Grandes Teorias, Paradoxos, Tratado e Reação Temporal.
+- Integra os três atalhos XI, XII e I diretamente à geometria da arte.
+- Mantém o núcleo de Pontos Temporais limpo e sem painéis opacos cobrindo a ilustração.
+- Faz o ponteiro percorrer as categorias em ordem circular natural ao usar a roda do mouse.
+- Usa transparência real fora da moldura para integração limpa ao Foundry.
+
 ### v0.23.6 — Arcos Concêntricos
 
 - Reconstrói os dois arcos em torno do centro real do relógio.
