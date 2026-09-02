@@ -1874,7 +1874,10 @@
 .ne-bp-compact .ne-bp-utility { right:1%; top:10%; height:75%; }
 
 /* Cronomante — relógio circular independente (v2) */
-.nova-era-chronomancer-clock-window .window-content { padding: 0; overflow: hidden; background: radial-gradient(circle at 42% 45%, #0b1830 0, #040912 54%, #020409 100%); }
+.nova-era-chronomancer-clock-window,
+.nova-era-chronomancer-clock-window.window-app,
+.nova-era-chronomancer-clock-window .window-content { background:transparent !important; }
+.nova-era-chronomancer-clock-window .window-content { padding:0; overflow:hidden; box-shadow:none; }
 .chronomancer-panel.ne-crono-standalone { width: 100%; min-height: 100%; color: #ead7a2; background: none; }
 .ne-v2-shell { position: relative; display: grid; grid-template-columns: minmax(620px, 1fr) 370px; grid-template-rows: minmax(0, 1fr) 76px; gap: 10px; width: 100%; height: 100%; min-height: 820px; padding: 12px 16px; overflow: hidden; }
 .ne-v2-clock { --pointer-angle: 0deg; position: relative; width: min(78vh, 790px); aspect-ratio: 1; align-self: center; justify-self: center; user-select: none; }
@@ -1910,7 +1913,7 @@
 .ne-v2-quick button { width: 31%; height: 100%; padding: 6px; border: 1px solid transparent; background: transparent; cursor: pointer; text-shadow: 0 1px 2px #000; }
 .ne-v2-quick button:hover,.ne-v2-quick button.active { border-color: #8ae8ff88; border-radius: 50%; background: #07213f99; box-shadow: 0 0 15px #54bfff88; }
 .ne-v2-quick small { display: block; font: 700 17px serif; }.ne-v2-quick span { display: block; margin-top: 42px; font-size: 10px; line-height: 1.05; overflow: hidden; max-height: 22px; }
-.ne-v2-quick img { display:block; width:62%; height:62%; border-radius:50%; object-fit:cover; pointer-events:none; opacity:.78; filter:saturate(.8) brightness(.85); transition:opacity .2s,filter .2s,transform .2s; }
+.ne-v2-quick img { display:block; width:78%; height:78%; border-radius:50%; object-fit:cover; pointer-events:none; opacity:.78; filter:saturate(.8) brightness(.85); transition:opacity .2s,filter .2s,transform .2s; }
 .ne-v2-quick button:hover img,.ne-v2-quick button.active img { opacity:1; filter:saturate(1.1) brightness(1.08) drop-shadow(0 0 10px #67dfff); transform:scale(1.08); }
 .ne-v2-quick button:disabled img:not([src]) { display:none; }
 .ne-v2-essential .ne-v2-quick { opacity: 0; pointer-events: none; }
@@ -1926,7 +1929,7 @@
 .ne-v2-library-entry { display:grid;grid-template-columns:1fr 36px;border-bottom:1px solid #72592655; }.ne-v2-library-entry.active { background:#183b5a88; }.ne-v2-library-entry button { min-height:40px;border:0;background:transparent;color:#ead7a2;text-align:left;cursor:pointer; }.ne-v2-library-entry button:first-child { display:flex;justify-content:space-between;align-items:center; }.ne-v2-library-entry small { color:#80dff1; }
 .ne-v2-selected { margin: 8px 12px; padding: 10px; border: 1px solid #785b22; background: #020711aa; }.ne-v2-selected p { max-height: 86px; overflow:auto; color:#bbc7d2; font-size:12px; }
 .ne-v2-library footer { display:flex;gap:8px;padding:0 12px; }.ne-v2-library footer button { min-height:42px;border:1px solid #8b6924;background:#0a1422;color:#ead7a2; }.ne-v2-library footer .ne-crono-execute { flex:1; }
-.ne-v2-timeline { grid-column: 1 / -1; display:grid;grid-template-columns:150px 1fr;align-items:center;border-top:1px solid #8e6b25;border-bottom:1px solid #8e6b25;background:#050b15cc;padding:8px 18px; }.ne-v2-timeline h3 { margin:0;font:700 15px serif;text-transform:uppercase;letter-spacing:.1em; }.ne-v2-timeline [data-role='combat-timeline'] { display:flex;justify-content:space-around;gap:8px; }.ne-v2-timeline [data-combatant-id] { min-width:70px;max-width:120px;display:grid;place-items:center;color:#83bcd2; }.ne-v2-timeline [data-combatant-id].active { color:#ffd071;text-shadow:0 0 8px #ff9b29; }.ne-v2-timeline small { width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center; }
+.ne-v2-timeline { grid-column: 1 / -1; display:grid;grid-template-columns:150px 1fr;align-items:center;border-top:1px solid #8e6b25;border-bottom:1px solid #8e6b25;background:transparent;padding:8px 18px; }.ne-v2-timeline h3 { margin:0;font:700 15px serif;text-transform:uppercase;letter-spacing:.1em; }.ne-v2-timeline [data-role='combat-timeline'] { display:flex;justify-content:space-around;gap:8px; }.ne-v2-timeline [data-combatant-id] { min-width:70px;max-width:120px;display:grid;place-items:center;color:#83bcd2; }.ne-v2-timeline [data-combatant-id].active { color:#ffd071;text-shadow:0 0 8px #ff9b29; }.ne-v2-timeline small { width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center; }
 .ne-bp-compat { display:none !important; }
 @media (max-width: 1050px) { .ne-v2-shell { grid-template-columns: minmax(560px,1fr) 310px; }.ne-v2-clock { width:min(72vh,700px); }.ne-v2-library { height:min(72vh,700px); } }
 

@@ -9,6 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.0 — Relógio Vivo
+
+- Adiciona um medalhão exclusivo para a classe Cronomante.
+- Adiciona símbolos próprios para os Tratados da Precedência, das Possibilidades e da Continuidade.
+- Integra o ícone da classe à Visão Essencial do relógio.
+- Troca automaticamente o medalhão inferior conforme o Tratado escolhido pelo personagem.
+- Fornece versões WebP de 512 px com transparência real para uso eficiente no Foundry.
+- Alinha Leis, categorias, atalhos, Tratado e Reação aos centros reais dos adornos.
+- Faz o ponteiro percorrer fisicamente as cinco posições do relógio ao usar o scroll.
+- Remove o fundo opaco da janela e da Linha do Tempo para revelar o cenário do Foundry.
+
 ### v0.24.0 — Relógio Funcional v7 do Cronomante
 
 - Redesenha a base do relógio como uma interface funcional sem abandonar sua identidade visual.

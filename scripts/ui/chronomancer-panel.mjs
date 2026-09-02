@@ -16,7 +16,7 @@ const FOUNDATION_ICON_SLUGS = new Set([
   "acelerar", "antecipacao", "retardar", "inercia-temporal", "eco-temporal",
   "reverberacao", "ancora-temporal", "permanencia", "colapso", "descontinuidade"
 ]);
-const MODE_ANGLES = [0, -55, 55, -125, 125];
+const MODE_ANGLES = [0, -39, 42, -132, 131];
 const CLOCK_SCROLL_ORDER = [0, 1, 3, 4, 2];
 const CONFLUENCE_NAMES = {
   "Atraso|Precedência": "Equilíbrio Causal",
@@ -314,7 +314,7 @@ function interventionIcon(entry) {
 function treatiseIcon(actor) {
   const name = treatise(actor)?.name ?? "";
   const slug = /preced/i.test(name) ? "precedencia" : /continui/i.test(name) ? "continuidade" : "possibilidades";
-  return `${ICON_ROOT}/tratados/${slug}.webp`;
+  return `${ICON_ROOT}/v7/tratado-${slug}.webp`;
 }
 
 function confluenceName(first, second) {
@@ -328,7 +328,7 @@ function circularPanelMarkup() {
   return `<div class="ne-v2-shell ne-v3-shell">
     <section class="ne-v2-clock ne-v3-clock" data-role="clock">
       <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-functional-v7.webp" alt="Relógio funcional do Cronomante">
-      <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
+      <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Cronomante — Visão essencial"><img src="${ICON_ROOT}/v7/cronomante.webp" alt="Cronomante"><span>Essencial</span></button>
       ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
       <div class="ne-v2-pointer" data-role="clock-pointer" aria-hidden="true"><span class="ne-v2-pointer-tip"></span><span class="ne-v2-pointer-hand"></span><span class="ne-v2-pointer-pivot"></span></div>
       <section class="ne-v4-laws ne-v4-trails" style="position:absolute;inset:0;width:100%;height:100%;transform:none;display:block" data-role="trail-laws" aria-label="Rastro ativo">${trailLaws}</section>
@@ -338,7 +338,7 @@ function circularPanelMarkup() {
         <div><button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button><button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button></div>
       </section>
       <section class="ne-v2-quick" data-role="quick-slots" aria-label="Intervenções rápidas"><button type="button" data-slot="0"><img alt=""></button><button type="button" data-slot="1"><img alt=""></button><button type="button" data-slot="2"><img alt=""></button></section>
-      <button type="button" class="ne-v2-treatise" style="left:50%;top:84.3%" data-action="open-treatise"><img data-role="treatise-icon" src="${ICON_ROOT}/tratados/possibilidades.webp" alt=""><span data-role="treatise"></span></button>
+      <button type="button" class="ne-v2-treatise" data-action="open-treatise"><img data-role="treatise-icon" src="${ICON_ROOT}/v7/tratado-possibilidades.webp" alt=""><span data-role="treatise"></span></button>
       <button type="button" class="ne-v2-reaction" data-action="reaction"><i class="fa-solid fa-hourglass"></i><span data-role="reaction"></span></button>
       <div class="ne-v2-feedback"><strong data-role="selected-name">Visão essencial</strong><small data-role="confluence-hint">Gire o anel para consultar a Biblioteca</small></div>
     </section>
@@ -396,7 +396,7 @@ function renderSelector(panel, actor) {
     } else if (Number(panel.dataset.pointerMode) === mode && Number.isFinite(previousAngle)) pointerAngle = previousAngle;
     panel.dataset.pointerAngle = String(pointerAngle);
     panel.dataset.pointerMode = String(mode);
-    panel.style.setProperty("--pointer-angle", `${pointerAngle}deg`);
+    panel.querySelector("[data-role='clock']")?.style.setProperty("--pointer-angle", `${pointerAngle}deg`);
     panel.querySelector("[data-role='clock-pointer']")?.setAttribute("data-position", CLOCK_MODES[mode] ?? CLOCK_MODES[0]);
     panel.querySelectorAll("[data-action='clock-mode']").forEach(button => button.classList.toggle("active", Number(button.dataset.mode) === mode));
     const library = panel.querySelector("[data-role='library-panel']");
