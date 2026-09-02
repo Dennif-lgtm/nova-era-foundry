@@ -1964,3 +1964,31 @@
 .ne-v2-quick button:disabled span { display:none; }
 .chronomancer-panel.ne-v2-essential .ne-v2-shell { grid-template-columns:1fr; }
 .chronomancer-panel.ne-v2-essential .ne-v2-library { display:none; }
+
+/* Relógio limpo v4 — cada controle ocupa um encaixe real da ilustração. */
+.ne-v3-clock .ne-v2-mode { display:grid; place-items:center; opacity:.72; color:#e7d39d !important; }
+.ne-v3-clock .ne-v2-mode img { width:72%; height:72%; border-radius:50%; object-fit:cover; filter:grayscale(.45) brightness(.7); transition:filter .2s,transform .2s; pointer-events:none; }
+.ne-v3-clock .ne-v2-mode span { position:absolute; top:84%; width:145%; color:#dfca94; font:700 10px/1.1 serif; letter-spacing:.08em; text-align:center; text-transform:uppercase; text-shadow:0 2px 4px #000; pointer-events:none; }
+.ne-v3-clock .ne-v2-mode:hover img,.ne-v3-clock .ne-v2-mode.active img { filter:none drop-shadow(0 0 13px #6cdcff); transform:scale(1.08); }
+.ne-v3-clock .ne-v2-mode-essential { left:34%; top:1%; width:32%; height:13%; }
+.ne-v3-clock .ne-v2-mode-essential::after { content:"ESSENCIAL"; color:#e8d59f; font:700 10px serif; letter-spacing:.16em; text-shadow:0 1px 4px #000; }
+.ne-v3-clock .ne-v2-mode-0 { left:10.5%; top:26.5%; width:13.5%; height:16%; }
+.ne-v3-clock .ne-v2-mode-1 { right:10.5%; top:26.5%; width:13.5%; height:16%; }
+.ne-v3-clock .ne-v2-mode-2 { left:10.5%; bottom:22.5%; width:13.5%; height:16%; }
+.ne-v3-clock .ne-v2-mode-3 { right:10.5%; bottom:22.5%; width:13.5%; height:16%; }
+.ne-v3-laws { position:absolute; z-index:10; left:31.5%; bottom:9.6%; display:grid; grid-template-columns:repeat(5,1fr); align-items:center; width:37%; height:10%; }
+.nova-era .ne-v3-laws .ne-v2-law { width:54px; height:54px; padding:0; }
+.ne-v3-laws .ne-v2-law img { width:46px; height:46px; }
+.ne-v3-laws .ne-v2-law span { position:absolute; top:102%; display:none; width:max-content; max-width:100px; font-size:8px; text-align:center; }
+.ne-v3-laws .ne-v2-law:hover span { display:block; }
+.ne-v3-laws .ne-v2-law.active { opacity:1 !important; filter:drop-shadow(0 0 12px #55dfff) !important; transform:scale(1.12); }
+.ne-v3-laws .ne-v2-law.ready { opacity:1; filter:drop-shadow(0 0 12px #b85dff); }
+.ne-v3-laws .ne-v2-law.blocked { opacity:.55; filter:drop-shadow(0 0 6px #7548a0); }
+.ne-v3-clock .ne-v2-quick { left:30%; top:16%; width:40%; height:17%; }
+.ne-v3-clock .ne-v2-quick button { display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; }
+.ne-v3-clock .ne-v2-quick span { width:94%; margin:0; }
+.ne-v3-clock .ne-v2-treatise,.ne-v3-clock .ne-v2-reaction { display:grid; place-items:center; width:11%; height:auto; aspect-ratio:1; bottom:4.1%; padding:0; border:0; border-radius:50%; background:radial-gradient(circle,#07182bcc,#020711 72%); }
+.ne-v3-clock .ne-v2-treatise { left:21.5%; }.ne-v3-clock .ne-v2-reaction { left:auto; right:21.5%; }
+.ne-v3-clock .ne-v2-treatise i,.ne-v3-clock .ne-v2-reaction i { font-size:25px; }.ne-v3-clock .ne-v2-treatise span,.ne-v3-clock .ne-v2-reaction span { display:none; }
+.ne-v3-clock .ne-v2-treatise:hover,.ne-v3-clock .ne-v2-reaction:hover,.ne-v3-clock .ne-v2-reaction.active { box-shadow:0 0 16px #67d8ff !important; }
+.ne-v3-clock .ne-v2-feedback { left:34%; top:65%; width:32%; }

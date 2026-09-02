@@ -299,16 +299,14 @@ function confluenceName(first, second) {
 }
 
 function circularPanelMarkup() {
-  const trailLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="trail" data-law="${law}" title="Definir Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
-  const confluenceLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="confluence-law" data-law="${law}" title="${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
-  return `<div class="ne-v2-shell">
-    <section class="ne-v2-clock" data-role="clock">
-      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-circular-v1.png" alt="Relógio do Cronomante">
+  const laws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="confluence-law" data-law="${law}" title="${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  return `<div class="ne-v2-shell ne-v3-shell">
+    <section class="ne-v2-clock ne-v3-clock" data-role="clock">
+      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v4.webp" alt="Relógio do Cronomante">
       <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
-      ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}">${CATEGORY_LABELS[index]}</button>`).join("")}
+      ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
       <div class="ne-v2-pointer" data-role="clock-pointer"><i class="fa-solid fa-location-arrow"></i></div>
-      <section class="ne-v2-trails" aria-label="Rastros"><h3>Rastros</h3>${trailLaws}</section>
-      <section class="ne-v2-confluences" aria-label="Confluências"><h3>Confluências</h3>${confluenceLaws}</section>
+      <section class="ne-v3-laws" data-role="law-orbit" aria-label="Leis Temporais">${laws}</section>
       <section class="ne-v2-core">
         <small>Pontos Temporais</small><strong data-role="points">0 / 0</strong>
         <div><button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button><button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button></div>
@@ -458,7 +456,7 @@ function createPanel(actor, { standalone = false } = {}) {
 
   if (standalone) {
     panel.innerHTML = circularPanelMarkup();
-    panel.dataset.clockMode = String(chronomancerState(actor).clockMode);
+    panel.dataset.clockMode = "0";
   }
 
   panel.addEventListener("click", async event => {
@@ -493,7 +491,8 @@ function createPanel(actor, { standalone = false } = {}) {
       renderSelector(panel, actor);
     }
     else if (action === "confluence-law") {
-      if (!current.trail || current.trail === button.dataset.law) return;
+      if (current.trail === button.dataset.law) { await updateChronomancerState(actor, { trail: "" }); return; }
+      if (!current.trail) { await updateChronomancerState(actor, { trail: button.dataset.law }); return; }
       const candidates = actorInterventions(actor).filter(entry => entry.laws.includes(button.dataset.law));
       const entry = candidates.find(candidate => candidate.cost <= current.points && (!/Reação/i.test(candidate.execution) || current.reaction)) ?? candidates[0];
       if (entry) { panel.dataset.clockMode = String(CATEGORIES.indexOf(entry.category) + 1); panel.dataset.categoryIndex = String(CATEGORIES.indexOf(entry.category)); panel.dataset.selectedItemId = entry.item.id; await updateChronomancerState(actor, { clockMode: Number(panel.dataset.clockMode) }); renderSelector(panel, actor); panel.classList.add("ne-v2-library-open"); }
@@ -614,6 +613,7 @@ function refreshPanel(panel, actor) {
     button.classList.toggle("ready", ready);
     button.classList.toggle("blocked", !same && candidates.length > 0 && !ready);
     button.classList.toggle("dark", same || !candidates.length);
+    button.classList.toggle("active", law === current.trail);
     const name = confluenceName(current.trail, law);
     const matching = candidates.map(entry => entry.item.name).join(", ");
     button.title = same ? (current.trail ? "A mesma Lei não forma Confluência" : "Defina um Rastro primeiro") : `${name}${matching ? ` — ${matching}` : " — nenhuma Intervenção conhecida"}`;

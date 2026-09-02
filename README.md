@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.0 — Relógio Limpo do Cronomante
+
+- Adota a nova arte limpa e transparente v4 criada para o painel do Foundry.
+- Usa os quatro medalhões laterais para Fundamentos, Disciplinas, Grandes Teorias e Paradoxos.
+- Reserva os três nichos superiores para os atalhos XI, XII e I.
+- Reúne as cinco Leis na faixa inferior, com brilho distinto para Rastro ativo, Confluência disponível e opção bloqueada.
+- Usa os dois medalhões inferiores para Tratado e Reação Temporal.
+- Abre sempre na visão Essencial, sem Biblioteca lateral, e preserva toda a automação existente.
+
 ### v0.22.1 — Acabamento do Relógio Circular
 
 - Torna invisíveis as áreas clicáveis dos quatro setores, eliminando retângulos sobre a ilustração.
