@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.3 — Órbitas das Cinco Leis
+
+- Distribui os cinco Rastros em um arco suave à esquerda do núcleo temporal.
+- Espelha as cinco possibilidades de Confluência em um arco à direita.
+- Mantém a ordem Precedência, Atraso, Repetição, Continuidade e Ruptura nos dois lados.
+- Faz a Lei ativa avançar em direção ao núcleo com brilho azul.
+- Faz Confluências disponíveis avançarem em direção ao núcleo com brilho violeta.
+- Diferencia visualmente ícones normais, disponíveis e indisponíveis por tamanho e opacidade.
+
 ### v0.23.2 — Ponteiro e Atalhos Visuais do Cronomante
 
 - Adiciona um ponteiro temporal completo, com haste, ponta luminosa e pivô central.
