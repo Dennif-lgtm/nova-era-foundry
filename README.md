@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.5 — Lapidação das Órbitas
+
+- Aumenta os ícones de Rastros e Confluências para melhorar a leitura durante o jogo.
+- Refina a curvatura e o espaçamento vertical dos dois arcos.
+- Mantém maior destaque para a Lei ativa e para as Confluências disponíveis.
+- Preserva o núcleo central e os encaixes rápidos sem sobreposição.
+
 ### v0.23.4 — Geometria e Ícones do Relógio
 
 - Fixa Rastros e Confluências em arcos espelhados mesmo quando o Foundry conserva CSS anterior em cache.

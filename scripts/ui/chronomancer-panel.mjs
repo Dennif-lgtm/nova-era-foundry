@@ -8,8 +8,8 @@ const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
 const CLOCK_MODES = ["Essencial", ...CATEGORIES];
 const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
 const LAW_SLUGS = ["precedencia", "atraso", "repeticao", "continuidade", "ruptura"];
-const TRAIL_ORBIT = [[34.2,31.2],[29.8,36.8],[28.1,44.1],[29.8,51.4],[34.2,57]];
-const CONFLUENCE_ORBIT = [[65.8,31.2],[70.2,36.8],[71.9,44.1],[70.2,51.4],[65.8,57]];
+const TRAIL_ORBIT = [[34.8,30.8],[30.4,36.8],[28.8,44.1],[30.4,51.4],[34.8,57.4]];
+const CONFLUENCE_ORBIT = [[65.2,30.8],[69.6,36.8],[71.2,44.1],[69.6,51.4],[65.2,57.4]];
 const FOUNDATION_ICON_SLUGS = new Set([
   "acelerar", "antecipacao", "retardar", "inercia-temporal", "eco-temporal",
   "reverberacao", "ancora-temporal", "permanencia", "colapso", "descontinuidade"
@@ -320,8 +320,8 @@ function confluenceName(first, second) {
 }
 
 function circularPanelMarkup() {
-  const trailLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${TRAIL_ORBIT[index][0]}%;top:${TRAIL_ORBIT[index][1]}%;width:5.6%;height:5.6%;transform:translate(-50%,-50%)" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
-  const confluenceLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${CONFLUENCE_ORBIT[index][0]}%;top:${CONFLUENCE_ORBIT[index][1]}%;width:5.6%;height:5.6%;transform:translate(-50%,-50%)" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const trailLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${TRAIL_ORBIT[index][0]}%;top:${TRAIL_ORBIT[index][1]}%;width:6.8%;height:6.8%;transform:translate(-50%,-50%)" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const confluenceLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${CONFLUENCE_ORBIT[index][0]}%;top:${CONFLUENCE_ORBIT[index][1]}%;width:6.8%;height:6.8%;transform:translate(-50%,-50%)" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
   return `<div class="ne-v2-shell ne-v3-shell">
     <section class="ne-v2-clock ne-v3-clock" data-role="clock">
       <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v6.webp" alt="Relógio do Cronomante">
@@ -643,7 +643,7 @@ function refreshPanel(panel, actor) {
   for (const button of panel.querySelectorAll("[data-action='trail']")) {
     const active = button.dataset.law === current.trail;
     button.classList.toggle("active", active);
-    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? "translate(-50%,-50%) translateX(6px) scale(1.22)" : "translate(-50%,-50%) scale(1)";
+    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? "translate(-50%,-50%) translateX(7px) scale(1.18)" : "translate(-50%,-50%) scale(1)";
   }
   const interventions = actorInterventions(actor);
   for (const button of panel.querySelectorAll("[data-action='confluence-law']")) {
@@ -656,8 +656,8 @@ function refreshPanel(panel, actor) {
     button.classList.toggle("dark", same || !candidates.length);
     button.classList.toggle("active", law === current.trail);
     button.style.transform = ready
-      ? "translate(-50%,-50%) translateX(-6px) scale(1.22)"
-      : (!same && candidates.length > 0 ? "translate(-50%,-50%) scale(.9)" : "translate(-50%,-50%) scale(.84)");
+      ? "translate(-50%,-50%) translateX(-7px) scale(1.18)"
+      : (!same && candidates.length > 0 ? "translate(-50%,-50%) scale(.9)" : "translate(-50%,-50%) scale(.86)");
     const name = confluenceName(current.trail, law);
     const matching = candidates.map(entry => entry.item.name).join(", ");
     button.title = same ? (current.trail ? "A mesma Lei não forma Confluência" : "Defina um Rastro primeiro") : `${name}${matching ? ` — ${matching}` : " — nenhuma Intervenção conhecida"}`;
