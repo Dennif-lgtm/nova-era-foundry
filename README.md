@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.1 — Encaixes e Legibilidade
+
+- Centraliza os cinco medalhões de navegação por suas âncoras reais na arte.
+- Reduz a área visual de Leis, atalhos e Tratado para mantê-los inteiramente dentro dos adornos.
+- Remove o aspecto apagado de Fundamentos, Disciplinas, Grandes Teorias e Paradoxos.
+- Aumenta saturação, brilho e contraste das categorias sem esconder a moldura dourada.
+- Reforça o brilho da categoria ativa mantendo os demais medalhões claramente legíveis.
+
 ### v0.25.0 — Relógio Vivo
 
 - Adiciona um medalhão exclusivo para a classe Cronomante.
