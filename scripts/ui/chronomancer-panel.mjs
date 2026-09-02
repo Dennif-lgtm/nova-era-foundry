@@ -293,26 +293,34 @@ function lawIcon(law) {
   return `${ICON_ROOT}/leis/${LAW_SLUGS[index]}.webp`;
 }
 
+function treatiseIcon(actor) {
+  const name = treatise(actor)?.name ?? "";
+  const slug = /preced/i.test(name) ? "precedencia" : /continui/i.test(name) ? "continuidade" : "possibilidades";
+  return `${ICON_ROOT}/tratados/${slug}.webp`;
+}
+
 function confluenceName(first, second) {
   if (!first || !second || first === second) return "";
   return CONFLUENCE_NAMES[[first, second].sort((a, b) => a.localeCompare(b, "pt-BR")).join("|")] ?? "Confluência Temporal";
 }
 
 function circularPanelMarkup() {
-  const laws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="confluence-law" data-law="${law}" title="${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const trailLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const confluenceLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
   return `<div class="ne-v2-shell ne-v3-shell">
     <section class="ne-v2-clock ne-v3-clock" data-role="clock">
-      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v4.webp" alt="Relógio do Cronomante">
+      <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v6.webp" alt="Relógio do Cronomante">
       <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
       ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
       <div class="ne-v2-pointer" data-role="clock-pointer"><i class="fa-solid fa-location-arrow"></i></div>
-      <section class="ne-v3-laws" data-role="law-orbit" aria-label="Leis Temporais">${laws}</section>
+      <section class="ne-v4-laws ne-v4-trails" data-role="trail-laws" aria-label="Rastro ativo">${trailLaws}</section>
+      <section class="ne-v4-laws ne-v4-confluences" data-role="confluence-laws" aria-label="Possibilidades de Confluência">${confluenceLaws}</section>
       <section class="ne-v2-core">
         <small>Pontos Temporais</small><strong data-role="points">0 / 0</strong>
         <div><button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button><button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button></div>
       </section>
       <section class="ne-v2-quick" data-role="quick-slots"><button type="button" data-slot="0"><small>XI</small><span>—</span></button><button type="button" data-slot="1"><small>XII</small><span>—</span></button><button type="button" data-slot="2"><small>I</small><span>—</span></button></section>
-      <button type="button" class="ne-v2-treatise" data-action="open-treatise"><i class="fa-solid fa-book-open"></i><span data-role="treatise"></span></button>
+      <button type="button" class="ne-v2-treatise" data-action="open-treatise"><img data-role="treatise-icon" src="${ICON_ROOT}/tratados/possibilidades.webp" alt=""><span data-role="treatise"></span></button>
       <button type="button" class="ne-v2-reaction" data-action="reaction"><i class="fa-solid fa-hourglass"></i><span data-role="reaction"></span></button>
       <div class="ne-v2-feedback"><strong data-role="selected-name">Visão essencial</strong><small data-role="confluence-hint">Gire o anel para consultar a Biblioteca</small></div>
     </section>
@@ -501,7 +509,7 @@ function createPanel(actor, { standalone = false } = {}) {
     else if (action === "open-intervention") selectedEntry(actor, panel)?.item.sheet?.render(true);
     else if (action === "points-minus") await updateChronomancerState(actor, { points: current.points - 1 });
     else if (action === "points-plus") await updateChronomancerState(actor, { points: current.points + 1 });
-    else if (action === "trail") { const confluence = Boolean(current.trail && current.trail !== button.dataset.law); await updateChronomancerState(actor, { trail: button.dataset.law, confluences: current.confluences + (confluence ? 1 : 0) }); }
+    else if (action === "trail") await updateChronomancerState(actor, { trail: button.dataset.law });
     else if (action === "trail-clear") await updateChronomancerState(actor, { trail: "" });
     else if (action === "confluence-clear") await updateChronomancerState(actor, { confluences: 0 });
     else if (action === "reaction") await updateChronomancerState(actor, { reaction: !current.reaction });
@@ -596,6 +604,8 @@ function refreshPanel(panel, actor) {
   if (crystals) crystals.innerHTML = temporalCrystals(current);
   panel.querySelector("[data-role='confluences']").textContent = current.confluences;
   panel.querySelector("[data-role='treatise']").textContent = treatise(actor)?.name ?? "Tratado não escolhido";
+  const treatiseImage = panel.querySelector("[data-role='treatise-icon']");
+  if (treatiseImage) treatiseImage.src = treatiseIcon(actor);
   panel.querySelector("[data-role='reaction']").textContent = current.reaction ? "Reação Temporal disponível" : "Reação Temporal utilizada";
   panel.querySelector("[data-role='compact-points']").textContent = `${current.points}/${current.maximum} PT`;
   panel.querySelector("[data-role='compact-name']").textContent = selectedEntry(actor, panel)?.item.name ?? "Intervenções";

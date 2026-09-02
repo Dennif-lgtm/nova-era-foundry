@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.1 — Relógio do Cronomante v6
+
+- Substitui a base anterior pela arte transparente v6 com rótulos corrigidos.
+- Separa visualmente as cinco Leis de Rastro das cinco possibilidades de Confluência.
+- Reposiciona os seletores de categoria conforme os setores definitivos da ilustração.
+- Usa o ícone correspondente ao Tratado escolhido pelo personagem.
+- Impede que a seleção manual de um Rastro gere uma Confluência indevida.
+- Preserva Pontos Temporais, atalhos, Biblioteca, Paralelismo, gatilhos e demais automações.
+
 ### v0.23.0 — Relógio Limpo do Cronomante
 
 - Adota a nova arte limpa e transparente v4 criada para o painel do Foundry.
