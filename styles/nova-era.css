@@ -2003,7 +2003,7 @@
 .ne-v3-clock .ne-v2-quick button { display:flex; align-items:center; justify-content:center; padding:0; }
 .ne-v3-clock .ne-v2-quick span { display:none; }
 .ne-v3-clock .ne-v2-treatise,.ne-v3-clock .ne-v2-reaction { display:grid; place-items:center; width:11%; height:auto; aspect-ratio:1; bottom:4.1%; padding:0; border:0; border-radius:50%; background:radial-gradient(circle,#07182bcc,#020711 72%); }
-.ne-v3-clock .ne-v2-treatise { left:34.6%; top:84.3%; bottom:auto; transform:translate(-50%,-50%); }.ne-v3-clock .ne-v2-reaction { left:auto; right:21.5%; }
+.ne-v3-clock .ne-v2-treatise { left:50%; top:84.3%; bottom:auto; transform:translate(-50%,-50%); }.ne-v3-clock .ne-v2-reaction { left:auto; right:21.5%; }
 .ne-v3-clock .ne-v2-treatise img { width:88%; height:88%; border-radius:50%; object-fit:contain; filter:drop-shadow(0 0 5px #49347a); pointer-events:none; }
 .ne-v3-clock .ne-v2-treatise i,.ne-v3-clock .ne-v2-reaction i { font-size:25px; }.ne-v3-clock .ne-v2-treatise span,.ne-v3-clock .ne-v2-reaction span { display:none; }
 .ne-v3-clock .ne-v2-treatise:hover,.ne-v3-clock .ne-v2-reaction:hover,.ne-v3-clock .ne-v2-reaction.active { box-shadow:0 0 16px #67d8ff !important; }

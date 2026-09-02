@@ -8,6 +8,12 @@ const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
 const CLOCK_MODES = ["Essencial", ...CATEGORIES];
 const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
 const LAW_SLUGS = ["precedencia", "atraso", "repeticao", "continuidade", "ruptura"];
+const TRAIL_ORBIT = [[34.2,31.2],[29.8,36.8],[28.1,44.1],[29.8,51.4],[34.2,57]];
+const CONFLUENCE_ORBIT = [[65.8,31.2],[70.2,36.8],[71.9,44.1],[70.2,51.4],[65.8,57]];
+const FOUNDATION_ICON_SLUGS = new Set([
+  "acelerar", "antecipacao", "retardar", "inercia-temporal", "eco-temporal",
+  "reverberacao", "ancora-temporal", "permanencia", "colapso", "descontinuidade"
+]);
 const MODE_ANGLES = [0, -55, 55, -125, 125];
 const CONFLUENCE_NAMES = {
   "Atraso|Precedência": "Equilíbrio Causal",
@@ -293,6 +299,15 @@ function lawIcon(law) {
   return `${ICON_ROOT}/leis/${LAW_SLUGS[index]}.webp`;
 }
 
+function contentSlug(name = "") {
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function interventionIcon(entry) {
+  const slug = contentSlug(entry?.item?.name);
+  return FOUNDATION_ICON_SLUGS.has(slug) ? `${ICON_ROOT}/fundamentos/${slug}.webp` : entry?.item?.img;
+}
+
 function treatiseIcon(actor) {
   const name = treatise(actor)?.name ?? "";
   const slug = /preced/i.test(name) ? "precedencia" : /continui/i.test(name) ? "continuidade" : "possibilidades";
@@ -305,22 +320,22 @@ function confluenceName(first, second) {
 }
 
 function circularPanelMarkup() {
-  const trailLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
-  const confluenceLaws = LAWS.map(law => `<button type="button" class="ne-v2-law" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const trailLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${TRAIL_ORBIT[index][0]}%;top:${TRAIL_ORBIT[index][1]}%;width:5.6%;height:5.6%;transform:translate(-50%,-50%)" data-action="trail" data-law="${law}" title="Rastro: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
+  const confluenceLaws = LAWS.map((law, index) => `<button type="button" class="ne-v2-law" style="position:absolute;left:${CONFLUENCE_ORBIT[index][0]}%;top:${CONFLUENCE_ORBIT[index][1]}%;width:5.6%;height:5.6%;transform:translate(-50%,-50%)" data-action="confluence-law" data-law="${law}" title="Confluência: ${law}"><img src="${lawIcon(law)}" alt=""><span>${law}</span></button>`).join("");
   return `<div class="ne-v2-shell ne-v3-shell">
     <section class="ne-v2-clock ne-v3-clock" data-role="clock">
       <img class="ne-v2-plate" src="modules/${MODULE_ID}/assets/ui/chronomancer-clock-clean-v6.webp" alt="Relógio do Cronomante">
       <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Visão essencial">Essencial</button>
       ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
       <div class="ne-v2-pointer" data-role="clock-pointer" aria-hidden="true"><span class="ne-v2-pointer-tip"></span><span class="ne-v2-pointer-hand"></span><span class="ne-v2-pointer-pivot"></span></div>
-      <section class="ne-v4-laws ne-v4-trails" data-role="trail-laws" aria-label="Rastro ativo">${trailLaws}</section>
-      <section class="ne-v4-laws ne-v4-confluences" data-role="confluence-laws" aria-label="Possibilidades de Confluência">${confluenceLaws}</section>
+      <section class="ne-v4-laws ne-v4-trails" style="position:absolute;inset:0;width:100%;height:100%;transform:none;display:block" data-role="trail-laws" aria-label="Rastro ativo">${trailLaws}</section>
+      <section class="ne-v4-laws ne-v4-confluences" style="position:absolute;inset:0;width:100%;height:100%;transform:none;display:block" data-role="confluence-laws" aria-label="Possibilidades de Confluência">${confluenceLaws}</section>
       <section class="ne-v2-core">
         <small>Pontos Temporais</small><strong data-role="points">0 / 0</strong>
         <div><button type="button" data-action="points-minus" title="Gastar 1 PT"><i class="fa-solid fa-minus"></i></button><button type="button" data-action="points-plus" title="Recuperar 1 PT"><i class="fa-solid fa-plus"></i></button></div>
       </section>
       <section class="ne-v2-quick" data-role="quick-slots" aria-label="Intervenções rápidas"><button type="button" data-slot="0"><img alt=""></button><button type="button" data-slot="1"><img alt=""></button><button type="button" data-slot="2"><img alt=""></button></section>
-      <button type="button" class="ne-v2-treatise" data-action="open-treatise"><img data-role="treatise-icon" src="${ICON_ROOT}/tratados/possibilidades.webp" alt=""><span data-role="treatise"></span></button>
+      <button type="button" class="ne-v2-treatise" style="left:50%;top:84.3%" data-action="open-treatise"><img data-role="treatise-icon" src="${ICON_ROOT}/tratados/possibilidades.webp" alt=""><span data-role="treatise"></span></button>
       <button type="button" class="ne-v2-reaction" data-action="reaction"><i class="fa-solid fa-hourglass"></i><span data-role="reaction"></span></button>
       <div class="ne-v2-feedback"><strong data-role="selected-name">Visão essencial</strong><small data-role="confluence-hint">Gire o anel para consultar a Biblioteca</small></div>
     </section>
@@ -416,7 +431,7 @@ function renderSelector(panel, actor) {
     button.dataset.itemId = entry?.item.id ?? "";
     button.title = entry ? `${entry.item.name} — ${entry.cost} PT` : "Encaixe de Intervenção vazio";
     const image = button.querySelector("img");
-    if (entry) image.src = entry.item.img;
+    if (entry) image.src = interventionIcon(entry);
     else image.removeAttribute("src");
     image.alt = entry?.item.name ?? "";
     button.classList.toggle("active", entry?.item.id === selected?.item.id);
@@ -625,7 +640,11 @@ function refreshPanel(panel, actor) {
   panel.classList.toggle("reaction-ready", current.reaction);
   panel.querySelector("[data-action='points-minus']").disabled = current.points <= 0;
   panel.querySelector("[data-action='points-plus']").disabled = current.points >= current.maximum;
-  for (const button of panel.querySelectorAll("[data-action='trail']")) button.classList.toggle("active", button.dataset.law === current.trail);
+  for (const button of panel.querySelectorAll("[data-action='trail']")) {
+    const active = button.dataset.law === current.trail;
+    button.classList.toggle("active", active);
+    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? "translate(-50%,-50%) translateX(6px) scale(1.22)" : "translate(-50%,-50%) scale(1)";
+  }
   const interventions = actorInterventions(actor);
   for (const button of panel.querySelectorAll("[data-action='confluence-law']")) {
     const law = button.dataset.law;
@@ -636,6 +655,9 @@ function refreshPanel(panel, actor) {
     button.classList.toggle("blocked", !same && candidates.length > 0 && !ready);
     button.classList.toggle("dark", same || !candidates.length);
     button.classList.toggle("active", law === current.trail);
+    button.style.transform = ready
+      ? "translate(-50%,-50%) translateX(-6px) scale(1.22)"
+      : (!same && candidates.length > 0 ? "translate(-50%,-50%) scale(.9)" : "translate(-50%,-50%) scale(.84)");
     const name = confluenceName(current.trail, law);
     const matching = candidates.map(entry => entry.item.name).join(", ");
     button.title = same ? (current.trail ? "A mesma Lei não forma Confluência" : "Defina um Rastro primeiro") : `${name}${matching ? ` — ${matching}` : " — nenhuma Intervenção conhecida"}`;

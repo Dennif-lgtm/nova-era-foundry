@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.23.4 — Geometria e Ícones do Relógio
+
+- Fixa Rastros e Confluências em arcos espelhados mesmo quando o Foundry conserva CSS anterior em cache.
+- Usa os ícones oficiais do pack nas Intervenções rápidas de Fundamentos.
+- Centraliza o ícone do Tratado no encaixe inferior do relógio.
+- Preserva estados, brilhos, tooltips e automações do painel.
+
 ### v0.23.3 — Órbitas das Cinco Leis
 
 - Distribui os cinco Rastros em um arco suave à esquerda do núcleo temporal.
