@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.6 — Ponteiro das Intervenções
+
+- Adiciona um segundo ponteiro roxo dedicado aos atalhos XI, XII e I.
+- Move o ponteiro roxo automaticamente para a Intervenção selecionada.
+- Permite percorrer os três atalhos com o scroll quando o cursor está sobre um deles.
+- Mantém o ponteiro azul e a categoria atual inalterados durante essa navegação.
+- Oculta o ponteiro roxo na Visão Essencial ou quando não existem atalhos disponíveis.
+
 ### v0.25.5 — Medalhões Completos
 
 - Mede e centraliza individualmente Cronomante, categorias, atalhos, Tratado e Reação Temporal na arte original.

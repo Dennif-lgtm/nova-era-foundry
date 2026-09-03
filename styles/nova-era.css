@@ -1894,6 +1894,12 @@
 .ne-v2-pointer-hand { position:absolute; left:calc(50% - 2px); top:8%; width:4px; height:86%; border-radius:4px; background:linear-gradient(90deg,#2e6685 0,#d8f8ff 42%,#76dfff 62%,#173d5c 100%); box-shadow:0 0 5px #74ddff; }
 .ne-v2-pointer-tip { position:absolute; z-index:2; left:50%; top:0; width:15px; height:22px; transform:translateX(-50%); clip-path:polygon(50% 0,100% 72%,63% 65%,50% 100%,37% 65%,0 72%); background:linear-gradient(135deg,#f0ffff,#56d9ff 52%,#1d5987); box-shadow:inset 0 0 0 1px #e4cc7b; }
 .ne-v2-pointer-pivot { position:absolute; z-index:2; left:50%; bottom:-8px; width:18px; height:18px; transform:translateX(-50%); border:2px solid #d0a954; border-radius:50%; background:radial-gradient(circle,#efffff 0 16%,#50cfff 20% 43%,#07162a 48% 100%); box-shadow:0 0 8px #5adaff; }
+.ne-v2-ability-pointer { z-index:7; left:49%; top:26.2%; height:24.3%; opacity:0; transform:rotate(var(--ability-pointer-angle,0deg)); filter:drop-shadow(0 0 5px #e3b5ff) drop-shadow(0 0 12px #9b38e8); transition:transform .32s cubic-bezier(.2,.82,.24,1),opacity .2s; }
+.ne-v2-ability-pointer.available { opacity:1; }
+.ne-v2-ability-pointer .ne-v2-pointer-hand { top:10%; height:82%; background:linear-gradient(90deg,#49225f 0,#f3dcff 42%,#be63ff 62%,#321145 100%); box-shadow:0 0 6px #c45cff; }
+.ne-v2-ability-pointer .ne-v2-pointer-tip { background:linear-gradient(135deg,#fff5ff,#c65cff 52%,#5a197f); box-shadow:inset 0 0 0 1px #e2bcff,0 0 8px #b34cff; }
+.ne-v2-ability-pointer .ne-v2-pointer-pivot { width:14px; height:14px; bottom:-6px; border-color:#d8a6ff; background:radial-gradient(circle,#fff5ff 0 16%,#b84cff 20% 43%,#170822 48% 100%); box-shadow:0 0 9px #bb4cff; }
+.ne-v2-essential .ne-v2-ability-pointer { opacity:0; }
 .ne-v2-core { position: absolute; z-index: 8; left: 39.2%; top: 39%; width: 21.6%; height: 21.6%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #9c762a; border-radius: 50%; background: radial-gradient(circle,#071b39 0,#030817 70%); box-shadow: inset 0 0 25px #2668b555,0 0 18px #5dafff55; text-align: center; }
 .ne-v2-core small { font-family: serif; text-transform: uppercase; letter-spacing: .08em; }
 .ne-v2-core strong { font: 700 38px/1.1 serif; color: #dff4ff; text-shadow: 0 0 9px #70bfff; }

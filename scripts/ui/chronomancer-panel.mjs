@@ -19,6 +19,7 @@ const FOUNDATION_ICON_SLUGS = new Set([
 ]);
 const MODE_ANGLES = [0, -39, 42, -132, 131];
 const CLOCK_SCROLL_ORDER = [0, 1, 3, 4, 2];
+const QUICK_POINTER_ANGLES = [-29, 0, 29];
 const CONFLUENCE_NAMES = {
   "Atraso|Precedência": "Equilíbrio Causal",
   "Precedência|Repetição": "Impulso Temporal",
@@ -332,6 +333,7 @@ function circularPanelMarkup() {
       <button type="button" class="ne-v2-mode ne-v2-mode-essential" data-action="clock-mode" data-mode="0" title="Cronomante — Visão essencial"><img src="${ICON_ROOT}/v7/cronomante.webp" alt="Cronomante"><span>Essencial</span></button>
       ${CATEGORIES.map((category, index) => `<button type="button" class="ne-v2-mode ne-v2-mode-${index}" data-action="clock-mode" data-mode="${index + 1}" title="${CATEGORY_LABELS[index]}"><img src="${ICON_ROOT}/categorias/${["fundamentos","disciplinas","grandes-teorias","paradoxos"][index]}.webp" alt=""><span>${CATEGORY_LABELS[index]}</span></button>`).join("")}
       <div class="ne-v2-pointer" data-role="clock-pointer" aria-hidden="true"><span class="ne-v2-pointer-tip"></span><span class="ne-v2-pointer-hand"></span><span class="ne-v2-pointer-pivot"></span></div>
+      <div class="ne-v2-pointer ne-v2-ability-pointer" data-role="ability-pointer" aria-hidden="true"><span class="ne-v2-pointer-tip"></span><span class="ne-v2-pointer-hand"></span><span class="ne-v2-pointer-pivot"></span></div>
       <section class="ne-v4-laws ne-v4-trails" style="position:absolute;inset:0;width:100%;height:100%;transform:none;display:block" data-role="trail-laws" aria-label="Rastro ativo">${trailLaws}</section>
       <section class="ne-v4-laws ne-v4-confluences" style="position:absolute;inset:0;width:100%;height:100%;transform:none;display:block" data-role="confluence-laws" aria-label="Possibilidades de Confluência">${confluenceLaws}</section>
       <section class="ne-v2-core">
@@ -413,6 +415,7 @@ function renderSelector(panel, actor) {
         image.removeAttribute("src");
         image.alt = "";
       });
+      panel.querySelector("[data-role='ability-pointer']")?.classList.remove("available");
       renderSelection(panel, actor, null);
       return;
     }
@@ -448,6 +451,13 @@ function renderSelector(panel, actor) {
     image.alt = entry?.item.name ?? "";
     button.classList.toggle("active", entry?.item.id === selected?.item.id);
   });
+  const quickButtons = [...(quick?.querySelectorAll("button") ?? [])];
+  const activeQuick = quickButtons.findIndex(button => button.classList.contains("active"));
+  const firstAvailable = quickButtons.findIndex(button => !button.disabled);
+  const pointerSlot = activeQuick >= 0 ? activeQuick : Math.max(0, firstAvailable);
+  panel.dataset.quickPointerSlot = String(pointerSlot);
+  panel.querySelector("[data-role='clock']")?.style.setProperty("--ability-pointer-angle", `${QUICK_POINTER_ANGLES[pointerSlot] ?? 0}deg`);
+  panel.querySelector("[data-role='ability-pointer']")?.classList.toggle("available", firstAvailable >= 0);
   renderSelection(panel, actor, selected);
 }
 
@@ -478,6 +488,18 @@ function rotateIntervention(panel, actor, direction) {
   if (!entries.length) return;
   const currentIndex = Math.max(0, entries.findIndex(entry => entry.item.id === selectedEntry(actor, panel)?.item.id));
   panel.dataset.selectedItemId = entries[(currentIndex + direction + entries.length) % entries.length].item.id;
+  renderSelector(panel, actor);
+}
+
+function rotateQuickIntervention(panel, actor, direction, hoveredButton) {
+  const buttons = [...panel.querySelectorAll("[data-role='quick-slots'] button")].filter(button => !button.disabled && button.dataset.itemId);
+  if (!buttons.length) return;
+  const activeButton = buttons.find(button => button.classList.contains("active"));
+  const origin = activeButton ?? (buttons.includes(hoveredButton) ? hoveredButton : buttons[0]);
+  const currentIndex = Math.max(0, buttons.indexOf(origin));
+  const next = buttons[(currentIndex + direction + buttons.length) % buttons.length];
+  panel.dataset.selectedItemId = next.dataset.itemId;
+  panel.dataset.quickPointerSlot = next.dataset.slot;
   renderSelector(panel, actor);
 }
 
@@ -575,7 +597,9 @@ function createPanel(actor, { standalone = false } = {}) {
     const now = Date.now();
     if (now - lastWheel < 180) return;
     lastWheel = now;
-    if (standalone) rotateClockMode(panel, actor, event.deltaY > 0 ? 1 : -1);
+    const quickButton = event.target.closest("[data-role='quick-slots'] button");
+    if (standalone && quickButton && !quickButton.disabled) rotateQuickIntervention(panel, actor, event.deltaY > 0 ? 1 : -1, quickButton);
+    else if (standalone) rotateClockMode(panel, actor, event.deltaY > 0 ? 1 : -1);
     else if (event.shiftKey) rotateCategory(panel, actor, event.deltaY > 0 ? 1 : -1);
     else rotateIntervention(panel, actor, event.deltaY > 0 ? 1 : -1);
   }, { passive: false });
