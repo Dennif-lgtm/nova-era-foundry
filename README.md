@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.5 — Medalhões Completos
+
+- Mede e centraliza individualmente Cronomante, categorias, atalhos, Tratado e Reação Temporal na arte original.
+- Faz o Cronomante preencher seu medalhão com 92 px.
+- Faz Fundamentos e Disciplinas preencherem seus medalhões com 76 px e Grandes Teorias e Paradoxos com 64 px.
+- Faz XI, XII e I preencherem seus círculos com 60 px.
+- Faz o Tratado preencher seu medalhão com 70 px e centraliza a Reação Temporal em um controle de 74 px.
+- Preserva os dez medalhões de Leis corrigidos na v0.25.4 e todas as automações.
+
 ### v0.25.4 — Medalhões de Leis
 
 - Reposiciona individualmente os dez ícones de Rastros e Confluências pelos centros medidos na arte original.
