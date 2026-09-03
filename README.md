@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.4 — Medalhões de Leis
+
+- Reposiciona individualmente os dez ícones de Rastros e Confluências pelos centros medidos na arte original.
+- Aumenta cada Lei para 52 px, preenchendo completamente o medalhão dourado no relógio de 790 px.
+- Limita o crescimento do ícone ativo a 4%, mantendo o destaque sem escapar do círculo.
+- Preserva categorias, atalhos, Tratado, Reação Temporal e todas as automações.
+
 ### v0.25.3 — Encaixe Interno dos Ícones
 
 - Recalibra os símbolos pelo diâmetro interno real dos adornos da nova arte.

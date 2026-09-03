@@ -8,8 +8,9 @@ const CATEGORY_ICONS = ["fa-compass", "fa-gem", "fa-star", "fa-infinity"];
 const CLOCK_MODES = ["Essencial", ...CATEGORIES];
 const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/chronomancer`;
 const LAW_SLUGS = ["precedencia", "atraso", "repeticao", "continuidade", "ruptura"];
-const TRAIL_ORBIT = [[28.23,33.95],[25.32,39.68],[23.15,46.29],[23.63,54.03],[25.24,61.53]];
-const CONFLUENCE_ORBIT = [[74.03,33.87],[77.98,39.68],[79.84,46.37],[79.6,54.03],[77.18,61.53]];
+// Centros medidos diretamente nos dez medalhões da arte funcional v7 (1263 × 1263).
+const TRAIL_ORBIT = [[26.999,33.333],[23.911,39.984],[22.169,46.873],[22.328,53.998],[24.386,60.649]];
+const CONFLUENCE_ORBIT = [[73.001,33.492],[76.01,40.063],[77.514,47.031],[77.118,54.157],[75.218,60.887]];
 const TRAIL_ACTIVE_SHIFTS = [[0,0],[0,0],[0,0],[0,0],[0,0]];
 const CONFLUENCE_ACTIVE_SHIFTS = [[0,0],[0,0],[0,0],[0,0],[0,0]];
 const FOUNDATION_ICON_SLUGS = new Set([
@@ -662,7 +663,7 @@ function refreshPanel(panel, actor) {
     const active = button.dataset.law === current.trail;
     const [shiftX, shiftY] = TRAIL_ACTIVE_SHIFTS[LAWS.indexOf(button.dataset.law)] ?? [0, 0];
     button.classList.toggle("active", active);
-    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.1)` : "translate(-50%,-50%) scale(1)";
+    if (button.closest("[data-role='trail-laws']")) button.style.transform = active ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.04)` : "translate(-50%,-50%) scale(1)";
   }
   const interventions = actorInterventions(actor);
   for (const button of panel.querySelectorAll("[data-action='confluence-law']")) {
@@ -676,7 +677,7 @@ function refreshPanel(panel, actor) {
     button.classList.toggle("active", law === current.trail);
     const [shiftX, shiftY] = CONFLUENCE_ACTIVE_SHIFTS[LAWS.indexOf(law)] ?? [0, 0];
     button.style.transform = ready
-      ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.1)`
+      ? `translate(-50%,-50%) translate(${shiftX}px,${shiftY}px) scale(1.04)`
       : (!same && candidates.length > 0 ? "translate(-50%,-50%) scale(.9)" : "translate(-50%,-50%) scale(.86)");
     const name = confluenceName(current.trail, law);
     const matching = candidates.map(entry => entry.item.name).join(", ");

@@ -1989,17 +1989,17 @@
 .ne-v3-clock .ne-v2-mode-3 { left:80.4%; top:76.5%; width:12%; height:12%; }
 .ne-v4-laws { position:absolute; z-index:10; inset:0; width:100%; height:100%; pointer-events:none; }
 .nova-era .ne-v4-laws .ne-v2-law { --law-scale:1; --law-shift-x:0px; position:absolute; width:7.5%; height:7.5%; padding:0; border:0; background:transparent; opacity:.62; transform:translate(calc(-50% + var(--law-shift-x)),-50%) scale(var(--law-scale)); transform-origin:center; transition:opacity .2s,filter .2s,transform .2s; pointer-events:auto; }
-.ne-v4-trails .ne-v2-law:nth-child(1) { left:28.23%; top:33.95%; }
-.ne-v4-trails .ne-v2-law:nth-child(2) { left:25.32%; top:39.68%; }
-.ne-v4-trails .ne-v2-law:nth-child(3) { left:23.15%; top:46.29%; }
-.ne-v4-trails .ne-v2-law:nth-child(4) { left:23.63%; top:54.03%; }
-.ne-v4-trails .ne-v2-law:nth-child(5) { left:25.24%; top:61.53%; }
-.ne-v4-confluences .ne-v2-law:nth-child(1) { left:74.03%; top:33.87%; }
-.ne-v4-confluences .ne-v2-law:nth-child(2) { left:77.98%; top:39.68%; }
-.ne-v4-confluences .ne-v2-law:nth-child(3) { left:79.84%; top:46.37%; }
-.ne-v4-confluences .ne-v2-law:nth-child(4) { left:79.6%; top:54.03%; }
-.ne-v4-confluences .ne-v2-law:nth-child(5) { left:77.18%; top:61.53%; }
-.ne-v4-laws .ne-v2-law img { display:block; width:38px; height:38px; max-width:66%; max-height:66%; margin:0; border-radius:50%; object-fit:contain; pointer-events:none; transition:filter .2s,transform .2s; }
+.ne-v4-trails .ne-v2-law:nth-child(1) { left:26.999%; top:33.333%; }
+.ne-v4-trails .ne-v2-law:nth-child(2) { left:23.911%; top:39.984%; }
+.ne-v4-trails .ne-v2-law:nth-child(3) { left:22.169%; top:46.873%; }
+.ne-v4-trails .ne-v2-law:nth-child(4) { left:22.328%; top:53.998%; }
+.ne-v4-trails .ne-v2-law:nth-child(5) { left:24.386%; top:60.649%; }
+.ne-v4-confluences .ne-v2-law:nth-child(1) { left:73.001%; top:33.492%; }
+.ne-v4-confluences .ne-v2-law:nth-child(2) { left:76.01%; top:40.063%; }
+.ne-v4-confluences .ne-v2-law:nth-child(3) { left:77.514%; top:47.031%; }
+.ne-v4-confluences .ne-v2-law:nth-child(4) { left:77.118%; top:54.157%; }
+.ne-v4-confluences .ne-v2-law:nth-child(5) { left:75.218%; top:60.887%; }
+.ne-v4-laws .ne-v2-law img { display:block; width:52px; height:52px; max-width:88%; max-height:88%; margin:0; border-radius:50%; object-fit:contain; pointer-events:none; transition:filter .2s,transform .2s; }
 .ne-v4-laws .ne-v2-law span { display:none; }
 .ne-v4-trails .ne-v2-law.active { --law-scale:1; --law-shift-x:0; z-index:2; opacity:1 !important; filter:drop-shadow(0 0 7px #c7f7ff) drop-shadow(0 0 15px #42d9ff) !important; }
 .ne-v4-confluences .ne-v2-law.ready { --law-scale:1; --law-shift-x:0; z-index:2; opacity:1; filter:drop-shadow(0 0 8px #edd2ff) drop-shadow(0 0 16px #ad4cff); }
