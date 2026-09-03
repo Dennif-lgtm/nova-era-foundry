@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.2 — Escala Visual dos Ícones
+
+- Mantém todos os arquivos de ícone em alta resolução e separa sua resolução do tamanho exibido no relógio.
+- Calibra Rastros e Confluências para 44 px, com crescimento do ativo sem deslocar os demais.
+- Calibra os atalhos XI, XII e I para 52 px.
+- Calibra Fundamentos, Disciplinas, Grandes Teorias e Paradoxos para 76 px.
+- Calibra o Cronomante para 80 px, o Tratado para 68 px e a Reação Temporal para 64 px.
+- Limita cada imagem ao interior do encaixe em janelas menores, preservando a moldura dourada.
+
 ### v0.25.1 — Encaixes e Legibilidade
 
 - Centraliza os cinco medalhões de navegação por suas âncoras reais na arte.

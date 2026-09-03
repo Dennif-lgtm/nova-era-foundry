@@ -1973,9 +1973,12 @@
 .chronomancer-panel.ne-v2-essential .ne-v2-shell { grid-template-columns:1fr; }
 .chronomancer-panel.ne-v2-essential .ne-v2-library { display:none; }
 
-/* Relógio funcional v7 — cada controle ocupa um encaixe dedicado da arte. */
+/* Relógio funcional v7 — o hotspot e a arte usam escalas independentes.
+   As medidas abaixo são calibradas para a placa de 790px; max-width mantém
+   todos os símbolos dentro dos adornos quando a janela é reduzida. */
 .ne-v3-clock .ne-v2-mode { display:grid; place-items:center; right:auto; bottom:auto; opacity:.96; color:#e7d39d !important; transform:translate(-50%,-50%); }
-.ne-v3-clock .ne-v2-mode img { display:block; width:78%; height:78%; margin:0; border-radius:50%; object-fit:contain; opacity:1; filter:saturate(1.22) brightness(1.18) contrast(1.12) drop-shadow(0 0 5px #4aa8d088); transition:filter .2s,transform .2s; pointer-events:none; }
+.ne-v3-clock .ne-v2-mode img { display:block; width:76px; height:76px; max-width:78%; max-height:78%; margin:0; border-radius:50%; object-fit:contain; opacity:1; filter:saturate(1.22) brightness(1.18) contrast(1.12) drop-shadow(0 0 5px #4aa8d088); transition:filter .2s,transform .2s; pointer-events:none; }
+.ne-v3-clock .ne-v2-mode-essential img { width:80px; height:80px; max-width:82%; max-height:82%; }
 .ne-v3-clock .ne-v2-mode span { display:none; }
 .ne-v3-clock .ne-v2-mode:hover img,.ne-v3-clock .ne-v2-mode.active img { filter:saturate(1.35) brightness(1.3) contrast(1.16) drop-shadow(0 0 8px #bff7ff) drop-shadow(0 0 16px #4acfff); transform:scale(1.04); }
 .ne-v3-clock .ne-v2-mode-essential { left:50.8%; top:12.9%; width:12%; height:12%; font-size:0; }
@@ -1996,10 +1999,10 @@
 .ne-v4-confluences .ne-v2-law:nth-child(3) { left:79.84%; top:46.37%; }
 .ne-v4-confluences .ne-v2-law:nth-child(4) { left:79.6%; top:54.03%; }
 .ne-v4-confluences .ne-v2-law:nth-child(5) { left:77.18%; top:61.53%; }
-.ne-v4-laws .ne-v2-law img { display:block; width:76%; height:76%; margin:0; border-radius:50%; object-fit:contain; pointer-events:none; }
+.ne-v4-laws .ne-v2-law img { display:block; width:44px; height:44px; max-width:76%; max-height:76%; margin:0; border-radius:50%; object-fit:contain; pointer-events:none; transition:filter .2s,transform .2s; }
 .ne-v4-laws .ne-v2-law span { display:none; }
-.ne-v4-trails .ne-v2-law.active { --law-scale:1.1; --law-shift-x:0; z-index:2; opacity:1 !important; filter:drop-shadow(0 0 7px #c7f7ff) drop-shadow(0 0 15px #42d9ff) !important; }
-.ne-v4-confluences .ne-v2-law.ready { --law-scale:1.1; --law-shift-x:0; z-index:2; opacity:1; filter:drop-shadow(0 0 8px #edd2ff) drop-shadow(0 0 16px #ad4cff); }
+.ne-v4-trails .ne-v2-law.active { --law-scale:1; --law-shift-x:0; z-index:2; opacity:1 !important; filter:drop-shadow(0 0 7px #c7f7ff) drop-shadow(0 0 15px #42d9ff) !important; }
+.ne-v4-confluences .ne-v2-law.ready { --law-scale:1; --law-shift-x:0; z-index:2; opacity:1; filter:drop-shadow(0 0 8px #edd2ff) drop-shadow(0 0 16px #ad4cff); }
 .ne-v4-confluences .ne-v2-law.blocked { --law-scale:.9; opacity:.48; filter:drop-shadow(0 0 5px #7548a0); }
 .ne-v4-confluences .ne-v2-law.dark { --law-scale:.86; opacity:.22; filter:grayscale(.75) brightness(.65); }
 .ne-v3-clock .ne-v2-quick { inset:0; width:auto; height:auto; display:block; }
@@ -2007,11 +2010,12 @@
 .ne-v3-clock .ne-v2-quick button:nth-child(1) { left:38.6%; top:28.3%; }
 .ne-v3-clock .ne-v2-quick button:nth-child(2) { left:50.8%; top:28.3%; }
 .ne-v3-clock .ne-v2-quick button:nth-child(3) { left:63%; top:28.3%; }
+.ne-v3-clock .ne-v2-quick img { width:52px; height:52px; max-width:72%; max-height:72%; }
 .ne-v3-clock .ne-v2-quick span { display:none; }
 .ne-v3-clock .ne-v2-treatise,.ne-v3-clock .ne-v2-reaction { display:grid; place-items:center; width:11%; height:auto; aspect-ratio:1; padding:0; border:0; border-radius:50%; background:transparent; transform:translate(-50%,-50%); }
 .ne-v3-clock .ne-v2-treatise { left:50.8%; top:85.9%; bottom:auto; }.ne-v3-clock .ne-v2-reaction { left:65.9%; right:auto; top:85.9%; bottom:auto; }
-.ne-v3-clock .ne-v2-treatise img { display:block; width:78%; height:78%; margin:0; border-radius:50%; object-fit:contain; filter:saturate(1.12) brightness(1.08) drop-shadow(0 0 5px #49347a); pointer-events:none; }
-.ne-v3-clock .ne-v2-treatise i,.ne-v3-clock .ne-v2-reaction i { font-size:25px; }.ne-v3-clock .ne-v2-treatise span,.ne-v3-clock .ne-v2-reaction span { display:none; }
+.ne-v3-clock .ne-v2-treatise img { display:block; width:68px; height:68px; max-width:78%; max-height:78%; margin:0; border-radius:50%; object-fit:contain; filter:saturate(1.12) brightness(1.08) drop-shadow(0 0 5px #49347a); pointer-events:none; }
+.ne-v3-clock .ne-v2-treatise i { font-size:68px; }.ne-v3-clock .ne-v2-reaction i { font-size:64px; line-height:1; filter:drop-shadow(0 0 6px #67d8ff88); }.ne-v3-clock .ne-v2-treatise span,.ne-v3-clock .ne-v2-reaction span { display:none; }
 .ne-v3-clock .ne-v2-treatise:hover,.ne-v3-clock .ne-v2-reaction:hover,.ne-v3-clock .ne-v2-reaction.active { box-shadow:0 0 16px #67d8ff !important; }
 .ne-v3-clock .ne-v2-core { left:34.5%; top:35%; width:31%; height:31%; }
 .ne-v3-clock .ne-v2-core { border:0; background:transparent; box-shadow:none; }
