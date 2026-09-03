@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.3 — Encaixe Interno dos Ícones
+
+- Recalibra os símbolos pelo diâmetro interno real dos adornos da nova arte.
+- Considera a moldura circular que já existe nos próprios arquivos de ícone.
+- Reduz Leis para 38 px, atalhos para 46 px, categorias para 58 px e Cronomante para 62 px.
+- Reduz o Tratado para 52 px e a ampulheta da Reação Temporal para 36 px dentro de um controle de 66 px.
+- Corrige os centros de Cronomante, Fundamentos, Disciplinas e Tratado para a geometria da arte atual.
+
 ### v0.25.2 — Escala Visual dos Ícones
 
 - Mantém todos os arquivos de ícone em alta resolução e separa sua resolução do tamanho exibido no relógio.
