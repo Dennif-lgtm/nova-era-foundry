@@ -436,8 +436,24 @@ function renderSelector(panel, actor) {
   const list = panel.querySelector("[data-role='category-list']");
   const category = CATEGORIES[categoryIndex];
   const storedQuick = Array.isArray(state.quickSlots?.[category]) ? state.quickSlots[category] : [];
-  const quickIds = [...storedQuick.filter(id => entries.some(entry => entry.item.id === id)), ...entries.map(entry => entry.item.id).filter(id => !storedQuick.includes(id))].slice(0, 3);
-  list.innerHTML = entries.length ? entries.map(entry => `<div class="ne-v2-library-entry ${entry.item.id === selected?.item.id ? "active" : ""}"><button type="button" data-action="select-intervention" data-item-id="${entry.item.id}"><span>${entry.item.name}</span><small>${entry.cost} PT</small></button><button type="button" data-action="toggle-quick" data-item-id="${entry.item.id}" title="${quickIds.includes(entry.item.id) ? "Remover dos atalhos" : "Fixar nos atalhos"}"><i class="fa-${quickIds.includes(entry.item.id) ? "solid" : "regular"} fa-star"></i></button></div>`).join("") : `<p>Nenhuma ${category.toLowerCase()} conhecida.</p>`;
+  const orderedQuickIds = [...storedQuick.filter(id => entries.some(entry => entry.item.id === id)), ...entries.map(entry => entry.item.id).filter(id => !storedQuick.includes(id))];
+  if (panel.dataset.quickWindowCategory !== category) {
+    panel.dataset.quickWindowCategory = category;
+    panel.dataset.quickWindowStart = "0";
+    delete panel.dataset.quickPointerAngle;
+    delete panel.dataset.quickPointerSlot;
+  }
+  const visibleQuickCount = Math.min(3, orderedQuickIds.length);
+  let quickWindowStart = orderedQuickIds.length ? ((Number(panel.dataset.quickWindowStart ?? 0) % orderedQuickIds.length) + orderedQuickIds.length) % orderedQuickIds.length : 0;
+  const selectedQuickIndex = orderedQuickIds.indexOf(selected?.item.id);
+  const currentWindow = Array.from({ length: visibleQuickCount }, (_, index) => orderedQuickIds[(quickWindowStart + index) % orderedQuickIds.length]);
+  if (selectedQuickIndex >= 0 && !currentWindow.includes(selected.item.id)) {
+    const preferredSlot = Math.max(0, Math.min(visibleQuickCount - 1, Number(panel.dataset.quickPointerSlot ?? 0)));
+    quickWindowStart = (selectedQuickIndex - preferredSlot + orderedQuickIds.length) % orderedQuickIds.length;
+  }
+  panel.dataset.quickWindowStart = String(quickWindowStart);
+  const quickIds = Array.from({ length: visibleQuickCount }, (_, index) => orderedQuickIds[(quickWindowStart + index) % orderedQuickIds.length]);
+  list.innerHTML = entries.length ? entries.map(entry => `<div class="ne-v2-library-entry ${entry.item.id === selected?.item.id ? "active" : ""}"><button type="button" data-action="select-intervention" data-item-id="${entry.item.id}"><span>${entry.item.name}</span><small>${entry.cost} PT</small></button><button type="button" data-action="toggle-quick" data-item-id="${entry.item.id}" title="${storedQuick.includes(entry.item.id) ? "Remover dos atalhos" : "Fixar nos atalhos"}"><i class="fa-${storedQuick.includes(entry.item.id) ? "solid" : "regular"} fa-star"></i></button></div>`).join("") : `<p>Nenhuma ${category.toLowerCase()} conhecida.</p>`;
   const quick = panel.querySelector("[data-role='quick-slots']");
   quick?.querySelectorAll("button").forEach((button, index) => {
     const entry = entries.find(candidate => candidate.item.id === quickIds[index]);
@@ -455,8 +471,19 @@ function renderSelector(panel, actor) {
   const activeQuick = quickButtons.findIndex(button => button.classList.contains("active"));
   const firstAvailable = quickButtons.findIndex(button => !button.disabled);
   const pointerSlot = activeQuick >= 0 ? activeQuick : Math.max(0, firstAvailable);
+  const previousPointerSlot = Number(panel.dataset.quickPointerSlot);
+  const previousPointerAngle = Number(panel.dataset.quickPointerAngle);
+  let pointerAngle = QUICK_POINTER_ANGLES[pointerSlot] ?? 0;
+  if (Number.isFinite(previousPointerAngle)) {
+    if (previousPointerSlot === pointerSlot) pointerAngle = previousPointerAngle;
+    else {
+      const equivalents = [pointerAngle - 360, pointerAngle, pointerAngle + 360];
+      pointerAngle = equivalents.reduce((closest, candidate) => Math.abs(candidate - previousPointerAngle) < Math.abs(closest - previousPointerAngle) ? candidate : closest);
+    }
+  }
   panel.dataset.quickPointerSlot = String(pointerSlot);
-  panel.querySelector("[data-role='clock']")?.style.setProperty("--ability-pointer-angle", `${QUICK_POINTER_ANGLES[pointerSlot] ?? 0}deg`);
+  panel.dataset.quickPointerAngle = String(pointerAngle);
+  panel.querySelector("[data-role='clock']")?.style.setProperty("--ability-pointer-angle", `${pointerAngle}deg`);
   panel.querySelector("[data-role='ability-pointer']")?.classList.toggle("available", firstAvailable >= 0);
   renderSelection(panel, actor, selected);
 }
@@ -497,10 +524,35 @@ function rotateQuickIntervention(panel, actor, direction, hoveredButton) {
   const activeButton = buttons.find(button => button.classList.contains("active"));
   const origin = activeButton ?? (buttons.includes(hoveredButton) ? hoveredButton : buttons[0]);
   const currentIndex = Math.max(0, buttons.indexOf(origin));
-  const next = buttons[(currentIndex + direction + buttons.length) % buttons.length];
-  panel.dataset.selectedItemId = next.dataset.itemId;
-  panel.dataset.quickPointerSlot = next.dataset.slot;
+  const boundaryReached = direction > 0 ? currentIndex === buttons.length - 1 : currentIndex === 0;
+  const entries = entriesInCategory(actor, panel);
+  const category = CATEGORIES[selectedCategory(panel)];
+  const storedQuick = chronomancerState(actor).quickSlots?.[category] ?? [];
+  const orderedIds = [...storedQuick.filter(id => entries.some(entry => entry.item.id === id)), ...entries.map(entry => entry.item.id).filter(id => !storedQuick.includes(id))];
+  const rotatesWindow = boundaryReached && orderedIds.length > buttons.length;
+  if (rotatesWindow) {
+    const currentStart = Number(panel.dataset.quickWindowStart ?? 0);
+    const nextStart = (currentStart + direction + orderedIds.length) % orderedIds.length;
+    const fixedSlot = direction > 0 ? buttons.length - 1 : 0;
+    const nextItemIndex = (nextStart + fixedSlot) % orderedIds.length;
+    panel.dataset.quickWindowStart = String(nextStart);
+    panel.dataset.selectedItemId = orderedIds[nextItemIndex];
+    panel.dataset.quickPointerSlot = String(fixedSlot);
+    panel.dataset.quickPointerAngle = String(Number(panel.dataset.quickPointerAngle ?? QUICK_POINTER_ANGLES[fixedSlot]) + (direction > 0 ? 360 : -360));
+  } else {
+    const next = buttons[(currentIndex + direction + buttons.length) % buttons.length];
+    panel.dataset.selectedItemId = next.dataset.itemId;
+    panel.dataset.quickPointerSlot = next.dataset.slot;
+  }
   renderSelector(panel, actor);
+  if (rotatesWindow) {
+    const quick = panel.querySelector("[data-role='quick-slots']");
+    const animationClass = direction > 0 ? "rotating-forward" : "rotating-backward";
+    quick?.classList.remove("rotating-forward", "rotating-backward");
+    void quick?.offsetWidth;
+    quick?.classList.add(animationClass);
+    globalThis.setTimeout(() => quick?.classList.remove(animationClass), 460);
+  }
 }
 
 function createPanel(actor, { standalone = false } = {}) {
