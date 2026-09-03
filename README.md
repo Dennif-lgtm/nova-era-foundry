@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.7 — Carrossel das Intervenções
+
+- Transforma XI, XII e I em uma janela móvel da Biblioteca do personagem.
+- Ao avançar além de I, desliza os três ícones e coloca a próxima Intervenção em I.
+- Faz o ponteiro roxo completar uma volta sincronizada durante a troca da janela.
+- Repete o comportamento no sentido inverso ao voltar por XI.
+- Mantém a categoria e o ponteiro azul inalterados durante a navegação.
+
 ### v0.25.6 — Ponteiro das Intervenções
 
 - Adiciona um segundo ponteiro roxo dedicado aos atalhos XI, XII e I.
