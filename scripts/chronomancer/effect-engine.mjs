@@ -23,6 +23,10 @@ async function execute(document, action, data = {}) {
     await document.delete({ novaEraChronomancer: true });
     return true;
   }
+  if (action === "update-effect" && document.documentName === "ActiveEffect") {
+    await document.update(data.change ?? {}, { novaEraChronomancer: true });
+    return true;
+  }
   if (action === "update-actor" && actor) {
     await actor.update(data.change ?? {}, { novaEraChronomancer: true });
     return true;

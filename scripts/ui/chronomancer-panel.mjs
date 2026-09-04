@@ -9,6 +9,8 @@ import {
 } from "../chronomancer/great-theory-automation.mjs";
 import { resolveChronomancerParadox } from "../chronomancer/paradox-automation.mjs";
 import { applyTreatiseInterventionBenefit, resolveChronomancerConfluenceFeatures, selectGeneratedTrail } from "../chronomancer/feature-automation.mjs";
+import { prepareChronomancerConfluence, resolveChronomancerConfluence } from "../chronomancer/confluence-automation.mjs";
+import { chronomancerAdvancedRules, forcedConfluenceLaw, recordChronomancerAdvancedUse } from "../chronomancer/advanced-feature-automation.mjs";
 
 const LAWS = ["Precedência", "Atraso", "Repetição", "Continuidade", "Ruptura"];
 const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
@@ -234,26 +236,33 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   const uses = turnKey && current.parallelTurnKey === turnKey ? [...current.parallelUses] : [];
   const parallelI = hasContent(actor, "crono-paralelismo-1");
   const parallelII = hasContent(actor, "crono-paralelismo-2");
+  const advanced = chronomancerAdvancedRules(actor, entry);
   const law = entry.category === "Paradoxo" ? "" : generatedLaw(entry, current.trail);
+  const confluenceLaw = law || (advanced.breaking ? "Ruptura" : "");
   if (entry.recovery && current.limitedUses[entry.item.id]) { ui.notifications.warn(`Nova Era: ${entry.item.name} já foi utilizada e exige um novo Descanso ${entry.recovery === "short" ? "Curto ou Longo" : "Longo"}.`); return false; }
   if (!isAbsoluteSetup && turnKey && uses.length >= 1) {
     if (!parallelI || uses.length >= 2) { ui.notifications.warn("Nova Era: você já realizou o máximo de Intervenções neste turno."); return false; }
-    const allowedCategories = parallelII ? ["Fundamento", "Disciplina"] : ["Fundamento"];
+    const allowedCategories = advanced.anyParallelCategory ? CATEGORIES : (parallelII ? ["Fundamento", "Disciplina"] : ["Fundamento"]);
     if (!allowedCategories.includes(uses[0].category) || !allowedCategories.includes(entry.category)) { ui.notifications.warn(`Nova Era: seu Paralelismo atual não combina ${uses[0].category} com ${entry.category}.`); return false; }
-    if (!law || law === uses[0].law) { ui.notifications.warn("Nova Era: a segunda Intervenção do Paralelismo deve usar uma Lei diferente."); return false; }
+    if (!confluenceLaw || confluenceLaw === uses[0].law) { ui.notifications.warn("Nova Era: a segunda Intervenção do Paralelismo deve usar uma Lei diferente."); return false; }
   }
-  const actualCost = !isAbsoluteSetup && uses.length === 1 && parallelII ? Math.max(1, entry.cost - 1) : entry.cost;
+  const freeIntervention = advanced.thesisFree || advanced.continuityFree;
+  const discounts = Number(advanced.breaking) + Number(advanced.precedenceDiscount) + Number(!isAbsoluteSetup && uses.length === 1 && parallelII);
+  const actualCost = freeIntervention ? 0 : Math.max(entry.cost > 0 ? 1 : 0, entry.cost - discounts);
   if (current.points < actualCost) { ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${actualCost} PT.`); return false; }
-  if (/Reação/i.test(entry.execution) && !current.reaction) { ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada."); return false; }
+  const usesExtraReaction = /Reação/i.test(entry.execution) && !current.reaction;
+  if (usesExtraReaction && !advanced.extraReaction) { ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada."); return false; }
   await prepareChronomancerGreatTheory(actor, entry, context);
   await applyTreatiseInterventionBenefit(actor, entry, context);
   const generatedTrail = await selectGeneratedTrail(actor, entry, law);
   const absolute = absoluteConvergence(actor, entry, law);
-  const confluencePreviousLaw = absolute?.previousLaw ?? current.trail;
-  const confluenceNewLaw = absolute?.newLaw ?? law;
-  const confluence = Boolean(absolute) || willConverge(entry, current.trail);
+  const forcedPreviousLaw = advanced.breaking && (!current.trail || current.trail === confluenceLaw) ? forcedConfluenceLaw(actor, confluenceLaw) : "";
+  const confluencePreviousLaw = absolute?.previousLaw ?? (current.trail || forcedPreviousLaw);
+  const confluenceNewLaw = absolute?.newLaw ?? confluenceLaw;
+  const confluence = Boolean(absolute) || advanced.breaking || willConverge(entry, current.trail);
   const resolvedConfluence = confluence ? confluenceName(confluencePreviousLaw, confluenceNewLaw) : "";
-  const nextUses = isAbsoluteSetup ? uses : (turnKey ? [...uses, { itemId: entry.item.id, name: entry.item.name, category: entry.category, law }] : []);
+  const confluenceRuntime = confluence ? await prepareChronomancerConfluence(actor, resolvedConfluence, context) : null;
+  const nextUses = isAbsoluteSetup ? uses : (turnKey ? [...uses, { itemId: entry.item.id, name: entry.item.name, category: entry.category, law: confluenceLaw }] : []);
   await updateChronomancerState(actor, {
     points: current.points - actualCost,
     trail: generatedTrail || current.trail,
@@ -266,6 +275,7 @@ export async function activateChronomancerIntervention(actor, entry, context = {
     lastAction: { name: entry.item.name, cost: actualCost, law, confluence: resolvedConfluence, at: Date.now() }
   });
   if (absolute) await consumeAbsoluteConvergence(actor);
+  await recordChronomancerAdvancedUse(actor, entry, advanced, usesExtraReaction);
   if (confluence) ui.notifications.info(`Nova Era: ${resolvedConfluence} entre ${confluencePreviousLaw} e ${confluenceNewLaw}.`);
   await postIntervention(actor, entry.item, entry);
   await resolveChronomancerFoundation(actor, entry, context);
@@ -273,6 +283,7 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   await resolveChronomancerGreatTheory(actor, entry, context);
   await resolveChronomancerParadox(actor, entry, context);
   if (confluence) {
+    await resolveChronomancerConfluence(actor, resolvedConfluence, { ...context, confluenceRuntime });
     await resolveChronomancerConfluenceFeatures(actor, entry, resolvedConfluence, confluencePreviousLaw, confluenceNewLaw, context);
     await postConfluence(actor, resolvedConfluence, confluencePreviousLaw, confluenceNewLaw);
   }

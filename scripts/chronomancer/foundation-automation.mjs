@@ -1,4 +1,5 @@
 import { MODULE_ID } from "../constants.mjs";
+import { armChronomancerSecondaryEffect, confirmedChronomancerMovement } from "./confluence-automation.mjs";
 
 function contentKey(entry) {
   return entry?.item?.getFlag?.(MODULE_ID, "contentKey") ?? entry?.item?.flags?.[MODULE_ID]?.contentKey ?? "";
@@ -83,7 +84,8 @@ async function resolveAcceleration(actor, entry, rawContext) {
     await documentAction(target?.uuid ?? actor.uuid, "remove-prone");
     await postResolution(actor, entry.item.name, `<strong>${target?.name ?? actor.name}</strong> levanta-se sem gastar deslocamento.`);
   } else if (selected === "move") {
-    await postResolution(actor, entry.item.name, `<strong>${target?.name ?? actor.name}</strong> pode mover até 3m sem provocar Ataques de Oportunidade.`);
+    const token = context.targetTokenUuid ? await fromUuid(context.targetTokenUuid) : target?.getActiveTokens?.()[0]?.document;
+    await confirmedChronomancerMovement(token?.object ?? token, 3, entry.item.name);
   } else {
     await postResolution(actor, entry.item.name, `<strong>${target?.name ?? actor.name}</strong> pode sacar, guardar, abrir, fechar ou manipular um objeto imediatamente.`);
   }
@@ -162,6 +164,7 @@ async function resolveDiscontinuity(actor, entry, context) {
   const target = context.targetActorUuid ? await fromUuid(context.targetActorUuid) : null;
   if (!target) return postResolution(actor, entry.item.name, "O efeito principal acontece, mas escolha uma consequência secundária não-danosa para impedir.");
   const save = await intelligenceSave(actor, target, `${entry.item.name} — CD ${chronomancerDC(actor)}`);
+  if (!save.success) await armChronomancerSecondaryEffect(target, "discard-secondary", actor);
   await postResolution(actor, entry.item.name, save.success
     ? `<strong>${target.name}</strong> resiste com ${save.total} contra CD ${save.dc}; a consequência secundária permanece.`
     : `<strong>${target.name}</strong> falha com ${save.total} contra CD ${save.dc}. O efeito principal de <strong>${context.activityName ?? "sua ação"}</strong> acontece, mas uma consequência secundária não-danosa deve ser ignorada.`);
@@ -174,7 +177,10 @@ export async function resolveChronomancerFoundation(actor, entry, context = {}) 
   else if (key === "crono-intervencao-inercia-temporal") await postResolution(actor, entry.item.name, "Resolva primeiro o acontecimento que provocou a Reação. A Reação somente acontece depois, caso ainda possua alvo e condições válidas.");
   else if (key === "crono-intervencao-eco-temporal") await resolveEcho(actor, entry, context);
   else if (key === "crono-intervencao-ancora-temporal") await resolveAnchor(actor, entry, context);
-  else if (key === "crono-intervencao-reverberacao") await postResolution(actor, entry.item.name, `<strong>${context.targetName ?? "O aliado"}</strong> pode mover 1,5m sem provocar Ataques de Oportunidade e sem entrar no alcance corpo a corpo de um hostil.`);
+  else if (key === "crono-intervencao-reverberacao") {
+    const token = context.targetTokenUuid ? await fromUuid(context.targetTokenUuid) : null;
+    await confirmedChronomancerMovement(token?.object ?? token, 1.5, entry.item.name);
+  }
   else if (key === "crono-intervencao-permanencia") await resolvePermanence(actor, entry, context);
   else if (key === "crono-intervencao-colapso") await resolveColapso(actor, entry, context);
   else if (key === "crono-intervencao-descontinuidade") await resolveDiscontinuity(actor, entry, context);

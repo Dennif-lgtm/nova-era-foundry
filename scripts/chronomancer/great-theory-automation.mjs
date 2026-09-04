@@ -78,6 +78,16 @@ function actorEchoes(actor) {
   return (canvas.scene?.tokens ?? []).filter(token => token.getFlag(MODULE_ID, "chronomancerEcho") && token.getFlag(MODULE_ID, "sourceActorUuid") === actor.uuid);
 }
 
+export async function swapWithChronomancerEcho(actor, echo = actorEchoes(actor)[0]) {
+  const source = actor.getActiveTokens?.()[0]?.document;
+  if (!source || !echo) return false;
+  const origin = { x: Number(source.x), y: Number(source.y) };
+  const destination = { x: Number(echo.x), y: Number(echo.y) };
+  await requestAction(source.uuid, "update-token", destination);
+  await requestAction(echo.uuid, "update-token", origin);
+  return true;
+}
+
 export async function prepareChronomancerGreatTheory(actor, entry, context = {}) {
   if (entry.category !== "Fundamento") return context;
   const echoes = actorEchoes(actor);
@@ -100,7 +110,7 @@ export async function prepareChronomancerGreatTheory(actor, entry, context = {})
   return context;
 }
 
-async function resolveClone(actor, entry) {
+async function resolveClone(actor, entry, context = {}) {
   const source = actor.getActiveTokens?.()[0]?.document;
   if (!source?.parent) return post(actor, entry.item.name, "Coloque o Cronomante em uma cena para criar seu Eco Temporal.");
   const grid = Number(canvas.grid.size ?? 100);
@@ -119,8 +129,15 @@ async function resolveClone(actor, entry) {
     placementPending: true,
     expiresRound: Number(game.combat?.round ?? 0) + 10
   };
-  await requestAction(source.parent.uuid, "create-echo", { source: tokenSource });
-  await post(actor, entry.item.name, `Um Eco Temporal foi criado próximo de ${actor.name}. Arraste-o uma vez para escolher um espaço inicial a até 9m. Depois, ele pode ser movido 6m no início do turno e desaparece se ficar além de 18m.`);
+  tokenSource.flags[MODULE_ID].noConcentration = context.cloneOption === "no-concentration";
+  const count = context.cloneOption === "two" ? 2 : 1;
+  for (let index = 0; index < count; index += 1) {
+    const cloneSource = foundry.utils.deepClone(tokenSource);
+    cloneSource.name = `${tokenSource.name}${count > 1 ? ` ${index + 1}` : ""}`;
+    cloneSource.x = Number(source.x) + grid * (index + 1);
+    await requestAction(source.parent.uuid, "create-echo", { source: cloneSource });
+  }
+  await post(actor, entry.item.name, `${count === 2 ? "Dois Ecos Temporais foram criados" : "Um Eco Temporal foi criado"} próximo de ${actor.name}. Arraste cada um uma vez para escolher um espaço inicial a até 9m. Depois, podem ser movidos 6m no início do turno e desaparecem além de 18m.${context.cloneOption === "no-concentration" ? " A duração não exige Concentração." : ""}`);
 }
 
 async function resolveAlternativeLine(actor, entry, context) {
@@ -213,7 +230,7 @@ async function sustainInfiniteEcho(actor, entry) {
 
 export async function resolveChronomancerGreatTheory(actor, entry, context = {}) {
   const key = keyOf(entry);
-  if (key === "crono-intervencao-clone-temporal") await resolveClone(actor, entry);
+  if (key === "crono-intervencao-clone-temporal" || key === "crono-clone-temporal-tratado") await resolveClone(actor, entry, context);
   else if (key === "crono-intervencao-linha-alternativa") await resolveAlternativeLine(actor, entry, context);
   else if (key === "crono-intervencao-horizonte-congelado") await resolveFrozenHorizon(actor, entry, context);
   else if (key === "crono-intervencao-eco-infinito") await resolveInfiniteEcho(actor, entry);

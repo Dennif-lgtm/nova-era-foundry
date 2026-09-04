@@ -1,4 +1,5 @@
 import { MODULE_ID } from "../constants.mjs";
+import { confirmedChronomancerMovement } from "./confluence-automation.mjs";
 
 const STATE_FLAG = "chronomancerDisciplineState";
 const previousCombatants = new Map();
@@ -90,7 +91,7 @@ async function intelligenceSave(source, target, flavor) {
 
 async function resolveStep(actor, entry) {
   const speed = Number(actor.system?.attributes?.movement?.walk ?? 0);
-  await post(actor, entry.item.name, `${actor.name} pode mover até <strong>${speed ? speed / 2 : "metade do deslocamento"}${speed ? "m" : ""}</strong> sem Ataques de Oportunidade e atravessar espaços ocupados como terreno difícil.`);
+  await confirmedChronomancerMovement(actor.getActiveTokens?.()[0], speed ? speed / 2 : 0, entry.item.name);
 }
 
 async function resolveAdvancedState(actor, entry, context) {

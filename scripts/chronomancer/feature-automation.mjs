@@ -6,6 +6,7 @@ import {
   mayManageChronomancer,
   removeEffectKey
 } from "./effect-engine.mjs";
+import { confirmedChronomancerMovement } from "./confluence-automation.mjs";
 
 const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"];
 
@@ -39,6 +40,10 @@ function has(actor, key) {
 
 function activeToken(actor) {
   return actor?.getActiveTokens?.()[0] ?? null;
+}
+
+function targetToken(actor) {
+  return [...(game.user.targets ?? [])][0] ?? activeToken(actor);
 }
 
 function roundKey() {
@@ -238,7 +243,7 @@ export async function applyTreatiseInterventionBenefit(actor, entry, context = {
   if (has(actor, "crono-mestre-precedencia") && laws.some(law => ["Precedência", "Atraso"].includes(law))) {
     const selected = await choose("Mestre da Precedência", "Escolha o benefício desta Intervenção", [["range", "+3m de alcance", "fa-ruler"], ["move", "Movimento de 1,5m", "fa-person-running"]]);
     if (selected === "range") context.rangeBonus = Number(context.rangeBonus ?? 0) + 3;
-    else if (selected === "move") await post(actor, "Mestre da Precedência", `${target?.name ?? "A criatura afetada"} pode mover 1,5m sem provocar Ataques de Oportunidade.`);
+    else if (selected === "move") await confirmedChronomancerMovement(targetToken(target), 1.5, "Mestre da Precedência");
   }
   if (has(actor, "crono-eco-possibilidade") && laws.some(law => ["Repetição", "Ruptura"].includes(law))) {
     const selected = await choose("Eco de Possibilidade", "Escolha o benefício desta Intervenção", [["range", "+3m de alcance", "fa-ruler"], ["trail", "Prolongar o Rastro", "fa-clock-rotate-left"]]);
@@ -286,7 +291,7 @@ async function fractureReading(actor, context) {
   ]);
   if (selected === "point") {
     if (await recoverConfluencePoint(actor, "fractureReadingRound")) await post(actor, "Leitura das Fraturas", "1 Ponto Temporal foi recuperado.");
-  } else if (selected === "move") await post(actor, "Leitura das Fraturas", `${actor.name} pode mover até 3m sem provocar Ataques de Oportunidade.`);
+  } else if (selected === "move") await confirmedChronomancerMovement(activeToken(actor), 3, "Leitura das Fraturas");
   else if (selected === "bonus") {
     const target = await selectedTarget(actor, context);
     await grantNextRollBonus(actor, target);
@@ -298,7 +303,7 @@ async function treatiseConfluence(actor, laws, context) {
   if (has(actor, "crono-sequencia-preferencial") && laws.some(law => ["Precedência", "Atraso"].includes(law))) {
     const selected = await choose("Sequência Preferencial", "Escolha o benefício do Tratado", [["point", "Recuperar 1 PT", "fa-gem"], ["move", "Aliado move 3m", "fa-person-running"]]);
     if (selected === "point") await recoverConfluencePoint(actor, "sequencePointRound");
-    else if (selected === "move") await post(actor, "Sequência Preferencial", "O aliado selecionado pode mover 3m sem provocar Ataques de Oportunidade.");
+    else if (selected === "move") await confirmedChronomancerMovement(targetToken(await selectedTarget(actor, context)), 3, "Sequência Preferencial");
   }
   if (has(actor, "crono-probabilidades-paralelas") && laws.some(law => ["Repetição", "Ruptura"].includes(law))) {
     const selected = await choose("Probabilidades Paralelas", "Escolha o benefício do Tratado", [["point", "Recuperar 1 PT", "fa-gem"], ["reroll", "Preparar repetição de teste", "fa-dice"]]);
