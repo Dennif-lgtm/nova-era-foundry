@@ -232,7 +232,7 @@ async function promptActivityStart(activity) {
   if (!attacker) return;
   const targets = [...(game.user.targets ?? [])].map(token => token.actor).filter(Boolean);
   const eventKey = `${game.combat?.id ?? "scene"}:${game.combat?.round ?? 0}:${game.combat?.turn ?? 0}:${activity.item.uuid}:${Date.now()}`;
-  if (activity.type === "attack") {
+  if (activity.type === "attack" && !game.modules.get("midi-qol")?.active) {
     for (const target of targets) {
       if (!ownedChronomancer(target) || !mayPrompt(target)) continue;
       const reflexes = target.items.find(entry => contentKey(entry) === "crono-reflexos-temporais");

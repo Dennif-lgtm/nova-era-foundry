@@ -8,6 +8,7 @@ import {
   resolveChronomancerGreatTheory
 } from "../chronomancer/great-theory-automation.mjs";
 import { resolveChronomancerParadox } from "../chronomancer/paradox-automation.mjs";
+import { applyTreatiseInterventionBenefit, resolveChronomancerConfluenceFeatures, selectGeneratedTrail } from "../chronomancer/feature-automation.mjs";
 
 const LAWS = ["Precedência", "Atraso", "Repetição", "Continuidade", "Ruptura"];
 const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
@@ -245,6 +246,8 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   if (current.points < actualCost) { ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${actualCost} PT.`); return false; }
   if (/Reação/i.test(entry.execution) && !current.reaction) { ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada."); return false; }
   await prepareChronomancerGreatTheory(actor, entry, context);
+  await applyTreatiseInterventionBenefit(actor, entry, context);
+  const generatedTrail = await selectGeneratedTrail(actor, entry, law);
   const absolute = absoluteConvergence(actor, entry, law);
   const confluencePreviousLaw = absolute?.previousLaw ?? current.trail;
   const confluenceNewLaw = absolute?.newLaw ?? law;
@@ -253,8 +256,8 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   const nextUses = isAbsoluteSetup ? uses : (turnKey ? [...uses, { itemId: entry.item.id, name: entry.item.name, category: entry.category, law }] : []);
   await updateChronomancerState(actor, {
     points: current.points - actualCost,
-    trail: law || current.trail,
-    trailExpiry: resolvedConfluence === "Horizonte Ecoante" ? "end-next-turn" : "",
+    trail: generatedTrail || current.trail,
+    trailExpiry: context.extendTrail || resolvedConfluence === "Horizonte Ecoante" ? "end-next-turn" : "",
     confluences: current.confluences + (confluence ? 1 : 0),
     reaction: /Reação/i.test(entry.execution) ? false : current.reaction,
     parallelTurnKey: turnKey,
@@ -269,7 +272,10 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   await resolveChronomancerDiscipline(actor, entry, context);
   await resolveChronomancerGreatTheory(actor, entry, context);
   await resolveChronomancerParadox(actor, entry, context);
-  if (confluence) await postConfluence(actor, resolvedConfluence, confluencePreviousLaw, confluenceNewLaw);
+  if (confluence) {
+    await resolveChronomancerConfluenceFeatures(actor, entry, resolvedConfluence, confluencePreviousLaw, confluenceNewLaw, context);
+    await postConfluence(actor, resolvedConfluence, confluencePreviousLaw, confluenceNewLaw);
+  }
   return true;
 }
 
