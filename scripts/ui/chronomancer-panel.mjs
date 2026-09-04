@@ -1,4 +1,5 @@
 import { MODULE_ID } from "../constants.mjs";
+import { resolveChronomancerFoundation } from "../chronomancer/foundation-automation.mjs";
 
 const LAWS = ["Precedência", "Atraso", "Repetição", "Continuidade", "Ruptura"];
 const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
@@ -215,24 +216,24 @@ async function postConfluence(actor, name, previousLaw, newLaw) {
   });
 }
 
-export async function activateChronomancerIntervention(actor, entry) {
+export async function activateChronomancerIntervention(actor, entry, context = {}) {
   const current = chronomancerState(actor);
-  if (!entry) return;
+  if (!entry) return false;
   const turnKey = temporalTurnKey();
   const uses = turnKey && current.parallelTurnKey === turnKey ? [...current.parallelUses] : [];
   const parallelI = hasContent(actor, "crono-paralelismo-1");
   const parallelII = hasContent(actor, "crono-paralelismo-2");
   const law = generatedLaw(entry, current.trail);
-  if (entry.recovery && current.limitedUses[entry.item.id]) return ui.notifications.warn(`Nova Era: ${entry.item.name} já foi utilizada e exige um novo Descanso ${entry.recovery === "short" ? "Curto ou Longo" : "Longo"}.`);
+  if (entry.recovery && current.limitedUses[entry.item.id]) { ui.notifications.warn(`Nova Era: ${entry.item.name} já foi utilizada e exige um novo Descanso ${entry.recovery === "short" ? "Curto ou Longo" : "Longo"}.`); return false; }
   if (turnKey && uses.length >= 1) {
-    if (!parallelI || uses.length >= 2) return ui.notifications.warn("Nova Era: você já realizou o máximo de Intervenções neste turno.");
+    if (!parallelI || uses.length >= 2) { ui.notifications.warn("Nova Era: você já realizou o máximo de Intervenções neste turno."); return false; }
     const allowedCategories = parallelII ? ["Fundamento", "Disciplina"] : ["Fundamento"];
-    if (!allowedCategories.includes(uses[0].category) || !allowedCategories.includes(entry.category)) return ui.notifications.warn(`Nova Era: seu Paralelismo atual não combina ${uses[0].category} com ${entry.category}.`);
-    if (!law || law === uses[0].law) return ui.notifications.warn("Nova Era: a segunda Intervenção do Paralelismo deve usar uma Lei diferente.");
+    if (!allowedCategories.includes(uses[0].category) || !allowedCategories.includes(entry.category)) { ui.notifications.warn(`Nova Era: seu Paralelismo atual não combina ${uses[0].category} com ${entry.category}.`); return false; }
+    if (!law || law === uses[0].law) { ui.notifications.warn("Nova Era: a segunda Intervenção do Paralelismo deve usar uma Lei diferente."); return false; }
   }
   const actualCost = uses.length === 1 && parallelII ? Math.max(1, entry.cost - 1) : entry.cost;
-  if (current.points < actualCost) return ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${actualCost} PT.`);
-  if (/Reação/i.test(entry.execution) && !current.reaction) return ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada.");
+  if (current.points < actualCost) { ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${actualCost} PT.`); return false; }
+  if (/Reação/i.test(entry.execution) && !current.reaction) { ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada."); return false; }
   const confluence = willConverge(entry, current.trail);
   const resolvedConfluence = confluence ? confluenceName(current.trail, law) : "";
   const nextUses = turnKey ? [...uses, { itemId: entry.item.id, name: entry.item.name, category: entry.category, law }] : [];
@@ -249,7 +250,9 @@ export async function activateChronomancerIntervention(actor, entry) {
   });
   if (confluence) ui.notifications.info(`Nova Era: ${resolvedConfluence} entre ${current.trail} e ${law}.`);
   await postIntervention(actor, entry.item, entry);
+  await resolveChronomancerFoundation(actor, entry, context);
   if (confluence) await postConfluence(actor, resolvedConfluence, current.trail, law);
+  return true;
 }
 
 function selectedCategory(panel) {

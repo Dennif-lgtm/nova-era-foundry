@@ -18,6 +18,7 @@ const offeredEvents = new Set();
 const movedCombatants = new Set();
 const previousCombatants = new Map();
 const previousHitPoints = new Map();
+const previousTokenPositions = new Map();
 
 function isChronomancerClass(item) {
   return item?.type === "class" && (item.system?.identifier === "cronomante-nova-era" || item.getFlag(MODULE_ID, "contentKey") === "cronomante");
@@ -136,7 +137,7 @@ function reactionEntry(actor, key) {
   return item ? { item, ...chronomancerInterventionData(item) } : null;
 }
 
-async function askToUse(actor, entry, trigger, eventKey) {
+async function askToUse(actor, entry, trigger, eventKey, context = {}) {
   if (!entry || !mayPrompt(actor)) return;
   const current = chronomancerState(actor);
   if (!current.reaction || current.points < entry.cost || (entry.recovery && current.limitedUses[entry.item.id])) return;
@@ -151,7 +152,7 @@ async function askToUse(actor, entry, trigger, eventKey) {
     no: () => false,
     defaultYes: false
   });
-  if (use) await activateChronomancerIntervention(actor, entry);
+  if (use) await activateChronomancerIntervention(actor, entry, context);
 }
 
 function visibleDistance(observer, subject) {
@@ -174,8 +175,8 @@ function inRange(observer, subject, maximum) {
   return distance !== null && distance <= maximum ? distance : null;
 }
 
-async function offerKnown(actor, key, trigger, eventKey) {
-  await askToUse(actor, reactionEntry(actor, key), trigger, eventKey);
+async function offerKnown(actor, key, trigger, eventKey, context = {}) {
+  await askToUse(actor, reactionEntry(actor, key), trigger, eventKey, context);
 }
 
 async function promptTurnStart(combat, changed) {
@@ -204,7 +205,7 @@ async function promptTurnStart(combat, changed) {
   for (const actor of game.actors.filter(ownedChronomancer)) {
     if (!mayPrompt(actor)) continue;
     const distance = visibleDistance(actor, combatant.actor);
-    if (distance !== null && distance <= 9) await offerKnown(actor, "crono-intervencao-acelerar", `${combatant.name} iniciou o turno a ${Math.round(distance)}m.`, eventKey);
+    if (distance !== null && distance <= 9) await offerKnown(actor, "crono-intervencao-acelerar", `${combatant.name} iniciou o turno a ${Math.round(distance)}m.`, eventKey, { targetActorUuid: combatant.actor.uuid, targetTokenUuid: combatant.token?.uuid });
     if (isAlly(actor, combatant.actor) && inRange(actor, combatant.actor, 9) !== null) await offerKnown(actor, "crono-intervencao-linha-alternativa", `${combatant.name} iniciou o turno.`, `${eventKey}:linha`);
     if (previous?.actor && isAlly(actor, previous.actor) && inRange(actor, previous.actor, 9) !== null) {
       const endKey = `${combat.id}:${previousId}:${combat.round}:${combat.turn}:turn-end`;
@@ -230,6 +231,8 @@ async function promptActivityStart(activity) {
   }
   for (const actor of game.actors.filter(ownedChronomancer)) {
     if (!mayPrompt(actor) || inRange(actor, attacker, 18) === null) continue;
+    const activation = activity.activation?.type ?? activity.item?.system?.activation?.type ?? "";
+    if (/reaction/i.test(activation)) await offerKnown(actor, "crono-intervencao-inercia-temporal", `${attacker.name} declarou uma Reação.`, `${eventKey}:inercia`, { targetActorUuid: attacker.uuid });
     await offerKnown(actor, "crono-intervencao-horizonte-congelado", `${attacker.name} começou a resolver ${activity.item.name}.`, `${eventKey}:horizonte`);
   }
 }
@@ -244,10 +247,62 @@ async function promptActivityEnd(activity) {
   }
 }
 
-function trackMovement(token, change) {
-  if (!("x" in change || "y" in change) || !game.combat?.started) return;
+function rememberTokenPosition(token, change, options) {
+  if (options?.novaEraChronomancer || !("x" in change || "y" in change)) return;
+  previousTokenPositions.set(token.uuid, { x: Number(token.x), y: Number(token.y) });
+}
+
+async function trackMovement(token, change, options) {
+  if (options?.novaEraChronomancer || !("x" in change || "y" in change) || !game.combat?.started) return;
+  const from = previousTokenPositions.get(token.uuid);
+  previousTokenPositions.delete(token.uuid);
   const combatant = game.combat.combatants.find(entry => entry.tokenId === token.id && entry.sceneId === token.parent?.id);
   if (combatant?.id === game.combat.combatant?.id) movedCombatants.add(`${game.combat.id}:${combatant.id}`);
+  if (!from || !token.actor) return;
+  const to = { x: Number(token.x), y: Number(token.y) };
+  const size = Number(canvas.grid.size ?? 100);
+  const halfWidth = Number(token.width ?? 1) * size / 2;
+  const halfHeight = Number(token.height ?? 1) * size / 2;
+  let distance = 0;
+  try { distance = Number(canvas.grid.measurePath([{ x: from.x + halfWidth, y: from.y + halfHeight }, { x: to.x + halfWidth, y: to.y + halfHeight }]).distance ?? 0); } catch { return; }
+  if (distance <= 0) return;
+  const voluntary = combatant?.id === game.combat.combatant?.id;
+  const key = voluntary ? "crono-intervencao-retardar" : "crono-intervencao-ancora-temporal";
+  const label = voluntary ? "iniciou um deslocamento voluntário" : "foi deslocado fora do próprio turno";
+  const eventKey = `${game.combat.id}:${game.combat.round}:${game.combat.turn}:${token.uuid}:move:${from.x}:${from.y}:${to.x}:${to.y}`;
+  for (const actor of game.actors.filter(ownedChronomancer)) {
+    if (!mayPrompt(actor) || inRange(actor, token.actor, 9) === null) continue;
+    await offerKnown(actor, key, `${token.name} ${label} (${distance.toFixed(1)}m).`, eventKey, { targetActorUuid: token.actor.uuid, targetTokenUuid: token.uuid, from, to, distance });
+  }
+}
+
+function rollFailed(roll) {
+  const success = roll?.options?.success ?? roll?.options?.isSuccess ?? roll?.isSuccess;
+  if (success !== undefined) return success === false;
+  const target = Number(roll?.options?.targetValue ?? roll?.options?.dc);
+  return Number.isFinite(target) && Number(roll?.total) < target;
+}
+
+async function promptFailedRoll(rolls, data = {}) {
+  const failedRoll = rolls?.find?.(rollFailed) ?? (rollFailed(rolls) ? rolls : null);
+  if (!failedRoll) return;
+  const origin = data.subject?.actor ?? data.subject ?? data.actor ?? failedRoll.data?.actor;
+  if (!origin) return;
+  const eventKey = `${game.combat?.id ?? "scene"}:${game.combat?.round ?? 0}:${game.combat?.turn ?? 0}:${origin.uuid}:failed-roll:${Date.now()}`;
+  for (const actor of game.actors.filter(ownedChronomancer)) {
+    if (!mayPrompt(actor) || !isAlly(actor, origin) || inRange(actor, origin, 9) === null) continue;
+    await offerKnown(actor, "crono-intervencao-eco-temporal", `${origin.name} falhou em uma jogada.`, eventKey, { targetActorUuid: origin.uuid, roll: failedRoll });
+  }
+}
+
+async function promptProne(effect) {
+  if (!effect?.statuses?.has?.("prone") || !effect.parent) return;
+  const target = effect.parent;
+  const eventKey = `${game.combat?.id ?? "scene"}:${game.combat?.round ?? 0}:${game.combat?.turn ?? 0}:${effect.uuid}:prone`;
+  for (const actor of game.actors.filter(ownedChronomancer)) {
+    if (!mayPrompt(actor) || inRange(actor, target, 9) === null) continue;
+    await offerKnown(actor, "crono-intervencao-ancora-temporal", `${target.name} seria Derrubado.`, eventKey, { targetActorUuid: target.uuid });
+  }
 }
 
 function rememberHitPoints(actor, change) {
@@ -358,12 +413,17 @@ export function registerChronomancerLibraryAndPrompts() {
     Hooks.on(hook, app => setTimeout(() => void offerPendingLibraryChoice(app.actor ?? app.document), 300));
   }
   Hooks.on("updateCombat", (combat, changed) => void promptTurnStart(combat, changed));
-  Hooks.on("updateToken", trackMovement);
+  Hooks.on("preUpdateToken", rememberTokenPosition);
+  Hooks.on("updateToken", (token, change, options) => void trackMovement(token, change, options));
   Hooks.on("preUpdateActor", rememberHitPoints);
   Hooks.on("updateActor", (actor, changed) => void promptDamage(actor, changed));
   Hooks.on("dnd5e.preUseActivity", activity => void promptActivityStart(activity));
   Hooks.on("dnd5e.postUseActivity", activity => void promptActivityEnd(activity));
   Hooks.on("dnd5e.postRollAttack", (rolls, data) => void promptCritical(rolls, data));
+  Hooks.on("dnd5e.postRollAttack", (rolls, data) => void promptFailedRoll(rolls, data));
+  Hooks.on("dnd5e.postRollAbilityCheck", (rolls, data) => void promptFailedRoll(rolls, data));
+  Hooks.on("dnd5e.postRollSavingThrow", (rolls, data) => void promptFailedRoll(rolls, data));
+  Hooks.on("createActiveEffect", effect => void promptProne(effect));
   Hooks.on("dnd5e.restCompleted", (actor, result, config) => void recoverChronomancerRest(actor, result, config));
   Hooks.on("deleteCombat", combat => void clearChronomancerCombatState(combat));
 }
