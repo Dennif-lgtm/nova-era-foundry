@@ -28,6 +28,10 @@ async function executeAction(document, action, data = {}) {
     await document.delete({ novaEraChronomancer: true });
     return true;
   }
+  if (action === "update-token" && document.documentName === "Token") {
+    await document.update(data.change ?? {}, { novaEraChronomancer: true });
+    return true;
+  }
   return false;
 }
 
@@ -59,13 +63,68 @@ async function resolveSimultaneousExistence(actor, entry) {
   tokenSource.flags[MODULE_ID] = {
     paradoxManifestation: true,
     sourceActorUuid: actor.uuid,
+    placementPending: true,
     expiresRound: Number(game.combat?.round ?? 0) + 10
   };
   await requestAction(source.parent.uuid, "create-manifestation", { source: tokenSource });
   const state = actor.getFlag(MODULE_ID, STATE_FLAG) ?? {};
   state.existence = { real: "original", expiresRound: Number(game.combat?.round ?? 0) + 10 };
   await requestAction(actor.uuid, "set-state", { state });
-  await post(actor, entry.item.name, "A manifestação foi criada ao lado do Cronomante. No início de cada turno, uma janela escolherá qual posição é real; somente ela poderá ser afetada.");
+  await Dialog.confirm({
+    title: `${entry.item.name} — posição inicial`,
+    content: `<section class="nova-era ne-trigger-dialog"><i class="fa-solid fa-location-crosshairs"></i><div><strong>Escolha onde a manifestação surgirá</strong><p>Assim que o token aparecer, arraste-o para um espaço desocupado a até <b>9m</b> do Cronomante. Uma posição acima desse limite será recusada.</p></div></section>`,
+    yes: () => true,
+    no: () => false,
+    defaultYes: true
+  });
+  await post(actor, entry.item.name, "A manifestação foi posicionada na linha temporal. No início de cada turno, uma janela escolherá qual posição é real; somente ela poderá ser afetada.");
+}
+
+function validateManifestationPlacement(token, change, options) {
+  if (options?.novaEraChronomancer || !("x" in change || "y" in change) || !token.getFlag(MODULE_ID, "paradoxManifestation")) return;
+  if (token.getFlag(MODULE_ID, "placementPending") !== true) {
+    ui.notifications.warn("Nova Era: a Manifestação de Existência Simultânea não pode ser movida depois de posicionada.");
+    return false;
+  }
+  const sourceUuid = token.getFlag(MODULE_ID, "sourceActorUuid");
+  const sourceActor = game.actors.get(String(sourceUuid).split(".").at(-1));
+  const sourceToken = sourceActor?.getActiveTokens?.().find(value => !value.document.getFlag(MODULE_ID, "paradoxManifestation"));
+  if (!sourceToken) return false;
+  const size = Number(canvas.grid.size ?? 100);
+  const destination = {
+    x: Number(change.x ?? token.x) + Number(token.width ?? 1) * size / 2,
+    y: Number(change.y ?? token.y) + Number(token.height ?? 1) * size / 2
+  };
+  let distance = Infinity;
+  try { distance = Number(canvas.grid.measurePath([sourceToken.center, destination]).distance ?? Infinity); } catch { return false; }
+  if (distance > 9) {
+    ui.notifications.warn(`Nova Era: a manifestação deve ser colocada a até 9m; posição de ${distance.toFixed(1)}m recusada.`);
+    return false;
+  }
+  foundry.utils.setProperty(change, `flags.${MODULE_ID}.placementPending`, false);
+  ui.notifications.info(`Nova Era: manifestação posicionada a ${distance.toFixed(1)}m.`);
+}
+
+async function resetSimultaneousExistence(actor, result, config) {
+  const longRest = result?.longRest === true || config?.type === "long";
+  if (!longRest || !actor || !mayManage(actor)) return;
+  for (const scene of game.scenes ?? []) {
+    for (const token of scene.tokens.filter(value => value.getFlag(MODULE_ID, "paradoxManifestation") && value.getFlag(MODULE_ID, "sourceActorUuid") === actor.uuid)) {
+      await requestAction(token.uuid, "delete-token");
+    }
+  }
+  const paradox = actor.getFlag(MODULE_ID, STATE_FLAG) ?? {};
+  delete paradox.existence;
+  await requestAction(actor.uuid, "set-state", { state: paradox });
+  // A recuperação geral do Cronomante também usa este gancho. Aguarde-a para
+  // preservar os PT restaurados e remova apenas o uso deste Paradoxo.
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const temporal = actor.getFlag(MODULE_ID, "chronomancerState") ?? {};
+  const limitedUses = { ...(temporal.limitedUses ?? {}) };
+  const item = actor.items.find(value => keyOf({ item: value }) === "crono-intervencao-existencia-simultanea");
+  if (item) delete limitedUses[item.id];
+  await actor.setFlag(MODULE_ID, "chronomancerState", { ...temporal, limitedUses, reaction: true });
+  Hooks.callAll("novaEraChronomancerChanged", actor);
 }
 
 async function resolveImmobileTime(actor, entry) {
@@ -206,6 +265,8 @@ export function registerChronomancerParadoxAutomation() {
   game.socket.on(`module.${MODULE_ID}`, payload => void handleSocket(payload));
   Hooks.on("updateCombat", (combat, changed) => void processTurn(combat, changed));
   Hooks.on("targetToken", preventUnrealTarget);
+  Hooks.on("preUpdateToken", validateManifestationPlacement);
   Hooks.on("dnd5e.preUseActivity", blockImmobileOffense);
   Hooks.on("dnd5e.preUseActivity", activity => void offerRealitySwap(activity));
+  Hooks.on("dnd5e.restCompleted", (actor, result, config) => void resetSimultaneousExistence(actor, result, config));
 }
