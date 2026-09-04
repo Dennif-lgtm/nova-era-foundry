@@ -182,19 +182,25 @@ async function promptTurnStart(combat, changed) {
   if (!("turn" in changed || "round" in changed)) return;
   const combatant = combat.combatant;
   if (!combatant?.actor) return;
+  const previousId = previousCombatants.get(combat.id);
+  const previous = combat.combatants.get(previousId);
+  if (previous?.actor && ownedChronomancer(previous.actor) && mayPrompt(previous.actor)) {
+    const previousState = chronomancerState(previous.actor);
+    if (previousState.trailExpiry === "end-current-turn") await updateChronomancerState(previous.actor, { trail: "", trailExpiry: "" });
+  }
   if (ownedChronomancer(combatant.actor) && mayPrompt(combatant.actor)) {
     const current = chronomancerState(combatant.actor);
+    const preserveExtendedTrail = current.trailExpiry === "end-next-turn";
     await updateChronomancerState(combatant.actor, {
       reaction: true,
-      trail: "",
+      trail: preserveExtendedTrail ? current.trail : "",
+      trailExpiry: preserveExtendedTrail ? "end-current-turn" : "",
       parallelTurnKey: "",
       parallelUses: [],
       lastAction: current.lastAction
     });
   }
   const eventKey = `${combat.id}:${combat.round}:${combat.turn}:turn-start`;
-  const previousId = previousCombatants.get(combat.id);
-  const previous = combat.combatants.get(previousId);
   for (const actor of game.actors.filter(ownedChronomancer)) {
     if (!mayPrompt(actor)) continue;
     const distance = visibleDistance(actor, combatant.actor);
@@ -326,6 +332,7 @@ async function recoverChronomancerRest(actor, result, config) {
     points,
     reaction: true,
     trail: "",
+    trailExpiry: "",
     parallelTurnKey: "",
     parallelUses: [],
     limitedUses
@@ -337,7 +344,7 @@ async function clearChronomancerCombatState(combat) {
   for (const combatant of combat.combatants ?? []) {
     const actor = combatant.actor;
     if (!ownedChronomancer(actor) || !mayPrompt(actor)) continue;
-    await updateChronomancerState(actor, { reaction: true, trail: "", parallelTurnKey: "", parallelUses: [] });
+    await updateChronomancerState(actor, { reaction: true, trail: "", trailExpiry: "", parallelTurnKey: "", parallelUses: [] });
   }
   previousCombatants.delete(combat.id);
   for (const key of [...movedCombatants]) if (key.startsWith(`${combat.id}:`)) movedCombatants.delete(key);

@@ -32,6 +32,18 @@ const CONFLUENCE_NAMES = {
   "Repetição|Ruptura": "Eco Fraturado",
   "Continuidade|Ruptura": "Ponto de Ruptura"
 };
+const CONFLUENCE_EFFECTS = {
+  "Equilíbrio Causal": "Você ou um aliado a até 9m pode mover 1,5m sem provocar Ataques de Oportunidade.",
+  "Impulso Temporal": "A oportunidade repetida acontece imediatamente; se envolver movimento, ele aumenta em 1,5m.",
+  "Instante Preservado": "O benefício produzido permanece até o início do seu próximo turno.",
+  "Causalidade Invertida": "A criatura afetada não pode realizar Reações durante a resolução.",
+  "Horizonte Ecoante": "O novo Rastro permanece até o final do seu próximo turno.",
+  "Horizonte Suspenso": "A consequência não-danosa começa somente ao final do turno da criatura afetada.",
+  "Instante Perdido": "A Reação ou o efeito secundário envolvido é perdido.",
+  "Linha Convergente": "A criatura beneficiada pode manter ou retornar à posição que ocupava no início do turno.",
+  "Eco Fraturado": "Em uma nova rolagem, escolha entre o resultado original e o novo resultado.",
+  "Ponto de Ruptura": "O efeito temporário de até uma rodada não pode ser prolongado."
+};
 const TEMPORAL_VERSES = {
   "Precedência": [
     "Antes do gesto, a intenção. Antes do instante, minha vontade.",
@@ -122,6 +134,7 @@ export function chronomancerState(actor) {
     maximum,
     points: Math.max(0, Math.min(maximum, Number(stored.points ?? maximum))),
     trail: LAWS.includes(stored.trail) ? stored.trail : "",
+    trailExpiry: ["end-next-turn", "end-current-turn"].includes(stored.trailExpiry) ? stored.trailExpiry : "",
     confluences: Math.max(0, Number(stored.confluences ?? 0)),
     reaction: stored.reaction !== false,
     clockMode: Math.max(0, Math.min(CLOCK_MODES.length - 1, Number(stored.clockMode ?? 0))),
@@ -186,6 +199,22 @@ async function postIntervention(actor, item, data) {
   });
 }
 
+async function postConfluence(actor, name, previousLaw, newLaw) {
+  const effect = CONFLUENCE_EFFECTS[name] ?? "Resolva a combinação temporal conforme a descrição da classe.";
+  const targets = [...(game.user.targets ?? [])].map(token => token.name).filter(Boolean);
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content: `<section class="nova-era chronomancer-chat ne-confluence-card"><h2><i class="fa-solid fa-code-merge"></i> ${name}</h2><p><strong>${previousLaw} + ${newLaw}</strong></p><blockquote>${effect}</blockquote>${targets.length ? `<p><strong>Alvos marcados:</strong> ${targets.join(", ")}</p>` : "<p><em>Nenhum alvo marcado; escolha o beneficiado durante a resolução.</em></p>"}</section>`
+  });
+  await Dialog.confirm({
+    title: `Confluência — ${name}`,
+    content: `<section class="nova-era ne-trigger-dialog"><i class="fa-solid fa-code-merge"></i><div><strong>${previousLaw} + ${newLaw}</strong><p>${effect}</p><p>${targets.length ? `Alvos atuais: <b>${targets.join(", ")}</b>.` : "Selecione o alvo apropriado no mapa, se necessário."}</p><p><strong>Deseja resolver esta Confluência agora?</strong></p></div></section>`,
+    yes: () => true,
+    no: () => false,
+    defaultYes: true
+  });
+}
+
 export async function activateChronomancerIntervention(actor, entry) {
   const current = chronomancerState(actor);
   if (!entry) return;
@@ -205,19 +234,22 @@ export async function activateChronomancerIntervention(actor, entry) {
   if (current.points < actualCost) return ui.notifications.warn(`Nova Era: ${entry.item.name} exige ${actualCost} PT.`);
   if (/Reação/i.test(entry.execution) && !current.reaction) return ui.notifications.warn("Nova Era: sua Reação Temporal já foi utilizada.");
   const confluence = willConverge(entry, current.trail);
+  const resolvedConfluence = confluence ? confluenceName(current.trail, law) : "";
   const nextUses = turnKey ? [...uses, { itemId: entry.item.id, name: entry.item.name, category: entry.category, law }] : [];
   await updateChronomancerState(actor, {
     points: current.points - actualCost,
     trail: law || current.trail,
+    trailExpiry: resolvedConfluence === "Horizonte Ecoante" ? "end-next-turn" : "",
     confluences: current.confluences + (confluence ? 1 : 0),
     reaction: /Reação/i.test(entry.execution) ? false : current.reaction,
     parallelTurnKey: turnKey,
     parallelUses: nextUses,
     limitedUses: entry.recovery ? { ...current.limitedUses, [entry.item.id]: entry.recovery } : current.limitedUses,
-    lastAction: { name: entry.item.name, cost: actualCost, law, confluence: confluence ? confluenceName(current.trail, law) : "", at: Date.now() }
+    lastAction: { name: entry.item.name, cost: actualCost, law, confluence: resolvedConfluence, at: Date.now() }
   });
-  if (confluence) ui.notifications.info(`Nova Era: Confluência entre ${current.trail} e ${law}.`);
+  if (confluence) ui.notifications.info(`Nova Era: ${resolvedConfluence} entre ${current.trail} e ${law}.`);
   await postIntervention(actor, entry.item, entry);
+  if (confluence) await postConfluence(actor, resolvedConfluence, current.trail, law);
 }
 
 function selectedCategory(panel) {
