@@ -9,6 +9,7 @@ import { registerChronomancerLibraryAndPrompts } from "./chronomancer/library-an
 import { registerChronomancerFoundationAutomation } from "./chronomancer/foundation-automation.mjs";
 import { registerChronomancerDisciplineAutomation } from "./chronomancer/discipline-automation.mjs";
 import { registerChronomancerGreatTheoryAutomation } from "./chronomancer/great-theory-automation.mjs";
+import { registerChronomancerParadoxAutomation } from "./chronomancer/paradox-automation.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
 import { registerSecondaryEffects, secondaryMacroApi } from "./features/secondary-effects.mjs";
@@ -81,6 +82,7 @@ Hooks.once("ready", async () => {
   registerChronomancerFoundationAutomation();
   registerChronomancerDisciplineAutomation();
   registerChronomancerGreatTheoryAutomation();
+  registerChronomancerParadoxAutomation();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();

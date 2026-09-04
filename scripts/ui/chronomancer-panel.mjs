@@ -7,6 +7,7 @@ import {
   prepareChronomancerGreatTheory,
   resolveChronomancerGreatTheory
 } from "../chronomancer/great-theory-automation.mjs";
+import { resolveChronomancerParadox } from "../chronomancer/paradox-automation.mjs";
 
 const LAWS = ["Precedência", "Atraso", "Repetição", "Continuidade", "Ruptura"];
 const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
@@ -232,7 +233,7 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   const uses = turnKey && current.parallelTurnKey === turnKey ? [...current.parallelUses] : [];
   const parallelI = hasContent(actor, "crono-paralelismo-1");
   const parallelII = hasContent(actor, "crono-paralelismo-2");
-  const law = generatedLaw(entry, current.trail);
+  const law = entry.category === "Paradoxo" ? "" : generatedLaw(entry, current.trail);
   if (entry.recovery && current.limitedUses[entry.item.id]) { ui.notifications.warn(`Nova Era: ${entry.item.name} já foi utilizada e exige um novo Descanso ${entry.recovery === "short" ? "Curto ou Longo" : "Longo"}.`); return false; }
   if (!isAbsoluteSetup && turnKey && uses.length >= 1) {
     if (!parallelI || uses.length >= 2) { ui.notifications.warn("Nova Era: você já realizou o máximo de Intervenções neste turno."); return false; }
@@ -267,6 +268,7 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   await resolveChronomancerFoundation(actor, entry, context);
   await resolveChronomancerDiscipline(actor, entry, context);
   await resolveChronomancerGreatTheory(actor, entry, context);
+  await resolveChronomancerParadox(actor, entry, context);
   if (confluence) await postConfluence(actor, resolvedConfluence, confluencePreviousLaw, confluenceNewLaw);
   return true;
 }

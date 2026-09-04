@@ -257,8 +257,9 @@ async function promptActivityEnd(activity) {
   if (!origin) return;
   const eventKey = `${game.combat?.id ?? "scene"}:${game.combat?.round ?? 0}:${game.combat?.turn ?? 0}:${activity.item.uuid}:action-end`;
   for (const actor of game.actors.filter(ownedChronomancer)) {
-    if (!mayPrompt(actor) || isAlly(actor, origin) || inRange(actor, origin, 9) === null) continue;
-    await offerKnown(actor, "crono-intervencao-lacuna-temporal", `${origin.name} terminou uma ação.`, eventKey, { targetActorUuid: origin.uuid });
+    if (!mayPrompt(actor)) continue;
+    if (!isAlly(actor, origin) && inRange(actor, origin, 9) !== null) await offerKnown(actor, "crono-intervencao-lacuna-temporal", `${origin.name} terminou uma ação.`, eventKey, { targetActorUuid: origin.uuid });
+    if (inRange(actor, origin, 18) !== null) await offerKnown(actor, "crono-intervencao-destino-reescrito", `${activity.item.name} de ${origin.name} foi resolvido.`, `${eventKey}:destino`, { targetActorUuid: origin.uuid, activityName: activity.item.name });
   }
 }
 
