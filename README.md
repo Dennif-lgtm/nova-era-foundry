@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.10 — Clone e Existência Simultânea
+
+- Permite ativar Clone Temporal clicando no ícone da ficha ou no novo botão de ampulheta.
+- Conecta a ativação ao custo de PT e às opções de Incontáveis Possibilidades.
+- Remove manifestações antigas e recupera Existência Simultânea após Descanso Longo.
+- Solicita o posicionamento inicial da manifestação e valida o limite de 9m.
+- Impede que a manifestação seja movida livremente depois de posicionada.
+
 ### v0.25.9 — Efeitos completos do Cronomante
 
 - Converte bônus de CA, resistências, ataques, redução de dano e bloqueios de Reação em efeitos mecânicos reais.
