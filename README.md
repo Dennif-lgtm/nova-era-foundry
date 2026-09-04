@@ -9,6 +9,15 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.8 — Automação do Cronomante
+
+- Automatiza os gatilhos e a resolução assistida dos 10 Fundamentos e das 10 Disciplinas.
+- Implementa as cinco Grandes Teorias: Clone Temporal, Linha Alternativa, Horizonte Congelado, Eco Infinito e Convergência Absoluta.
+- Implementa os três Paradoxos: Existência Simultânea, Tempo Imóvel e Destino Reescrito.
+- Integra Pontos Temporais, Rastros, Confluências, Reação Temporal, Paralelismo e recuperação em descansos.
+- Exibe janelas de confirmação quando uma Intervenção conhecida se torna utilizável.
+- Mantém todas as automações visuais e mecânicas do Ladino das versões anteriores.
+
 ### v0.25.7 — Carrossel das Intervenções
 
 - Transforma XI, XII e I em uma janela móvel da Biblioteca do personagem.
