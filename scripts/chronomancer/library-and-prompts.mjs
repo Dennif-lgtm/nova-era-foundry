@@ -208,7 +208,7 @@ async function promptTurnStart(combat, changed) {
     if (!mayPrompt(actor)) continue;
     const distance = visibleDistance(actor, combatant.actor);
     if (distance !== null && distance <= 9) await offerKnown(actor, "crono-intervencao-acelerar", `${combatant.name} iniciou o turno a ${Math.round(distance)}m.`, eventKey, { targetActorUuid: combatant.actor.uuid, targetTokenUuid: combatant.token?.uuid });
-    if (isAlly(actor, combatant.actor) && inRange(actor, combatant.actor, 9) !== null) await offerKnown(actor, "crono-intervencao-linha-alternativa", `${combatant.name} iniciou o turno.`, `${eventKey}:linha`);
+    if (isAlly(actor, combatant.actor) && inRange(actor, combatant.actor, 9) !== null) await offerKnown(actor, "crono-intervencao-linha-alternativa", `${combatant.name} iniciou o turno.`, `${eventKey}:linha`, { targetActorUuid: combatant.actor.uuid, targetTokenUuid: combatant.token?.uuid });
     if (previous?.actor && isAlly(actor, previous.actor) && inRange(actor, previous.actor, 9) !== null) {
       const endKey = `${combat.id}:${previousId}:${combat.round}:${combat.turn}:turn-end`;
       if (movedCombatants.has(`${combat.id}:${previousId}`)) await offerKnown(actor, "crono-intervencao-reverberacao", `${previous.name} terminou um turno no qual se deslocou.`, `${endKey}:reverberacao`, { targetActorUuid: previous.actor.uuid, targetTokenUuid: previous.token?.uuid, targetName: previous.name });
@@ -248,7 +248,7 @@ async function promptActivityStart(activity) {
     if (activityEffects > 0 && !isAlly(actor, attacker) && inRange(actor, attacker, 9) !== null) {
       await offerKnown(actor, "crono-intervencao-descontinuidade", `${attacker.name} declarou ${activity.item.name}, que possui consequência secundária.`, `${eventKey}:descontinuidade`, { targetActorUuid: attacker.uuid, activityName: activity.item.name });
     }
-    await offerKnown(actor, "crono-intervencao-horizonte-congelado", `${attacker.name} começou a resolver ${activity.item.name}.`, `${eventKey}:horizonte`);
+    await offerKnown(actor, "crono-intervencao-horizonte-congelado", `${attacker.name} começou a resolver ${activity.item.name}.`, `${eventKey}:horizonte`, { targetActorUuid: attacker.uuid, activityName: activity.item.name });
   }
 }
 
