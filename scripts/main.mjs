@@ -7,6 +7,7 @@ import { registerExposurePanel } from "./ui/exposure-panel.mjs";
 import { openChronomancerClock, registerChronomancerPanel } from "./ui/chronomancer-panel.mjs";
 import { registerChronomancerLibraryAndPrompts } from "./chronomancer/library-and-prompts.mjs";
 import { registerChronomancerFoundationAutomation } from "./chronomancer/foundation-automation.mjs";
+import { registerChronomancerDisciplineAutomation } from "./chronomancer/discipline-automation.mjs";
 import { registerBaseFeatureAutomation } from "./features/base-features.mjs";
 import { registerAdvancedBaseFeatureAutomation } from "./features/advanced-base-features.mjs";
 import { registerSecondaryEffects, secondaryMacroApi } from "./features/secondary-effects.mjs";
@@ -77,6 +78,7 @@ Hooks.once("ready", async () => {
   registerChronomancerPanel();
   registerChronomancerLibraryAndPrompts();
   registerChronomancerFoundationAutomation();
+  registerChronomancerDisciplineAutomation();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();

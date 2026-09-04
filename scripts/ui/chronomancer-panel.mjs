@@ -1,5 +1,6 @@
 import { MODULE_ID } from "../constants.mjs";
 import { resolveChronomancerFoundation } from "../chronomancer/foundation-automation.mjs";
+import { resolveChronomancerDiscipline } from "../chronomancer/discipline-automation.mjs";
 
 const LAWS = ["Precedência", "Atraso", "Repetição", "Continuidade", "Ruptura"];
 const CATEGORIES = ["Fundamento", "Disciplina", "Grande Teoria", "Paradoxo"];
@@ -251,6 +252,7 @@ export async function activateChronomancerIntervention(actor, entry, context = {
   if (confluence) ui.notifications.info(`Nova Era: ${resolvedConfluence} entre ${current.trail} e ${law}.`);
   await postIntervention(actor, entry.item, entry);
   await resolveChronomancerFoundation(actor, entry, context);
+  await resolveChronomancerDiscipline(actor, entry, context);
   if (confluence) await postConfluence(actor, resolvedConfluence, current.trail, law);
   return true;
 }
