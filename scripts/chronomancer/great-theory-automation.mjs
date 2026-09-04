@@ -116,10 +116,11 @@ async function resolveClone(actor, entry) {
   tokenSource.flags[MODULE_ID] = {
     chronomancerEcho: true,
     sourceActorUuid: actor.uuid,
+    placementPending: true,
     expiresRound: Number(game.combat?.round ?? 0) + 10
   };
   await requestAction(source.parent.uuid, "create-echo", { source: tokenSource });
-  await post(actor, entry.item.name, `Um Eco Temporal foi criado próximo de ${actor.name}. Ele pode ser movido 6m no início do turno e desaparece se ficar além de 18m.`);
+  await post(actor, entry.item.name, `Um Eco Temporal foi criado próximo de ${actor.name}. Arraste-o uma vez para escolher um espaço inicial a até 9m. Depois, ele pode ser movido 6m no início do turno e desaparece se ficar além de 18m.`);
 }
 
 async function resolveAlternativeLine(actor, entry, context) {
@@ -242,6 +243,24 @@ async function maintainEchoRange(token, change, options) {
 function validateEchoMovement(token, change, options) {
   if (options?.novaEraChronomancer || !("x" in change || "y" in change) || !token.getFlag(MODULE_ID, "chronomancerEcho")) return;
   const sourceUuid = token.getFlag(MODULE_ID, "sourceActorUuid");
+  const placementPending = token.getFlag(MODULE_ID, "placementPending") === true;
+  if (placementPending) {
+    const sourceActor = game.actors.get(String(sourceUuid).split(".").at(-1));
+    const sourceToken = sourceActor?.getActiveTokens?.()[0];
+    if (!sourceToken) return;
+    const grid = Number(canvas.grid.size ?? 100);
+    const width = Number(token.width ?? 1) * grid;
+    const height = Number(token.height ?? 1) * grid;
+    const destination = { x: Number(change.x ?? token.x) + width / 2, y: Number(change.y ?? token.y) + height / 2 };
+    let placementDistance = 0;
+    try { placementDistance = canvas.grid.measurePath([sourceToken.center, destination]).distance; } catch { return; }
+    if (placementDistance > 9) {
+      ui.notifications.warn("Nova Era: a posição inicial do Eco Temporal deve estar a até 9m.");
+      return false;
+    }
+    foundry.utils.setProperty(change, `flags.${MODULE_ID}.placementPending`, false);
+    return;
+  }
   if (game.combat?.combatant?.actor?.uuid && game.combat.combatant.actor.uuid !== sourceUuid) {
     ui.notifications.warn("Nova Era: o Eco Temporal só pode ser movido no turno do Cronomante.");
     return false;
