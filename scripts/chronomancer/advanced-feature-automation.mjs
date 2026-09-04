@@ -306,6 +306,40 @@ function addActivationButton(app, html) {
   root.querySelector("form")?.append(button);
 }
 
+function addActorSheetActivations(app, html) {
+  const actor = app.actor ?? app.document;
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!actor?.isOwner || !root || root.dataset.novaEraChronomancerActivation === "true") return;
+  root.dataset.novaEraChronomancerActivation = "true";
+
+  for (const row of root.querySelectorAll("[data-item-id]")) {
+    const item = actor.items.get(row.dataset.itemId);
+    if (!ACTIVATABLE.has(keyOf(item))) continue;
+    const controls = row.querySelector(".item-controls");
+    if (controls && !controls.querySelector("[data-action='nova-era-activate']")) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "unbutton item-control nova-era-chronomancer-activate";
+      button.dataset.action = "nova-era-activate";
+      button.dataset.itemId = item.id;
+      button.dataset.tooltip = "Ativar automação Nova Era";
+      button.innerHTML = '<i class="fa-solid fa-hourglass-start"></i>';
+      controls.prepend(button);
+    }
+  }
+
+  root.addEventListener("click", event => {
+    const activateButton = event.target.closest?.("[data-action='nova-era-activate']");
+    const useImage = event.target.closest?.("[data-item-id] .item-image[data-action='use']");
+    const row = (activateButton ?? useImage)?.closest?.("[data-item-id]");
+    const item = row ? actor.items.get(row.dataset.itemId) : null;
+    if (!ACTIVATABLE.has(keyOf(item))) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void activateChronomancerFeature(actor, item);
+  }, true);
+}
+
 async function resetTurn(combat, changed) {
   if (!("turn" in changed || "round" in changed)) return;
   const actor = combat.combatant?.actor;
@@ -346,6 +380,7 @@ async function restCompleted(actor, result, config) {
 
 export function registerChronomancerAdvancedFeatureAutomation() {
   for (const hook of ["renderItemSheet", "renderItemSheet5e", "renderItemSheetV2"]) Hooks.on(hook, addActivationButton);
+  for (const hook of ["renderActorSheet", "renderActorSheetV2", "renderActorSheet5eCharacter", "renderActorSheet5eCharacter2"]) Hooks.on(hook, addActorSheetActivations);
   Hooks.on("preUpdateActor", preventImmutableDeath);
   Hooks.on("dnd5e.postRollAttack", offerParadoxicalExistence);
   Hooks.on("dnd5e.postRollAbilityCheck", offerParadoxicalExistence);
