@@ -139,7 +139,7 @@ function reactionEntry(actor, key) {
 async function askToUse(actor, entry, trigger, eventKey) {
   if (!entry || !mayPrompt(actor)) return;
   const current = chronomancerState(actor);
-  if (!current.reaction || current.points < entry.cost) return;
+  if (!current.reaction || current.points < entry.cost || (entry.recovery && current.limitedUses[entry.item.id])) return;
   const unique = `${game.user.id}:${actor.uuid}:${entry.item.id}:${eventKey}`;
   if (offeredEvents.has(unique)) return;
   offeredEvents.add(unique);
@@ -182,6 +182,16 @@ async function promptTurnStart(combat, changed) {
   if (!("turn" in changed || "round" in changed)) return;
   const combatant = combat.combatant;
   if (!combatant?.actor) return;
+  if (ownedChronomancer(combatant.actor) && mayPrompt(combatant.actor)) {
+    const current = chronomancerState(combatant.actor);
+    await updateChronomancerState(combatant.actor, {
+      reaction: true,
+      trail: "",
+      parallelTurnKey: "",
+      parallelUses: [],
+      lastAction: current.lastAction
+    });
+  }
   const eventKey = `${combat.id}:${combat.round}:${combat.turn}:turn-start`;
   const previousId = previousCombatants.get(combat.id);
   const previous = combat.combatants.get(previousId);
@@ -304,6 +314,35 @@ function levelChanged(item) {
   setTimeout(() => void offerPendingLibraryChoice(item.parent), 350);
 }
 
+async function recoverChronomancerRest(actor, result, config) {
+  if (!ownedChronomancer(actor) || !mayPrompt(actor)) return;
+  const longRest = result?.longRest === true || config?.type === "long";
+  const shortRest = longRest || result?.shortRest === true || config?.type === "short";
+  if (!shortRest) return;
+  const current = chronomancerState(actor);
+  const limitedUses = Object.fromEntries(Object.entries(current.limitedUses).filter(([, recovery]) => !longRest && recovery === "long"));
+  const points = longRest ? current.maximum : Math.min(current.maximum, current.points + Math.ceil(current.maximum / 2));
+  await updateChronomancerState(actor, {
+    points,
+    reaction: true,
+    trail: "",
+    parallelTurnKey: "",
+    parallelUses: [],
+    limitedUses
+  });
+  ui.notifications.info(`Nova Era: ${actor.name} recuperou ${longRest ? "todos os Pontos Temporais" : "metade do máximo de Pontos Temporais"}.`);
+}
+
+async function clearChronomancerCombatState(combat) {
+  for (const combatant of combat.combatants ?? []) {
+    const actor = combatant.actor;
+    if (!ownedChronomancer(actor) || !mayPrompt(actor)) continue;
+    await updateChronomancerState(actor, { reaction: true, trail: "", parallelTurnKey: "", parallelUses: [] });
+  }
+  previousCombatants.delete(combat.id);
+  for (const key of [...movedCombatants]) if (key.startsWith(`${combat.id}:`)) movedCombatants.delete(key);
+}
+
 export function registerChronomancerLibraryAndPrompts() {
   Hooks.on("preUpdateItem", rememberLevel);
   Hooks.on("updateItem", levelChanged);
@@ -318,4 +357,6 @@ export function registerChronomancerLibraryAndPrompts() {
   Hooks.on("dnd5e.preUseActivity", activity => void promptActivityStart(activity));
   Hooks.on("dnd5e.postUseActivity", activity => void promptActivityEnd(activity));
   Hooks.on("dnd5e.postRollAttack", (rolls, data) => void promptCritical(rolls, data));
+  Hooks.on("dnd5e.restCompleted", (actor, result, config) => void recoverChronomancerRest(actor, result, config));
+  Hooks.on("deleteCombat", combat => void clearChronomancerCombatState(combat));
 }

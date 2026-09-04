@@ -92,7 +92,8 @@ export function chronomancerInterventionData(item) {
   const laws = LAWS.filter(value => fields.some(part => part.includes(value)));
   const execution = fields.find(part => /Ação|Reação|Sem ação/i.test(part)) ?? "Intervenção";
   const range = fields.find(part => part !== category && part !== execution && !/\d+\s*PT/i.test(part) && !LAWS.some(law => part.includes(law))) ?? "";
-  return { cost, category, laws, execution, range };
+  const recovery = /1\s*\/\s*Descanso\s*Curto/i.test(description) ? "short" : /1\s*\/\s*Descanso\s*Longo/i.test(description) ? "long" : "";
+  return { cost, category, laws, execution, range, recovery };
 }
 
 function actorInterventions(actor) {
@@ -125,6 +126,7 @@ export function chronomancerState(actor) {
     reaction: stored.reaction !== false,
     clockMode: Math.max(0, Math.min(CLOCK_MODES.length - 1, Number(stored.clockMode ?? 0))),
     quickSlots: stored.quickSlots && typeof stored.quickSlots === "object" ? stored.quickSlots : {},
+    limitedUses: stored.limitedUses && typeof stored.limitedUses === "object" ? stored.limitedUses : {},
     parallelTurnKey: String(stored.parallelTurnKey ?? ""),
     parallelUses: Array.isArray(stored.parallelUses) ? stored.parallelUses.slice(0, 2) : [],
     lastAction: stored.lastAction && typeof stored.lastAction === "object" ? stored.lastAction : null
@@ -192,6 +194,7 @@ export async function activateChronomancerIntervention(actor, entry) {
   const parallelI = hasContent(actor, "crono-paralelismo-1");
   const parallelII = hasContent(actor, "crono-paralelismo-2");
   const law = generatedLaw(entry, current.trail);
+  if (entry.recovery && current.limitedUses[entry.item.id]) return ui.notifications.warn(`Nova Era: ${entry.item.name} já foi utilizada e exige um novo Descanso ${entry.recovery === "short" ? "Curto ou Longo" : "Longo"}.`);
   if (turnKey && uses.length >= 1) {
     if (!parallelI || uses.length >= 2) return ui.notifications.warn("Nova Era: você já realizou o máximo de Intervenções neste turno.");
     const allowedCategories = parallelII ? ["Fundamento", "Disciplina"] : ["Fundamento"];
@@ -210,6 +213,7 @@ export async function activateChronomancerIntervention(actor, entry) {
     reaction: /Reação/i.test(entry.execution) ? false : current.reaction,
     parallelTurnKey: turnKey,
     parallelUses: nextUses,
+    limitedUses: entry.recovery ? { ...current.limitedUses, [entry.item.id]: entry.recovery } : current.limitedUses,
     lastAction: { name: entry.item.name, cost: actualCost, law, confluence: confluence ? confluenceName(current.trail, law) : "", at: Date.now() }
   });
   if (confluence) ui.notifications.info(`Nova Era: Confluência entre ${current.trail} e ${law}.`);
@@ -367,6 +371,7 @@ function renderSelection(panel, actor, entry = selectedEntry(actor, panel)) {
     generatedLaw(entry, current.trail) === turnUses[0]?.law
   ));
   const reactionBlocked = Boolean(entry && /Reação/i.test(entry.execution) && !current.reaction);
+  const recoveryBlocked = Boolean(entry?.recovery && current.limitedUses[entry.item.id]);
   const insufficient = Boolean(entry && current.points < displayCost);
   const execute = panel.querySelector("[data-action='execute-intervention']");
   panel.querySelector("[data-role='selected-name']").textContent = entry?.item.name ?? "Nenhuma Intervenção";
@@ -378,9 +383,9 @@ function renderSelection(panel, actor, entry = selectedEntry(actor, panel)) {
   panel.querySelector("[data-role='confluence-preview']").innerHTML = entry && willConverge(entry, current.trail)
     ? `<i class="fa-solid fa-sparkles"></i> Gerará Confluência: ${current.trail} + ${generatedLaw(entry, current.trail)}`
     : entry ? `<i class="fa-solid fa-wave-square"></i> Novo Rastro: ${generatedLaw(entry, current.trail) || "inalterado"}` : "";
-  execute.disabled = !entry || insufficient || reactionBlocked || parallelBlocked;
-  execute.classList.toggle("ready", Boolean(entry && !insufficient && !reactionBlocked && !parallelBlocked));
-  execute.querySelector("span").textContent = insufficient ? `Faltam ${displayCost - current.points} PT` : reactionBlocked ? "Reação utilizada" : parallelBlocked ? "Paralelismo incompatível" : "Executar Intervenção";
+  execute.disabled = !entry || insufficient || reactionBlocked || parallelBlocked || recoveryBlocked;
+  execute.classList.toggle("ready", Boolean(entry && !insufficient && !reactionBlocked && !parallelBlocked && !recoveryBlocked));
+  execute.querySelector("span").textContent = insufficient ? `Faltam ${displayCost - current.points} PT` : reactionBlocked ? "Reação utilizada" : recoveryBlocked ? `Aguarde Descanso ${entry.recovery === "short" ? "Curto" : "Longo"}` : parallelBlocked ? "Paralelismo incompatível" : "Executar Intervenção";
   panel.querySelector("[data-action='open-intervention']").disabled = !entry;
 }
 
