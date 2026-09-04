@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
 
+### v0.25.9 — Efeitos completos do Cronomante
+
+- Converte bônus de CA, resistências, ataques, redução de dano e bloqueios de Reação em efeitos mecânicos reais.
+- Automatiza as dez Confluências, incluindo movimento validado no mapa, adiamento, descarte, preservação e limite de duração de efeitos.
+- Implementa Primeiro Instante, as Teses dos Tratados, Tempo Imutável, Incontáveis Possibilidades, Existência Paradoxal e Quebra do Tempo.
+- Aplica descontos de PT, segunda Reação, Paralelismo ampliado e Confluências automáticas diretamente pelo Relógio.
+- Adiciona ativação Nova Era às características especiais abertas pela ficha e mantém a API disponível para macros.
+
 ### v0.25.8 — Automação do Cronomante
 
 - Automatiza os gatilhos e a resolução assistida dos 10 Fundamentos e das 10 Disciplinas.
