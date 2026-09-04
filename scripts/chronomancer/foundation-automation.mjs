@@ -18,6 +18,21 @@ async function executeDocumentAction(document, action, data) {
     return true;
   }
   const actor = document.documentName === "Actor" ? document : document.actor;
+  if (action === "delete-effect" && document.documentName === "ActiveEffect") {
+    await document.delete({ novaEraChronomancer: true });
+    return true;
+  }
+  if (action === "restore-effect" && actor) {
+    const source = foundry.utils.deepClone(data.source ?? {});
+    delete source._id;
+    source.flags ??= {};
+    source.flags[MODULE_ID] = { ...(source.flags[MODULE_ID] ?? {}), permanenceExtended: true };
+    source.duration = game.combat?.started
+      ? { rounds: 1, turns: 0, startRound: game.combat.round, startTurn: game.combat.turn }
+      : { seconds: 6, startTime: game.time.worldTime };
+    await actor.createEmbeddedDocuments("ActiveEffect", [source], { novaEraChronomancer: true });
+    return true;
+  }
   if (action === "remove-prone" && actor) {
     const prone = actor.effects.filter(effect => effect.statuses?.has?.("prone") || effect.statuses?.has?.("proneStatus"));
     if (prone.length) await actor.deleteEmbeddedDocuments("ActiveEffect", prone.map(effect => effect.id));
@@ -112,6 +127,46 @@ async function resolveEcho(actor, entry, context) {
   } else await postResolution(actor, entry.item.name, "Repita a jogada afetada e utilize o novo resultado.");
 }
 
+function chronomancerDC(actor) {
+  return 8 + Number(actor.system?.attributes?.prof ?? 0) + Number(actor.system?.abilities?.int?.mod ?? 0);
+}
+
+async function intelligenceSave(sourceActor, targetActor, flavor) {
+  const modifier = Number(targetActor?.system?.abilities?.int?.save ?? targetActor?.system?.abilities?.int?.mod ?? 0);
+  const roll = await new Roll("1d20 + @modifier", { modifier }).evaluate();
+  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: targetActor }), flavor });
+  return { success: Number(roll.total) >= chronomancerDC(sourceActor), total: Number(roll.total), dc: chronomancerDC(sourceActor) };
+}
+
+async function resolvePermanence(actor, entry, context) {
+  if (!context.effectSource || !context.targetActorUuid) {
+    await postResolution(actor, entry.item.name, "Prolongue o benefício temporário elegível até o início do próximo turno do aliado.");
+    return;
+  }
+  const target = await fromUuid(context.targetActorUuid);
+  await documentAction(target?.uuid, "restore-effect", { source: context.effectSource });
+  await postResolution(actor, entry.item.name, `<strong>${context.effectName ?? "O benefício"}</strong> foi prolongado sobre <strong>${target?.name ?? "o aliado"}</strong> por mais uma rodada.`);
+}
+
+async function resolveColapso(actor, entry, context) {
+  const target = context.targetActorUuid ? await fromUuid(context.targetActorUuid) : null;
+  if (!target) return postResolution(actor, entry.item.name, "O alvo realiza uma resistência de Inteligência; em falha, encerre o benefício temporário.");
+  const save = await intelligenceSave(actor, target, `${entry.item.name} — CD ${chronomancerDC(actor)}`);
+  if (!save.success && context.effectUuid) await documentAction(context.effectUuid, "delete-effect");
+  await postResolution(actor, entry.item.name, save.success
+    ? `<strong>${target.name}</strong> resiste com ${save.total} contra CD ${save.dc}; o benefício permanece.`
+    : `<strong>${target.name}</strong> falha com ${save.total} contra CD ${save.dc}; <strong>${context.effectName ?? "o benefício"}</strong> termina.`);
+}
+
+async function resolveDiscontinuity(actor, entry, context) {
+  const target = context.targetActorUuid ? await fromUuid(context.targetActorUuid) : null;
+  if (!target) return postResolution(actor, entry.item.name, "O efeito principal acontece, mas escolha uma consequência secundária não-danosa para impedir.");
+  const save = await intelligenceSave(actor, target, `${entry.item.name} — CD ${chronomancerDC(actor)}`);
+  await postResolution(actor, entry.item.name, save.success
+    ? `<strong>${target.name}</strong> resiste com ${save.total} contra CD ${save.dc}; a consequência secundária permanece.`
+    : `<strong>${target.name}</strong> falha com ${save.total} contra CD ${save.dc}. O efeito principal de <strong>${context.activityName ?? "sua ação"}</strong> acontece, mas uma consequência secundária não-danosa deve ser ignorada.`);
+}
+
 export async function resolveChronomancerFoundation(actor, entry, context = {}) {
   const key = contentKey(entry);
   if (key === "crono-intervencao-acelerar" || key === "crono-intervencao-antecipacao") await resolveAcceleration(actor, entry, context);
@@ -119,6 +174,10 @@ export async function resolveChronomancerFoundation(actor, entry, context = {}) 
   else if (key === "crono-intervencao-inercia-temporal") await postResolution(actor, entry.item.name, "Resolva primeiro o acontecimento que provocou a Reação. A Reação somente acontece depois, caso ainda possua alvo e condições válidas.");
   else if (key === "crono-intervencao-eco-temporal") await resolveEcho(actor, entry, context);
   else if (key === "crono-intervencao-ancora-temporal") await resolveAnchor(actor, entry, context);
+  else if (key === "crono-intervencao-reverberacao") await postResolution(actor, entry.item.name, `<strong>${context.targetName ?? "O aliado"}</strong> pode mover 1,5m sem provocar Ataques de Oportunidade e sem entrar no alcance corpo a corpo de um hostil.`);
+  else if (key === "crono-intervencao-permanencia") await resolvePermanence(actor, entry, context);
+  else if (key === "crono-intervencao-colapso") await resolveColapso(actor, entry, context);
+  else if (key === "crono-intervencao-descontinuidade") await resolveDiscontinuity(actor, entry, context);
 }
 
 async function handleSocket(payload) {

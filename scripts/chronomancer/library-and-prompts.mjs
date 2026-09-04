@@ -209,7 +209,7 @@ async function promptTurnStart(combat, changed) {
     if (isAlly(actor, combatant.actor) && inRange(actor, combatant.actor, 9) !== null) await offerKnown(actor, "crono-intervencao-linha-alternativa", `${combatant.name} iniciou o turno.`, `${eventKey}:linha`);
     if (previous?.actor && isAlly(actor, previous.actor) && inRange(actor, previous.actor, 9) !== null) {
       const endKey = `${combat.id}:${previousId}:${combat.round}:${combat.turn}:turn-end`;
-      if (movedCombatants.has(`${combat.id}:${previousId}`)) await offerKnown(actor, "crono-intervencao-reverberacao", `${previous.name} terminou um turno no qual se deslocou.`, `${endKey}:reverberacao`);
+      if (movedCombatants.has(`${combat.id}:${previousId}`)) await offerKnown(actor, "crono-intervencao-reverberacao", `${previous.name} terminou um turno no qual se deslocou.`, `${endKey}:reverberacao`, { targetActorUuid: previous.actor.uuid, targetTokenUuid: previous.token?.uuid, targetName: previous.name });
       await offerKnown(actor, "crono-intervencao-linha-restaurada", `${previous.name} terminou o turno.`, `${endKey}:restaurada`);
     }
   }
@@ -233,6 +233,10 @@ async function promptActivityStart(activity) {
     if (!mayPrompt(actor) || inRange(actor, attacker, 18) === null) continue;
     const activation = activity.activation?.type ?? activity.item?.system?.activation?.type ?? "";
     if (/reaction/i.test(activation)) await offerKnown(actor, "crono-intervencao-inercia-temporal", `${attacker.name} declarou uma Reação.`, `${eventKey}:inercia`, { targetActorUuid: attacker.uuid });
+    const activityEffects = Number(activity.effects?.size ?? activity.effects?.length ?? 0) + Number(activity.item?.effects?.size ?? activity.item?.effects?.length ?? 0);
+    if (activityEffects > 0 && !isAlly(actor, attacker) && inRange(actor, attacker, 9) !== null) {
+      await offerKnown(actor, "crono-intervencao-descontinuidade", `${attacker.name} declarou ${activity.item.name}, que possui consequência secundária.`, `${eventKey}:descontinuidade`, { targetActorUuid: attacker.uuid, activityName: activity.item.name });
+    }
     await offerKnown(actor, "crono-intervencao-horizonte-congelado", `${attacker.name} começou a resolver ${activity.item.name}.`, `${eventKey}:horizonte`);
   }
 }
@@ -302,6 +306,46 @@ async function promptProne(effect) {
   for (const actor of game.actors.filter(ownedChronomancer)) {
     if (!mayPrompt(actor) || inRange(actor, target, 9) === null) continue;
     await offerKnown(actor, "crono-intervencao-ancora-temporal", `${target.name} seria Derrubado.`, eventKey, { targetActorUuid: target.uuid });
+  }
+}
+
+function shortNonmagicalEffect(effect) {
+  if (!effect || effect.getFlag(MODULE_ID, "permanenceExtended")) return false;
+  const duration = effect.duration ?? {};
+  const short = (Number(duration.rounds) > 0 && Number(duration.rounds) <= 1) || (Number(duration.turns) > 0 && Number(duration.turns) <= 1) || (Number(duration.seconds) > 0 && Number(duration.seconds) <= 6);
+  if (!short) return false;
+  try {
+    const origin = globalThis.fromUuidSync?.(effect.origin);
+    return origin?.type !== "spell";
+  } catch { return true; }
+}
+
+function beneficialEffect(effect) {
+  if (!shortNonmagicalEffect(effect) || effect.statuses?.size) return false;
+  return (effect.changes ?? []).some(change => {
+    const value = Number(change.value);
+    return Number.isFinite(value) ? value > 0 : /advantage|bonus|ac/i.test(`${change.key} ${change.value}`);
+  });
+}
+
+async function promptExpiringBenefit(effect, options) {
+  if (options?.novaEraChronomancer || !game.combat?.started || !beneficialEffect(effect) || !effect.parent) return;
+  const target = effect.parent;
+  const source = effect.toObject();
+  const eventKey = `${game.combat.id}:${game.combat.round}:${game.combat.turn}:${effect.uuid}:expires`;
+  for (const actor of game.actors.filter(ownedChronomancer)) {
+    if (!mayPrompt(actor) || !isAlly(actor, target) || inRange(actor, target, 9) === null) continue;
+    await offerKnown(actor, "crono-intervencao-permanencia", `${effect.name} terminaria sobre ${target.name}.`, eventKey, { targetActorUuid: target.uuid, effectName: effect.name, effectSource: source });
+  }
+}
+
+async function promptHostileBenefit(effect, options) {
+  if (options?.novaEraChronomancer || !beneficialEffect(effect) || !effect.parent) return;
+  const target = effect.parent;
+  const eventKey = `${game.combat?.id ?? "scene"}:${game.combat?.round ?? 0}:${game.combat?.turn ?? 0}:${effect.uuid}:benefit`;
+  for (const actor of game.actors.filter(ownedChronomancer)) {
+    if (!mayPrompt(actor) || isAlly(actor, target) || inRange(actor, target, 9) === null) continue;
+    await offerKnown(actor, "crono-intervencao-colapso", `${target.name} recebeu o benefício temporário ${effect.name}.`, eventKey, { targetActorUuid: target.uuid, effectUuid: effect.uuid, effectName: effect.name });
   }
 }
 
@@ -423,7 +467,8 @@ export function registerChronomancerLibraryAndPrompts() {
   Hooks.on("dnd5e.postRollAttack", (rolls, data) => void promptFailedRoll(rolls, data));
   Hooks.on("dnd5e.postRollAbilityCheck", (rolls, data) => void promptFailedRoll(rolls, data));
   Hooks.on("dnd5e.postRollSavingThrow", (rolls, data) => void promptFailedRoll(rolls, data));
-  Hooks.on("createActiveEffect", effect => void promptProne(effect));
+  Hooks.on("createActiveEffect", (effect, options) => { void promptProne(effect); void promptHostileBenefit(effect, options); });
+  Hooks.on("preDeleteActiveEffect", (effect, options) => void promptExpiringBenefit(effect, options));
   Hooks.on("dnd5e.restCompleted", (actor, result, config) => void recoverChronomancerRest(actor, result, config));
   Hooks.on("deleteCombat", combat => void clearChronomancerCombatState(combat));
 }
