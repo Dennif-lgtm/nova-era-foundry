@@ -2032,3 +2032,38 @@
 .ne-v3-clock .ne-v2-core { border:0; background:transparent; box-shadow:none; }
 .ne-v3-clock .ne-v2-core small { display:none; }
 .ne-v3-clock .ne-v2-feedback { left:37%; top:59.5%; width:26%; }
+
+/* Berserker — coração independente */
+.nova-era-berserker-window .window-content { padding:0; overflow:hidden; background:transparent; }
+.berserker-panel { min-height:600px; padding:14px; color:#ead7bd; background:radial-gradient(circle at 50% 36%,#4a0708 0,#160405 47%,#050202 100%); font-family:Georgia,serif; }
+.ne-berserker-frame { position:relative; display:flex; flex-direction:column; align-items:center; min-height:568px; padding:24px 22px 18px; border:2px solid #8e3022; clip-path:polygon(7% 0,93% 0,100% 6%,100% 94%,93% 100%,7% 100%,0 94%,0 6%); background:linear-gradient(145deg,#190707e8,#050202f5); box-shadow:inset 0 0 0 3px #250b09,inset 0 0 36px #a51c102e,0 0 18px #000; }
+.ne-berserker-frame::before,.ne-berserker-frame::after { content:""; position:absolute; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,#d8683e,#f5b563,#d8683e,transparent); box-shadow:0 0 8px #cf2d20; }
+.ne-berserker-frame::before { top:104px; }.ne-berserker-frame::after { bottom:88px; }
+.ne-berserker-frame header { width:100%; text-align:center; text-transform:uppercase; letter-spacing:.16em; }
+.ne-berserker-frame header small { color:#c7805d; }.ne-berserker-frame header h2 { margin:3px 0;color:#f0d0aa;font-size:29px;text-shadow:0 2px 0 #3b0905,0 0 11px #aa2117; }.ne-berserker-frame header em { color:#ca4d36;font-size:11px; }
+.ne-berserker-heart { position:relative; display:grid; place-items:center; width:270px; height:270px; margin:24px 0 4px; }
+.ne-berserker-heart::before { content:""; position:absolute; inset:22px; border:1px solid #7f392d;border-radius:50%;box-shadow:inset 0 0 28px #d5221a55,0 0 22px #bd1d15;animation:ne-berserker-pulse 2.4s ease-in-out infinite; }
+.ne-berserker-heart img { width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 12px #8f160f); }
+.ne-berserker-heart strong { position:absolute; display:block; padding:7px 13px; border:1px solid #963d2c;border-radius:24px;background:#090303db;color:#fff0d0;font-size:30px;text-shadow:0 0 8px #dc2a1e; }
+.ne-berserker-heart strong small { font-size:13px;color:#cf9e82; }
+.berserker-panel.is-frenzy .ne-berserker-heart img { filter:drop-shadow(0 0 10px #ff3924) drop-shadow(0 0 24px #a90000);animation:ne-berserker-heartbeat .95s ease-in-out infinite; }
+.ne-berserker-segments { display:flex;justify-content:center;gap:5px;width:100%;min-height:25px;margin:5px 0; }
+.ne-berserker-segments span { position:relative;width:min(26px,7%);height:17px;transform:skew(-18deg);border:1px solid #713529;background:#170808;box-shadow:inset 0 0 6px #000; }
+.ne-berserker-segments span.filled { border-color:#cf6549;background:linear-gradient(#ff5538,#8f100a);box-shadow:0 0 8px #ef2d1d,inset 0 0 5px #ffd095; }
+.ne-berserker-segments span.threshold::after { content:"LIMIAR";position:absolute;left:-4px;top:21px;transform:skew(18deg);color:#e28c68;font-size:7px;letter-spacing:.08em; }
+.ne-berserker-threshold { margin:13px 0 10px;color:#c99376;font-size:11px;text-transform:uppercase;letter-spacing:.12em; }
+.ne-berserker-controls { display:grid;grid-template-columns:42px 1fr 42px;gap:8px;width:100%; }
+.ne-berserker-controls button { min-height:42px;border:1px solid #8d3d2d;background:linear-gradient(#38110d,#120504);color:#f1d6b3;cursor:pointer; }
+.ne-berserker-controls button:hover { border-color:#ee8058;box-shadow:0 0 10px #c5271b;color:#fff4d7; }
+.ne-berserker-techniques { width:100%;margin:12px 0 8px;border-top:1px solid #6c281f;border-bottom:1px solid #6c281f; }
+.ne-berserker-techniques summary { padding:8px;color:#cf8b68;font-size:11px;letter-spacing:.14em;text-align:center;cursor:pointer; }
+.ne-berserker-techniques>div { display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:118px;padding:0 4px 8px;overflow:auto; }
+.ne-berserker-techniques button { min-height:39px;padding:5px;border:1px solid #65271e;background:#160605;color:#dfc3a5;text-align:left;cursor:pointer; }
+.ne-berserker-techniques button span,.ne-berserker-techniques button small { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }.ne-berserker-techniques button small { color:#be6e55;font-size:8px; }.ne-berserker-techniques button:disabled { opacity:.35;cursor:not-allowed; }
+.ne-berserker-techniques p { grid-column:1/-1;color:#9c6d5c;font-size:10px;text-align:center; }
+.ne-berserker-frame footer { margin-top:auto;color:#b9785c;font-size:11px;font-style:italic;text-align:center; }
+.ne-berserker-launcher { display:grid;grid-template-columns:44px 1fr 18px;align-items:center;gap:7px;width:100%;min-height:62px;margin:8px 0;padding:5px 8px;border:1px solid #8d3a29;background:linear-gradient(100deg,#260a08,#080303);color:#eacfb1;text-align:left; }
+.ne-berserker-launcher img { width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 6px #d62b1e); }.ne-berserker-launcher strong,.ne-berserker-launcher small { display:block; }.ne-berserker-launcher small { color:#b97960;font-size:9px;text-transform:uppercase; }
+.berserker-chat { padding:10px 14px;border:1px solid #8e3022;background:linear-gradient(135deg,#280807,#090202);color:#e8cdb3; }.berserker-chat h2 { margin:0 0 6px;color:#e05a3e;font-family:Georgia,serif; }
+@keyframes ne-berserker-pulse { 50% { transform:scale(1.035);box-shadow:inset 0 0 38px #ff2c205c,0 0 34px #d3261c; } }
+@keyframes ne-berserker-heartbeat { 0%,100% { transform:scale(1); } 12% { transform:scale(1.045); } 24% { transform:scale(.99); } 36% { transform:scale(1.025); } }

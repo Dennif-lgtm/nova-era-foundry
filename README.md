@@ -7,7 +7,17 @@ Módulo de regras e automações para:
 
 ## Estado atual
 
-Esta versão oferece armazenamento de Exposição por alvo e por Ladino, automatiza a ação **Analisar**, adiciona um painel de Exposição à ficha e instala no mundo a pasta **Nova Era — Ladino**, contendo a classe, as três subclasses e todas as características consolidadas por nível.
+Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
+
+### v0.26.0 — Berserker entra no módulo
+
+- Adiciona a classe Berserker completa com progressão d12 do nível 1 ao 20.
+- Instala os quatro Legados de Sangue: Imortal, Carniceiro, Frenético e Besta.
+- Organiza as 24 Técnicas de Sangue em Carnificina e Hemotecnia e inclui as 12 Mutações Bestiais.
+- Adiciona o painel independente Coração do Berserker, aberto diretamente pela ficha.
+- Calcula PS máximos e Limiar de Frenesi, controla entrada e saída automáticas e aplica resistência física e movimento do Frenesi.
+- Automatiza ganhos básicos por Violência Causada/Sofrida, queda da reserva após um minuto, Sacrifício de Hemotecnia, Violência Crescente e Golpe Brutal.
+- Expõe uma API própria em `game.novaEra.berserker` sem alterar as automações do Ladino e do Cronomante.
 
 ### v0.25.10 — Clone e Existência Simultânea
 

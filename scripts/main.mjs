@@ -22,6 +22,9 @@ import { registerSubclassAutomation, subclassMacroApi } from "./features/subclas
 import { ensureRogueContent, installRogueContent } from "./content/rogue-installer.mjs";
 import { ensureRogueMacros, installRogueMacros } from "./content/macro-installer.mjs";
 import { ensureChronomancerContent, installChronomancerContent } from "./content/chronomancer-installer.mjs";
+import { ensureBerserkerContent, installBerserkerContent } from "./content/berserker-installer.mjs";
+import { gainBlood, registerBerserkerAutomation, setBloodPoints, spendBlood, useBloodTechnique, useBrutalStrike } from "./berserker/core-automation.mjs";
+import { openBerserkerPanel, registerBerserkerPanel } from "./ui/berserker-panel.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -55,6 +58,13 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+
+  game.settings.register(MODULE_ID, "berserkerContentVersion", {
+    scope: "world",
+    config: false,
+    type: String,
+    default: ""
+  });
 });
 
 Hooks.once("ready", async () => {
@@ -70,11 +80,20 @@ Hooks.once("ready", async () => {
     content: {
       installRogue: installRogueContent,
       installRogueMacros,
-      installChronomancer: installChronomancerContent
+      installChronomancer: installChronomancerContent,
+      installBerserker: installBerserkerContent
     },
     chronomancer: {
       openClock: openChronomancerClock,
       activateFeature: activateChronomancerFeature
+    },
+    berserker: {
+      openPanel: openBerserkerPanel,
+      setBlood: setBloodPoints,
+      gainBlood,
+      spendBlood,
+      useTechnique: useBloodTechnique,
+      brutalStrike: useBrutalStrike
     },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
@@ -92,6 +111,8 @@ Hooks.once("ready", async () => {
   registerChronomancerFeatureAutomation();
   registerChronomancerConfluenceAutomation();
   registerChronomancerAdvancedFeatureAutomation();
+  registerBerserkerAutomation();
+  registerBerserkerPanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();
@@ -123,6 +144,15 @@ Hooks.once("ready", async () => {
     console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Cronomante`, error);
     if (game.user.isGM) {
       ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Cronomante. Consulte o console para detalhes.");
+    }
+  }
+
+  try {
+    await ensureBerserkerContent();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Berserker`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Berserker. Consulte o console para detalhes.");
     }
   }
 
