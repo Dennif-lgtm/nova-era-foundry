@@ -10,6 +10,7 @@ import {
 
 const SOCKET_TYPE = "berserkerTechnique";
 const ICON = `modules/${MODULE_ID}/assets/icons/berserker/coracao-com-sangue-v1.png`;
+const movementOrigins = new Map();
 
 function key(item) { return item?.getFlag(MODULE_ID, "contentKey") ?? ""; }
 function known(actor, contentKey) { return actor.items.find(item => key(item) === contentKey); }
@@ -29,8 +30,13 @@ function selectedTarget() {
 }
 
 function isMeleeActivity(activity) {
-  const type = activity?.attack?.type?.value ?? activity?.attack?.type ?? activity?.item?.system?.actionType;
-  return type === "melee" || type === "mwak" || type === "msak";
+  const item = activity?.item;
+  const type = activity?.attack?.type?.value ?? activity?.attack?.type ?? item?.system?.actionType;
+  const validTypes = activity?.validAttackTypes instanceof Set ? [...activity.validAttackTypes] : [];
+  return ["melee", "mwak", "msak"].includes(type)
+    || validTypes.some(entry => ["melee", "mwak", "msak"].includes(entry))
+    || ["simpleM", "martialM", "natural"].includes(item?.system?.type?.value)
+    || item?.system?.range?.units === "touch";
 }
 
 async function executeDocument(uuid, action, data = {}) {
@@ -74,7 +80,14 @@ async function confirm(title, content) {
 
 async function rollSave(target, abilities, dc, label) {
   const ability = abilities.sort((left, right) => Number(target.system.abilities?.[right]?.save ?? 0) - Number(target.system.abilities?.[left]?.save ?? 0))[0];
-  const roll = firstRoll(await target.rollSavingThrow({ ability }));
+  let roll;
+  try {
+    roll = firstRoll(await target.rollSavingThrow({ ability }));
+  } catch (error) {
+    console.debug(`${MODULE_ID} | Salvaguarda nativa indisponível para ${target.name}; usando rolagem direta.`, error);
+    roll = await new Roll("1d20 + @save", { save: Number(target.system.abilities?.[ability]?.save ?? 0) }).evaluate();
+    await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: target }), flavor: `${label} — salvaguarda de ${ability.toUpperCase()}` });
+  }
   const success = Number(roll?.total ?? 0) >= dc;
   await post(target, label, `${target.name} realizou salvaguarda de ${ability.toUpperCase()} contra CD ${dc}: <strong>${success ? "sucesso" : "falha"}</strong>.`);
   return success;
@@ -110,6 +123,37 @@ async function applyLamina(actor, item) {
 }
 
 function tokenFor(actor) { return actor.getActiveTokens(true, true)?.[0] ?? actor.getActiveTokens()?.[0] ?? null; }
+function meleeChoices(actor) {
+  const choices = [];
+  for (const item of actor.items) {
+    for (const activity of item.system?.activities ?? []) {
+      if (isMeleeActivity(activity)) choices.push({ item, activity });
+    }
+  }
+  return choices;
+}
+
+async function offerImmediateMeleeAttack(actor, target) {
+  const choices = meleeChoices(actor);
+  if (!choices.length) {
+    ui.notifications.warn("Nova Era: nenhuma atividade de ataque corpo a corpo foi encontrada na ficha.");
+    return false;
+  }
+  const selected = await Dialog.prompt({
+    title: "Puxão Escarlate — Ataque imediato",
+    content: `<form><div class="form-group"><label>Escolha o ataque contra ${target.name}</label><select name="attack">${choices.map(({ item, activity }) => `<option value="${item.id}:${activity.id}">${item.name} — ${activity.name}</option>`).join("")}</select></div><p>Este ataque não permite Golpe Brutal nem outra Técnica de Sangue.</p></form>`,
+    label: "Atacar",
+    callback: html => String(html.find("[name='attack']").val()),
+    rejectClose: false
+  });
+  if (!selected) return false;
+  const [itemId, activityId] = selected.split(":");
+  const activity = actor.items.get(itemId)?.system?.activities?.get(activityId);
+  if (!activity) return false;
+  await activity.use();
+  return true;
+}
+
 async function pullToward(sourceActor, targetActor, metres = 3) {
   const source = tokenFor(sourceActor);
   const target = tokenFor(targetActor);
@@ -135,10 +179,14 @@ async function applyPuxao(actor, item) {
   const success = await rollSave(target, ["str"], bloodDC(actor), item.name);
   if (!success) {
     const moved = await pullToward(actor, target, 3);
+    if (!moved) ui.notifications.warn("Nova Era: não foi possível localizar os dois tokens na cena; mova o alvo manualmente até 3 m.");
     await createEffect(actor, "puxao-ataque-imediato", "Puxão Escarlate — Ataque imediato", {
       flags: { suppressBloodTechniques: true, consumeOnMeleeAttack: true, expiresAtTurnStart: actor.uuid }
     });
     await post(actor, item.name, moved ? `${target.name} foi puxado até 3 m. O próximo ataque corpo a corpo é o ataque imediato e não aceita Golpe Brutal ou outra Técnica.` : `${target.name} falhou. Mova-o até 3 m em direção ao Berserker; o próximo ataque corpo a corpo permitido não aceita Golpe Brutal ou outra Técnica.`);
+    await postBloodTechnique(actor, item, payment);
+    await offerImmediateMeleeAttack(actor, target);
+    return true;
   }
   await postBloodTechnique(actor, item, payment);
   return true;
@@ -310,12 +358,14 @@ async function finishMeleeAttack(rolls, { subject } = {}) {
 
 function rememberMovement(token, changed, options) {
   if (options?.novaEraTechnique || (changed.x === undefined && changed.y === undefined)) return;
-  options.novaEraBerserkerOrigin = { x: Number(token.x), y: Number(token.y) };
+  movementOrigins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() });
 }
 
 async function offerInvestida(token, changed, options = {}) {
   const actor = token.actor;
-  if (!actor || !isNovaEraBerserker(actor) || !responsible(actor) || !options.novaEraBerserkerOrigin) return;
+  const origin = movementOrigins.get(token.uuid);
+  movementOrigins.delete(token.uuid);
+  if (!actor || !isNovaEraBerserker(actor) || !responsible(actor) || !origin || Date.now() - origin.at > 10000) return;
   const item = known(actor, "berserker-tecnica-investida");
   if (!item || bloodState(actor).points < Number(item.getFlag(MODULE_ID, "bloodCost")) || actor.effects.some(effect => effect.getFlag(MODULE_ID, "consumeOnMeleeAttack"))) return;
   const targetActor = selectedTarget();
@@ -323,7 +373,6 @@ async function offerInvestida(token, changed, options = {}) {
   if (!target || Number(target.document.disposition) === Number(token.disposition)) return;
   const grid = Number(canvas.scene?.grid?.size ?? 100);
   const units = Number(canvas.scene?.grid?.distance ?? 1.5);
-  const origin = options.novaEraBerserkerOrigin;
   const destination = { x: Number(token.x), y: Number(token.y) };
   const travelled = Math.hypot(destination.x - origin.x, destination.y - origin.y) / grid * units;
   const targetCenter = target.center;

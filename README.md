@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.27.1 — Investida e Puxão
+
+- Torna a detecção do movimento da Investida Carniceira independente do contexto interno da atualização do token.
+- Mantém a origem do deslocamento por token e valida os 3 m percorridos em direção ao alvo selecionado.
+- Adiciona alternativa segura para salvaguardas de Puxão Escarlate quando o jogador não possui o token inimigo.
+- Abre a escolha de ataque corpo a corpo imediatamente após um Puxão bem-sucedido e mantém o bloqueio de Golpe Brutal e Técnicas nesse ataque.
+- Exibe aviso para movimentação manual quando os tokens não puderem ser localizados na cena.
+
 ### v0.27.0 — Técnicas de Sangue I
 
 - Automatiza as oito Técnicas de Sangue disponíveis no nível 2.
