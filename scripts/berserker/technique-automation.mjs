@@ -122,7 +122,13 @@ async function applyLamina(actor, item) {
   return true;
 }
 
-function tokenFor(actor) { return actor.getActiveTokens(true, true)?.[0] ?? actor.getActiveTokens()?.[0] ?? null; }
+function tokenFor(actor) {
+  // O segundo argumento de getActiveTokens solicita TokenDocuments. As rotinas
+  // geométricas abaixo precisam dos Token placeables, que possuem `center` e
+  // uma referência `document` para a atualização das coordenadas.
+  const token = actor.getActiveTokens(false, false)?.[0] ?? null;
+  return token?.center && token?.document ? token : token?.object ?? null;
+}
 function meleeChoices(actor) {
   const choices = [];
   for (const item of actor.items) {

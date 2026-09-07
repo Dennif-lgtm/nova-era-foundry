@@ -9,6 +9,12 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.27.2 — Geometria dos tokens
+
+- Corrige a resolução do token da cena usada por Investida Carniceira e Puxão Escarlate.
+- Usa o objeto visual do token para obter seu centro e o documento associado para aplicar o deslocamento.
+- Impede a interrupção da automação logo após uma falha na salvaguarda do Puxão.
+
 ### v0.27.1 — Investida e Puxão
 
 - Torna a detecção do movimento da Investida Carniceira independente do contexto interno da atualização do token.
