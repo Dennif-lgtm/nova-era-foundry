@@ -25,6 +25,7 @@ import { ensureChronomancerContent, installChronomancerContent } from "./content
 import { ensureBerserkerContent, installBerserkerContent } from "./content/berserker-installer.mjs";
 import { gainBlood, registerBerserkerAutomation, setBloodPoints, spendBlood, useBloodTechnique, useBrutalStrike } from "./berserker/core-automation.mjs";
 import { openBerserkerPanel, registerBerserkerPanel } from "./ui/berserker-panel.mjs";
+import { registerBerserkerTechniqueAutomation } from "./berserker/technique-automation.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -112,6 +113,7 @@ Hooks.once("ready", async () => {
   registerChronomancerConfluenceAutomation();
   registerChronomancerAdvancedFeatureAutomation();
   registerBerserkerAutomation();
+  registerBerserkerTechniqueAutomation();
   registerBerserkerPanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();

@@ -9,6 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.27.0 — Técnicas de Sangue I
+
+- Automatiza as oito Técnicas de Sangue disponíveis no nível 2.
+- Aplica movimento e bônus do próximo ataque de Investida Carniceira.
+- Oferece Quebra-Ossos e Marca Rubra depois de um acerto corpo a corpo e resolve salvaguardas e efeitos.
+- Oferece Carne pela Carne e Sangue Coagulado quando o Berserker sofre dano, restaurando mecanicamente o dano reduzido.
+- Oferece Recusar a Queda depois da geração de Sangue ao chegar a 0 PV e restaura seu uso no Descanso Longo.
+- Mantém Lâmina Hemática por um minuto e rola automaticamente seu dano uma vez por turno.
+- Resolve o Sacrifício, a salvaguarda e o deslocamento de Puxão Escarlate.
+- Controla duração, consumo no próximo ataque e bloqueio de Reações dos novos efeitos.
+
 ### v0.26.1 — Gatilho de Violência Causada
 
 - Reconhece o formato moderno de AttackActivity do D&D5e 5.3.3, que registra ataques como `melee` em vez de apenas `mwak` ou `msak`.

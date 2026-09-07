@@ -3,6 +3,7 @@ import { MODULE_ID } from "../constants.mjs";
 const STATE_FLAG = "berserkerBlood";
 const FRENZY_EFFECT = "Frenesi — Nova Era";
 const violenceTimers = new Map();
+let techniqueExecutor = null;
 
 function classItem(actor) {
   return actor?.items?.find(item => item.type === "class" && (item.system.identifier === "berserker-nova-era" || item.getFlag(MODULE_ID, "contentKey") === "berserker"));
@@ -168,6 +169,7 @@ async function onAttack(rolls, data = {}) {
   if (!isNovaEraBerserker(actor) || !meleeAttack(activity, item) || !isAutomationAuthority(actor)) return;
   const target = selectedTarget();
   const roll = rolls?.[0];
+  const suppressTechniques = actor.effects.some(effect => effect.getFlag(MODULE_ID, "suppressBloodTechniques"));
   if (!target) {
     ui.notifications.warn("Nova Era: selecione exatamente um alvo para registrar a Violência Causada do Berserker.");
     return;
@@ -189,7 +191,7 @@ async function onAttack(rolls, data = {}) {
     const bonus = await new Roll(String(proficiency(actor))).evaluate();
     await bonus.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: "Violência Crescente — dano adicional do Frenesi" });
   }
-  Hooks.callAll("novaEraBerserkerMeleeHit", { actor, target, item, roll });
+  Hooks.callAll("novaEraBerserkerMeleeHit", { actor, target, item, roll, suppressTechniques });
 }
 
 async function onPreUpdateActor(actor, changed, options) {
@@ -207,6 +209,12 @@ async function onUpdateActor(actor, changed, options = {}) {
   if (actor.getFlag(MODULE_ID, "berserkerSufferedTurn") === key) return;
   await actor.setFlag(MODULE_ID, "berserkerSufferedTurn", key);
   await gainBlood(actor, 1, "Violência Sofrida");
+  Hooks.callAll("novaEraBerserkerDamaged", {
+    actor,
+    previousHp: Number(options.novaEraPreviousHp ?? next),
+    nextHp: Number(next),
+    damage: Math.max(0, Number(options.novaEraPreviousHp ?? next) - Number(next))
+  });
 }
 
 async function onCombatStart(combat) {
@@ -219,6 +227,10 @@ async function onCombatStart(combat) {
 }
 
 export async function useBrutalStrike(actor) {
+  if (actor.effects.some(effect => effect.getFlag(MODULE_ID, "suppressBloodTechniques"))) {
+    ui.notifications.warn("Nova Era: este ataque não permite Golpe Brutal nem Técnicas de Sangue.");
+    return false;
+  }
   const state = bloodState(actor);
   const used = actor.getFlag(MODULE_ID, "berserkerBrutalRound") === roundKey();
   if (used) return ui.notifications.warn("Nova Era: Golpe Brutal já foi usado nesta rodada.");
@@ -242,7 +254,11 @@ export async function useBrutalStrike(actor) {
   return true;
 }
 
-export async function useBloodTechnique(actor, item) {
+export function setBloodTechniqueExecutor(executor) {
+  techniqueExecutor = executor;
+}
+
+export async function payBloodTechnique(actor, item) {
   if (!isNovaEraBerserker(actor) || item?.parent !== actor || !String(item.getFlag(MODULE_ID, "group") ?? "").startsWith("tecnicas-")) {
     ui.notifications.warn("Nova Era: escolha uma Técnica de Sangue conhecida pelo personagem.");
     return false;
@@ -256,11 +272,22 @@ export async function useBloodTechnique(actor, item) {
   const sacrifice = !!item.getFlag(MODULE_ID, "sacrifice");
   if (!await spendBlood(actor, cost, { reason: item.name, sacrifice })) return false;
   const hpCost = sacrifice ? cost * proficiency(actor) : 0;
+  return { cost, sacrifice, hpCost };
+}
+
+export async function postBloodTechnique(actor, item, payment, extra = "") {
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<section class="nova-era berserker-chat"><h2>${item.name}</h2><p><strong>${cost} PS${hpCost ? ` + ${hpCost} PV de Sacrifício` : ""}</strong></p>${item.system.description?.value ?? ""}</section>`
+    content: `<section class="nova-era berserker-chat"><h2>${item.name}</h2><p><strong>${payment.cost} PS${payment.hpCost ? ` + ${payment.hpCost} PV de Sacrifício` : ""}</strong></p>${extra}${item.system.description?.value ?? ""}</section>`
   });
-  Hooks.callAll("novaEraBerserkerTechniqueUsed", { actor, item, cost, sacrifice });
+  Hooks.callAll("novaEraBerserkerTechniqueUsed", { actor, item, ...payment });
+}
+
+export async function useBloodTechnique(actor, item, context = {}) {
+  if (techniqueExecutor) return techniqueExecutor(actor, item, context);
+  const payment = await payBloodTechnique(actor, item);
+  if (!payment) return false;
+  await postBloodTechnique(actor, item, payment);
   return true;
 }
 
