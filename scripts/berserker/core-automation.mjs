@@ -140,10 +140,20 @@ export async function spendBlood(actor, amount, { reason = "Gasto de Sangue", sa
   return true;
 }
 
-function meleeItem(item) {
-  const activation = item?.system?.activities?.contents?.[0]?.activation?.type ?? item?.system?.activation?.type ?? "";
-  const actionType = item?.system?.actionType ?? item?.system?.activities?.contents?.[0]?.attack?.type?.value ?? "";
-  return ["mwak", "msak"].includes(actionType) || ["mwak", "msak"].includes(activation) || item?.system?.range?.units === "touch";
+function meleeAttack(activity, item) {
+  // D&D5e 5.x separa "tipo" (melee/ranged) de "classificação"
+  // (weapon/spell/unarmed) na AttackActivity. Itens migrados ainda podem usar
+  // os antigos mwak/msak, então ambos os formatos permanecem aceitos.
+  const attackType = activity?.attack?.type?.value ?? activity?.system?.attack?.type?.value ?? "";
+  const actionType = item?.system?.actionType ?? activity?.actionType ?? "";
+  const weaponType = item?.system?.type?.value ?? "";
+  const validTypes = activity?.validAttackTypes instanceof Set ? [...activity.validAttackTypes] : [];
+  return attackType === "melee"
+    || ["mwak", "msak"].includes(actionType)
+    || validTypes.includes("melee")
+    || validTypes.some(type => ["mwak", "msak"].includes(type))
+    || ["simpleM", "martialM", "natural"].includes(weaponType)
+    || item?.system?.range?.units === "touch";
 }
 
 function selectedTarget() {
@@ -152,18 +162,26 @@ function selectedTarget() {
 }
 
 async function onAttack(rolls, data = {}) {
-  const item = data.subject?.item ?? data.subject;
-  const actor = data.subject?.actor ?? item?.actor;
-  if (!isNovaEraBerserker(actor) || !meleeItem(item) || !isAutomationAuthority(actor)) return;
+  const activity = data.subject;
+  const item = activity?.item ?? activity;
+  const actor = activity?.actor ?? item?.actor ?? data.actor;
+  if (!isNovaEraBerserker(actor) || !meleeAttack(activity, item) || !isAutomationAuthority(actor)) return;
   const target = selectedTarget();
   const roll = rolls?.[0];
+  if (!target) {
+    ui.notifications.warn("Nova Era: selecione exatamente um alvo para registrar a Violência Causada do Berserker.");
+    return;
+  }
   const hit = target && roll && Number(roll.total) >= Number(target.system.attributes?.ac?.value ?? Infinity);
   if (!hit) return;
   const key = turnKey();
   if (actor.getFlag(MODULE_ID, "berserkerCausedTurn") !== key) {
     await actor.setFlag(MODULE_ID, "berserkerCausedTurn", key);
     const critical = !!roll.isCritical || Number(roll.dice?.[0]?.total ?? 0) >= Number(roll.dice?.[0]?.faces ?? 20);
-    await gainBlood(actor, critical ? 2 : 1, critical ? "Violência Causada — crítico" : "Violência Causada");
+    const before = bloodState(actor).points;
+    const gained = critical ? 2 : 1;
+    const after = await gainBlood(actor, gained, critical ? "Violência Causada — crítico" : "Violência Causada");
+    if (after.points > before) ui.notifications.info(`Nova Era: ${actor.name} recebeu +${after.points - before} PS por Violência Causada.`);
   }
   const state = bloodState(actor);
   if (state.frenzy && actor.getFlag(MODULE_ID, "berserkerGrowingTurn") !== key) {

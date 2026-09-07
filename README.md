@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.26.1 — Gatilho de Violência Causada
+
+- Reconhece o formato moderno de AttackActivity do D&D5e 5.3.3, que registra ataques como `melee` em vez de apenas `mwak` ou `msak`.
+- Mantém compatibilidade com armas antigas, ataques naturais e ataques corpo a corpo mágicos.
+- Adiciona um retorno visual ao receber PS e avisa quando não existe exatamente um alvo selecionado.
+- Mantém o limite de uma geração por turno e evita ativações duplicadas.
+
 ### v0.26.0 — Berserker entra no módulo
 
 - Adiciona a classe Berserker completa com progressão d12 do nível 1 ao 20.
