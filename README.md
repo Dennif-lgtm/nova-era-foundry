@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.28.1 — Observador de movimento
+
+- Mantém um registro contínuo da posição de todos os tokens da cena, independente da ordem dos eventos de atualização do Foundry.
+- Corrige gatilhos de movimento feitos pelo jogador, pelo Mestre ou por outro cliente conectado.
+- Estabiliza Investida Carniceira, Caçada Impossível e os demais efeitos que precisam comparar origem e destino.
+- Atualiza o registro após movimentos automáticos sem abrir janelas indevidas ou contaminar o próximo deslocamento manual.
+
 ### v0.28.0 — Berserker Completo
 
 - Corrige definitivamente o gatilho da Investida Carniceira: qualquer hostil do qual o Berserker realmente se aproximou pode ativar a oferta, com prioridade para o alvo selecionado.

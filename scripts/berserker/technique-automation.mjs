@@ -474,20 +474,25 @@ async function finishMeleeAttack(rolls, { subject } = {}) {
 }
 
 function rememberMovement(token, changed, options) {
-  if (options?.novaEraTechnique || (changed.x === undefined && changed.y === undefined)) return;
+  if (changed.x === undefined && changed.y === undefined) return;
   movementOrigins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() });
+}
+
+function seedMovementOrigins() {
+  for (const token of canvas?.scene?.tokens ?? []) movementOrigins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() });
 }
 
 async function offerInvestida(token, changed, options = {}) {
   const actor = token.actor;
   const origin = movementOrigins.get(token.uuid);
-  movementOrigins.delete(token.uuid);
-  if (!actor || !isNovaEraBerserker(actor) || !responsible(actor) || !origin || Date.now() - origin.at > 10000) return;
+  if (changed.x === undefined && changed.y === undefined) return;
+  const destination = { x: Number(changed.x ?? token.x), y: Number(changed.y ?? token.y) };
+  movementOrigins.set(token.uuid, { ...destination, at: Date.now() });
+  if (options?.novaEraTechnique || options?.novaEraAdvancedTechnique || !actor || !isNovaEraBerserker(actor) || !responsible(actor) || !origin) return;
   const item = known(actor, "berserker-tecnica-investida");
   if (!item || bloodState(actor).points < Number(item.getFlag(MODULE_ID, "bloodCost")) || actor.effects.some(effect => effect.getFlag(MODULE_ID, "consumeOnMeleeAttack"))) return;
   const grid = Number(canvas.scene?.grid?.size ?? 100);
   const units = Number(canvas.scene?.grid?.distance ?? 1.5);
-  const destination = { x: Number(token.x), y: Number(token.y) };
   const travelled = Math.hypot(destination.x - origin.x, destination.y - origin.y) / grid * units;
   if (travelled < 3) return;
   const half = grid * Number(token.width ?? 1) / 2;
@@ -555,5 +560,9 @@ export function registerBerserkerTechniqueAutomation() {
   Hooks.on("updateCombat", (combat, changed) => void cleanTurnEffects(combat, changed));
   Hooks.on("dnd5e.preUseActivity", activity => blockReaction(activity));
   Hooks.on("dnd5e.restCompleted", (actor, result, config) => void resetLongRest(actor, result, config));
+  Hooks.on("canvasReady", seedMovementOrigins);
+  Hooks.on("createToken", token => movementOrigins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() }));
+  Hooks.on("deleteToken", token => movementOrigins.delete(token.uuid));
+  seedMovementOrigins();
   game.socket.on(`module.${MODULE_ID}`, payload => void socket(payload));
 }

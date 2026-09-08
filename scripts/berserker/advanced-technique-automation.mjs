@@ -255,8 +255,11 @@ export async function resolveAdvancedBloodTechnique(actor, item, context = {}) {
 }
 
 function rememberPosition(token, changed, options) {
-  if (options?.novaEraAdvancedTechnique || (changed.x === undefined && changed.y === undefined)) return;
+  if (changed.x === undefined && changed.y === undefined) return;
   origins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() });
+}
+function seedPositions() {
+  for (const token of canvas?.scene?.tokens ?? []) origins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() });
 }
 async function validateTeleport(token, changed, options) {
   if (options?.novaEraAdvancedTechnique || (changed.x === undefined && changed.y === undefined) || !token.actor) return;
@@ -274,14 +277,16 @@ async function validateTeleport(token, changed, options) {
 }
 async function offerHunt(token, changed, options) {
   const origin = origins.get(token.uuid);
-  origins.delete(token.uuid);
-  if (!origin || !token.actor || options?.novaEraAdvancedTechnique) return;
+  if (changed.x === undefined && changed.y === undefined) return;
+  const destination = { x: Number(changed.x ?? token.x), y: Number(changed.y ?? token.y) };
+  origins.set(token.uuid, { ...destination, at: Date.now() });
+  if (!origin || !token.actor || options?.novaEraAdvancedTechnique || options?.novaEraTechnique) return;
   const grid = Number(canvas.scene?.grid?.size ?? 100);
   for (const actor of game.actors.filter(candidate => isNovaEraBerserker(candidate) && responsible(candidate) && known(candidate, "berserker-tecnica-cacada") && bloodState(candidate).points >= 2)) {
     const hunter = tokenFor(actor);
     if (!hunter || Number(hunter.document.disposition) === Number(token.disposition) || distance(hunter, token.object) > 9) continue;
     const before = Math.hypot(origin.x - hunter.document.x, origin.y - hunter.document.y);
-    const after = Math.hypot(Number(token.x) - hunter.document.x, Number(token.y) - hunter.document.y);
+    const after = Math.hypot(destination.x - hunter.document.x, destination.y - hunter.document.y);
     if (after <= before + grid / 4) continue;
     const item = known(actor, "berserker-tecnica-cacada");
     if (await confirm(item.name, `${token.name} afastou-se. Gastar 2 PS para persegui-lo?`)) await avanco(actor, item, true, token.actor);
@@ -394,5 +399,9 @@ export function registerBerserkerAdvancedTechniqueAutomation() {
   Hooks.on("preUpdateActor", rememberDamagedActor);
   Hooks.on("updateActor", (actor, changed, options) => void offerPact(actor, changed, options));
   Hooks.on("createActiveEffect", active => void offerAtravessar(active));
+  Hooks.on("canvasReady", seedPositions);
+  Hooks.on("createToken", token => origins.set(token.uuid, { x: Number(token.x), y: Number(token.y), at: Date.now() }));
+  Hooks.on("deleteToken", token => origins.delete(token.uuid));
+  seedPositions();
   game.socket.on(`module.${MODULE_ID}`, payload => void socket(payload));
 }
