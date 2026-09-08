@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.27.3 — Técnicas de Sangue completas
+
+- Integra o dano da Lâmina Hemática ao fluxo de dano do Midi-QOL, incluindo progressão, limite por turno e dados dobrados no crítico.
+- Torna a Marca Rubra mecânica: identifica o alvo, concede o deslocamento condicional, informa direção e distância e ignora o benefício da Invisibilidade contra os ataques do Berserker.
+- Faz Carne pela Carne reconhecer automaticamente o agressor do ataque corpo a corpo, mantendo a seleção manual apenas como alternativa de segurança.
+- Separa as ofertas de reação da geração de Pontos de Sangue: a violência sofrida continua gerando PS uma vez por turno, mas as Técnicas podem reagir a qualquer dano válido enquanto a Reação estiver disponível.
+
 ### v0.27.2 — Geometria dos tokens
 
 - Corrige a resolução do token da cena usada por Investida Carniceira e Puxão Escarlate.

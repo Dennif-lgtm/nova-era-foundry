@@ -11,6 +11,7 @@ import {
 const SOCKET_TYPE = "berserkerTechnique";
 const ICON = `modules/${MODULE_ID}/assets/icons/berserker/coracao-com-sangue-v1.png`;
 const movementOrigins = new Map();
+const ATTACKER_FLAG = "berserkerLastAttacker";
 
 function key(item) { return item?.getFlag(MODULE_ID, "contentKey") ?? ""; }
 function known(actor, contentKey) { return actor.items.find(item => key(item) === contentKey); }
@@ -27,6 +28,21 @@ function responsible(actor) {
 function selectedTarget() {
   const targets = [...game.user.targets];
   return targets.length === 1 ? targets[0].actor : null;
+}
+
+function invisible(actor) {
+  return actor?.effects?.some(effect => effect.statuses?.has?.("invisible") || effect.statuses?.has?.("invisibility")) ?? false;
+}
+
+function actorFromUuid(uuid) {
+  if (!uuid) return null;
+  return game.actors.get(String(uuid).split(".").at(-1)) ?? null;
+}
+
+function recentAttacker(actor) {
+  const record = actor?.getFlag?.(MODULE_ID, ATTACKER_FLAG);
+  if (!record?.actorUuid || Date.now() - Number(record.at ?? 0) > 30_000) return null;
+  return actorFromUuid(record.actorUuid);
 }
 
 function isMeleeActivity(activity) {
@@ -201,6 +217,7 @@ async function applyPuxao(actor, item) {
 async function applyHitTechnique(actor, item, target) {
   const payment = await payBloodTechnique(actor, item);
   if (!payment) return false;
+  let extra = "";
   if (key(item) === "berserker-tecnica-quebra-ossos") {
     const success = await rollSave(target, ["str", "con"], bloodDC(actor), item.name);
     if (!success) {
@@ -213,13 +230,24 @@ async function applyHitTechnique(actor, item, target) {
       ], flags: { expiresAtTurnStart: actor.uuid } });
     }
   } else {
-    await createEffect(target, `marca-rubra-${actor.id}`, `Marca Rubra — ${actor.name}`, { flags: { sourceActorUuid: actor.uuid, expiresAtTurnStart: actor.uuid }, duration: { rounds: 1 } });
+    await createEffect(target, `marca-rubra-${actor.id}`, `Marca Rubra — ${actor.name}`, {
+      flags: { sourceActorUuid: actor.uuid, expiresAtTurnStart: actor.uuid, ignoresInvisibility: true },
+      duration: { rounds: 1 }
+    });
+    await createEffect(actor, "marca-rubra-movimento", `Marca Rubra — perseguindo ${target.name}`, {
+      changes: [
+        { key: "system.attributes.movement.walk", mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: "3", priority: 20 }
+      ],
+      flags: { markedTargetUuid: target.uuid, towardMarkedTargetOnly: true, expiresAtTurnStart: actor.uuid },
+      duration: { rounds: 1 }
+    });
+    extra = `<p><strong>${target.name}</strong> foi marcado. Você conhece sua direção enquanto estiver a até 18 m, ignora os benefícios da Invisibilidade contra ele e recebe +3 m de deslocamento apenas ao se aproximar.</p>`;
   }
-  await postBloodTechnique(actor, item, payment);
+  await postBloodTechnique(actor, item, payment, extra);
   return true;
 }
 
-async function applyDamageReaction(actor, item, damage, previousHp) {
+async function applyDamageReaction(actor, item, damage, previousHp, attacker = null) {
   const state = bloodState(actor);
   const cost = Number(item.getFlag(MODULE_ID, "bloodCost") ?? 0);
   const sacrifice = !!item.getFlag(MODULE_ID, "sacrifice");
@@ -240,7 +268,7 @@ async function applyDamageReaction(actor, item, damage, previousHp) {
     options: { novaEraSacrifice: true }
   });
   if (key(item) === "berserker-tecnica-carne") {
-    const target = selectedTarget();
+    const target = attacker ?? recentAttacker(actor) ?? selectedTarget();
     if (target) await createEffect(actor, "carne-pela-carne", "Carne pela Carne — Contra-ataque", { flags: { retaliationTargetUuid: target.uuid, expiresAtTurnStart: actor.uuid } });
   }
   await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `${item.name} — redução de dano` });
@@ -276,7 +304,7 @@ async function executeTechnique(actor, item, context = {}) {
   }
   if (["berserker-tecnica-carne", "berserker-tecnica-coagulado"].includes(contentKey)) {
     if (!context.damage) { ui.notifications.info(`Nova Era: ${item.name} será oferecida automaticamente quando o Berserker sofrer dano.`); return false; }
-    return applyDamageReaction(actor, item, context.damage, context.previousHp);
+    return applyDamageReaction(actor, item, context.damage, context.previousHp, context.attacker);
   }
   if (contentKey === "berserker-tecnica-recusar") {
     if (!context.fallen) { ui.notifications.info("Nova Era: Recusar a Queda será oferecida automaticamente ao chegar a 0 PV."); return false; }
@@ -291,7 +319,7 @@ async function executeTechnique(actor, item, context = {}) {
 async function onMeleeHit({ actor, target, suppressTechniques = false }) {
   if (!responsible(actor) || !target) return;
   const lamina = actor.effects.find(effect => effect.getFlag(MODULE_ID, "berserkerEffect") === "lamina-hematica");
-  if (lamina && actor.getFlag(MODULE_ID, "laminaHematicaTurn") !== turnKey()) {
+  if (lamina && !game.modules.get("midi-qol")?.active && actor.getFlag(MODULE_ID, "laminaHematicaTurn") !== turnKey()) {
     await actor.setFlag(MODULE_ID, "laminaHematicaTurn", turnKey());
     const level = Number(actor.items.find(item => item.type === "class" && item.system.identifier === "berserker-nova-era")?.system.levels ?? 1);
     const die = level >= 17 ? 10 : level >= 9 ? 8 : 6;
@@ -318,7 +346,8 @@ async function onMeleeHit({ actor, target, suppressTechniques = false }) {
 async function onDamaged({ actor, damage, nextHp, previousHp }) {
   if (!responsible(actor) || damage <= 0) return;
   if (actor.getFlag(MODULE_ID, "berserkerReactionRound") !== roundKey()) {
-    const carne = selectedTarget() ? known(actor, "berserker-tecnica-carne") : null;
+    const attacker = recentAttacker(actor);
+    const carne = (attacker ?? selectedTarget()) ? known(actor, "berserker-tecnica-carne") : null;
     const coagulado = known(actor, "berserker-tecnica-coagulado");
     const reactions = [carne, coagulado].filter(item => item && Number(item.getFlag(MODULE_ID, "bloodCost")) <= bloodState(actor).points);
     if (reactions.length) {
@@ -333,7 +362,7 @@ async function onDamaged({ actor, damage, nextHp, previousHp }) {
         const item = actor.items.get(choice.itemId);
         if (key(item) === "berserker-tecnica-coagulado" && (choice.damageType === "psychic" || (!bloodState(actor).frenzy && choice.damageType !== "physical"))) {
           ui.notifications.warn("Nova Era: Sangue Coagulado só aceita dano físico; em Frenesi aceita qualquer dano exceto Psíquico.");
-        } else await executeTechnique(actor, item, { damage, previousHp, damageType: choice.damageType });
+        } else await executeTechnique(actor, item, { damage, previousHp, damageType: choice.damageType, attacker });
       }
     }
   }
@@ -352,6 +381,80 @@ function prepareMeleeAttack(config) {
   const actor = activity?.actor ?? config?.actor;
   if (!actor || !isMeleeActivity(activity)) return;
   if (actor.effects.some(effect => effect.getFlag(MODULE_ID, "advantageFirstMelee"))) config.advantage = true;
+  const target = selectedTarget();
+  if (invisible(target) && target.effects.some(effect => effect.getFlag(MODULE_ID, "sourceActorUuid") === actor.uuid && effect.getFlag(MODULE_ID, "ignoresInvisibility"))) {
+    config.disadvantage = false;
+  }
+}
+
+function ignoreMarkedInvisibility(workflow) {
+  const actor = workflow?.actor ?? workflow?.item?.actor;
+  if (!actor) return;
+  const targets = [...(workflow.targets ?? [])];
+  if (!targets.some(token => invisible(token.actor) && token.actor.effects.some(effect => effect.getFlag(MODULE_ID, "sourceActorUuid") === actor.uuid && effect.getFlag(MODULE_ID, "ignoresInvisibility")))) return;
+  workflow.disadvantage = false;
+}
+
+async function rememberAttacker(actor, target) {
+  if (!actor || !target || !isNovaEraBerserker(target)) return;
+  await documentAction(target, "update-actor", {
+    change: { [`flags.${MODULE_ID}.${ATTACKER_FLAG}`]: { actorUuid: actor.uuid, at: Date.now() } },
+    options: { novaEraAttackerMarker: true }
+  });
+}
+
+async function rememberCoreAttacker(rolls, data = {}) {
+  if (game.modules.get("midi-qol")?.active) return;
+  const activity = data.subject;
+  const actor = activity?.actor ?? activity?.item?.actor ?? data.actor;
+  if (!actor || !responsible(actor) || !isMeleeActivity(activity)) return;
+  const target = selectedTarget();
+  const roll = firstRoll(rolls);
+  if (!target || !roll || Number(roll.total) < Number(target.system.attributes?.ac?.value ?? Infinity)) return;
+  await rememberAttacker(actor, target);
+}
+
+async function midiDamageBonus(workflow) {
+  const actor = workflow?.actor ?? workflow?.item?.actor;
+  if (!actor || !responsible(actor) || !isMeleeActivity(workflow?.activity ?? workflow)) return;
+  const targets = workflow.hitTargets instanceof Set ? [...workflow.hitTargets] : [...(workflow.targets ?? [])];
+  if (!targets.length) return;
+  for (const token of targets) await rememberAttacker(actor, token.actor);
+  const lamina = actor.effects.find(effect => effect.getFlag(MODULE_ID, "berserkerEffect") === "lamina-hematica");
+  if (!lamina || actor.getFlag(MODULE_ID, "laminaHematicaTurn") === turnKey()) return;
+  await actor.setFlag(MODULE_ID, "laminaHematicaTurn", turnKey());
+  const level = Number(actor.items.find(item => item.type === "class" && item.system.identifier === "berserker-nova-era")?.system.levels ?? 1);
+  const die = level >= 17 ? 10 : level >= 9 ? 8 : 6;
+  const type = lamina.getFlag(MODULE_ID, "damageType") ?? "necrotic";
+  const dice = workflow.isCritical ? 2 : 1;
+  const roll = await new CONFIG.Dice.DamageRoll(`${dice}d${die}`, actor.getRollData(), { type, flavor: "Lâmina Hemática" }).evaluate();
+  const existing = [...(workflow.bonusDamageRolls ?? [])];
+  if (typeof workflow.setBonusDamageRolls === "function") await workflow.setBonusDamageRolls([...existing, roll]);
+  else if (typeof workflow.setBonusDamageRoll === "function") await workflow.setBonusDamageRoll(roll);
+  else await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `Lâmina Hemática — dano ${type}` });
+}
+
+function directionName(dx, dy) {
+  const angle = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+  return ["leste", "sudeste", "sul", "sudoeste", "oeste", "noroeste", "norte", "nordeste"][Math.round(angle / 45) % 8];
+}
+
+function reportMarkedDirection(token, changed, options = {}) {
+  if (options?.novaEraTechnique || (changed.x === undefined && changed.y === undefined)) return;
+  const target = token.actor;
+  for (const mark of target?.effects?.filter(effect => effect.getFlag(MODULE_ID, "ignoresInvisibility")) ?? []) {
+    const source = actorFromUuid(mark.getFlag(MODULE_ID, "sourceActorUuid"));
+    if (!source || !responsible(source)) continue;
+    const sourceToken = tokenFor(source);
+    if (!sourceToken || !canvas?.scene) continue;
+    const grid = Number(canvas.scene.grid.size ?? 100);
+    const units = Number(canvas.scene.grid.distance ?? 1.5);
+    const destination = { x: Number(changed.x ?? token.x) + grid * Number(token.width ?? 1) / 2, y: Number(changed.y ?? token.y) + grid * Number(token.height ?? 1) / 2 };
+    const dx = destination.x - sourceToken.center.x;
+    const dy = destination.y - sourceToken.center.y;
+    const distance = Math.hypot(dx, dy) / grid * units;
+    if (distance <= 18) ui.notifications.info(`Marca Rubra: ${target.name} está a ${distance.toFixed(1)} m, na direção ${directionName(dx, dy)}.`);
+  }
 }
 
 async function finishMeleeAttack(rolls, { subject } = {}) {
@@ -421,9 +524,15 @@ export function registerBerserkerTechniqueAutomation() {
   Hooks.on("novaEraBerserkerMeleeHit", data => void onMeleeHit(data));
   Hooks.on("novaEraBerserkerDamaged", data => void onDamaged(data));
   Hooks.on("dnd5e.preRollAttack", config => prepareMeleeAttack(config));
+  Hooks.on("dnd5e.postRollAttack", (rolls, data) => void rememberCoreAttacker(rolls, data));
   Hooks.on("dnd5e.postRollAttack", (rolls, data) => void finishMeleeAttack(rolls, data));
   Hooks.on("preUpdateToken", (token, changed, options) => rememberMovement(token, changed, options));
-  Hooks.on("updateToken", (token, changed, options) => void offerInvestida(token, changed, options));
+  Hooks.on("updateToken", (token, changed, options) => {
+    void offerInvestida(token, changed, options);
+    reportMarkedDirection(token, changed, options);
+  });
+  Hooks.on("midi-qol.preAttackRoll", workflow => ignoreMarkedInvisibility(workflow));
+  Hooks.on("midi-qol.DamageRollComplete", workflow => midiDamageBonus(workflow));
   Hooks.on("updateCombat", (combat, changed) => void cleanTurnEffects(combat, changed));
   Hooks.on("dnd5e.preUseActivity", activity => blockReaction(activity));
   Hooks.on("dnd5e.restCompleted", (actor, result, config) => void resetLongRest(actor, result, config));

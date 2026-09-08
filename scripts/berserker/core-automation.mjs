@@ -206,9 +206,10 @@ async function onUpdateActor(actor, changed, options = {}) {
   const next = foundry.utils.getProperty(changed, "system.attributes.hp.value");
   if (next === undefined || Number(next) >= Number(options.novaEraPreviousHp ?? next)) return;
   const key = turnKey();
-  if (actor.getFlag(MODULE_ID, "berserkerSufferedTurn") === key) return;
-  await actor.setFlag(MODULE_ID, "berserkerSufferedTurn", key);
-  await gainBlood(actor, 1, "Violência Sofrida");
+  if (actor.getFlag(MODULE_ID, "berserkerSufferedTurn") !== key) {
+    await actor.setFlag(MODULE_ID, "berserkerSufferedTurn", key);
+    await gainBlood(actor, 1, "Violência Sofrida");
+  }
   Hooks.callAll("novaEraBerserkerDamaged", {
     actor,
     previousHp: Number(options.novaEraPreviousHp ?? next),
