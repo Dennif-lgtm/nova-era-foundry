@@ -1,7 +1,7 @@
 import { MODULE_ID } from "../constants.mjs";
 import { BERSERKER_CLASS, BERSERKER_FEATURES, BERSERKER_LEGACIES, BERSERKER_MUTATIONS, BERSERKER_TECHNIQUES } from "./berserker-data.mjs";
 
-const CONTENT_VERSION = "1";
+const CONTENT_VERSION = "2";
 const ICON_ROOT = `modules/${MODULE_ID}/assets/icons/berserker`;
 const DEFAULT_ICON = `${ICON_ROOT}/coracao-com-sangue-v1.png`;
 
@@ -129,6 +129,7 @@ export async function installBerserkerContent({ notify = true } = {}) {
   await configureAdvancement(byKey);
   await updateActorCopies(sources);
   await game.settings.set(MODULE_ID, "berserkerContentVersion", CONTENT_VERSION);
+  Hooks.callAll("novaEraBerserkerContentReady");
   if (notify) ui.notifications.info(`Nova Era: Berserker instalado/atualizado (${items.length} itens).`);
   return items;
 }

@@ -2055,6 +2055,8 @@
 .ne-berserker-controls { display:grid;grid-template-columns:42px 1fr 42px;gap:8px;width:100%; }
 .ne-berserker-controls button { min-height:42px;border:1px solid #8d3d2d;background:linear-gradient(#38110d,#120504);color:#f1d6b3;cursor:pointer; }
 .ne-berserker-controls button:hover { border-color:#ee8058;box-shadow:0 0 10px #c5271b;color:#fff4d7; }
+.ne-berserker-status { display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:10px; }
+.ne-berserker-status span { padding:7px 5px;border:1px solid #59231c;background:#100504;color:#ce8768;font-size:9px;letter-spacing:.08em;text-align:center; }
 .ne-berserker-techniques { width:100%;margin:12px 0 8px;border-top:1px solid #6c281f;border-bottom:1px solid #6c281f; }
 .ne-berserker-techniques summary { padding:8px;color:#cf8b68;font-size:11px;letter-spacing:.14em;text-align:center;cursor:pointer; }
 .ne-berserker-techniques>div { display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:118px;padding:0 4px 8px;overflow:auto; }

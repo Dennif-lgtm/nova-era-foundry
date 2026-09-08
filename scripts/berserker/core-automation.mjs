@@ -37,7 +37,9 @@ export function bloodState(actor) {
   const stored = actor?.getFlag(MODULE_ID, STATE_FLAG) ?? {};
   const maximum = bloodMaximum(actor);
   const points = Math.clamp(Number(stored.points ?? 0), 0, maximum);
-  return { points, maximum, threshold: Math.ceil(maximum / 2), frenzy: points >= Math.ceil(maximum / 2), lastViolence: Number(stored.lastViolence ?? 0) };
+  const threshold = Math.ceil(maximum / 2);
+  const forcedFrenzy = actor?.effects?.some(effect => effect.getFlag(MODULE_ID, "berserkerLegacyEffect") === "immortal-ascension") ?? false;
+  return { points, maximum, threshold, frenzy: points >= threshold || forcedFrenzy, lastViolence: Number(stored.lastViolence ?? 0) };
 }
 
 function mayManage(actor) {
@@ -105,7 +107,8 @@ export async function setBloodPoints(actor, value, { reason = "Ajuste", violence
   const points = Math.clamp(Number(value) || 0, 0, before.maximum);
   const next = { points, lastViolence: violence ? Date.now() : before.lastViolence };
   await actor.setFlag(MODULE_ID, STATE_FLAG, next);
-  await syncFrenzyEffect(actor, points >= before.threshold);
+  const forcedFrenzy = actor.effects.some(effect => effect.getFlag(MODULE_ID, "berserkerLegacyEffect") === "immortal-ascension");
+  await syncFrenzyEffect(actor, points >= before.threshold || forcedFrenzy);
   if (violence) scheduleViolenceExpiry(actor);
   Hooks.callAll("novaEraBerserkerChanged", { actor, before, after: bloodState(actor), reason });
   return bloodState(actor);
@@ -195,14 +198,14 @@ async function onAttack(rolls, data = {}) {
 }
 
 async function onPreUpdateActor(actor, changed, options) {
-  if (!isNovaEraBerserker(actor) || options?.novaEraSacrifice) return;
+  if (!isNovaEraBerserker(actor) || options?.novaEraSacrifice || options?.novaEraLegacyDamage) return;
   const next = foundry.utils.getProperty(changed, "system.attributes.hp.value");
   if (next === undefined) return;
   options.novaEraPreviousHp = Number(actor.system.attributes.hp.value ?? 0);
 }
 
 async function onUpdateActor(actor, changed, options = {}) {
-  if (!isNovaEraBerserker(actor) || !isAutomationAuthority(actor) || options.novaEraSacrifice) return;
+  if (!isNovaEraBerserker(actor) || !isAutomationAuthority(actor) || options.novaEraSacrifice || options.novaEraLegacyDamage) return;
   const next = foundry.utils.getProperty(changed, "system.attributes.hp.value");
   if (next === undefined || Number(next) >= Number(options.novaEraPreviousHp ?? next)) return;
   const key = turnKey();
@@ -246,12 +249,21 @@ export async function useBrutalStrike(actor) {
   });
   if (!result) return false;
   const points = Math.clamp(result, 1, maximum);
-  if (!await spendBlood(actor, points, { reason: "Golpe Brutal" })) return false;
+  let execution = false;
+  const target = selectedTarget();
+  const bleeding = target?.effects?.some(effect => effect.getFlag(MODULE_ID, "bleedingSourceUuid") === actor.uuid);
+  const executionFeature = hasFeature(actor, "carniceiro-execucao");
+  const threshold = hasFeature(actor, "carniceiro-avatar") && bloodState(actor).frenzy ? 1 / 3 : 1 / 4;
+  if (executionFeature && bleeding && Number(target.system.attributes.hp.value ?? Infinity) <= Number(target.system.attributes.hp.max ?? 0) * threshold && state.points >= points + 2) {
+    execution = await Dialog.confirm({ title: "Execução Brutal", content: `<p><strong>${target.name}</strong> está no Limiar de Execução. Gastar 2 PS adicionais para maximizar os dados normais do Golpe Brutal?</p>`, yes: () => true, no: () => false, defaultYes: false });
+  }
+  if (!await spendBlood(actor, points + (execution ? 2 : 0), { reason: execution ? "Execução Brutal" : "Golpe Brutal" })) return false;
+  if (execution) await actor.setFlag(MODULE_ID, "executionTarget", { actorUuid: target.uuid, round: roundKey() });
   await actor.setFlag(MODULE_ID, "berserkerBrutalRound", roundKey());
   const level = berserkerLevel(actor);
   const die = level >= 17 ? 12 : level >= 11 ? 10 : level >= 5 ? 8 : 6;
-  const roll = await new Roll(`${points}d${die}`, actor.getRollData()).evaluate();
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `Golpe Brutal — ${points} PS` });
+  const roll = execution ? await new Roll(String(points * die), actor.getRollData()).evaluate() : await new Roll(`${points}d${die}`, actor.getRollData()).evaluate();
+  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `${execution ? "Execução Brutal" : "Golpe Brutal"} — ${points + (execution ? 2 : 0)} PS` });
   return true;
 }
 
@@ -269,17 +281,20 @@ export async function payBloodTechnique(actor, item) {
     ui.notifications.warn(`Nova Era: ${item.name} exige nível ${required}.`);
     return false;
   }
-  const cost = Number(item.getFlag(MODULE_ID, "bloodCost") ?? 0);
+  const baseCost = Number(item.getFlag(MODULE_ID, "bloodCost") ?? 0);
+  const discount = actor.effects.find(effect => effect.getFlag(MODULE_ID, "berserkerLegacyEffect") === "devastating-discount");
+  const cost = discount ? Math.max(1, baseCost - 1) : baseCost;
   const sacrifice = !!item.getFlag(MODULE_ID, "sacrifice");
   if (!await spendBlood(actor, cost, { reason: item.name, sacrifice })) return false;
+  if (discount) await discount.delete({ novaEraLegacy: true });
   const hpCost = sacrifice ? cost * proficiency(actor) : 0;
-  return { cost, sacrifice, hpCost };
+  return { cost, baseCost, sacrifice, hpCost, discounted: cost < baseCost };
 }
 
 export async function postBloodTechnique(actor, item, payment, extra = "") {
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<section class="nova-era berserker-chat"><h2>${item.name}</h2><p><strong>${payment.cost} PS${payment.hpCost ? ` + ${payment.hpCost} PV de Sacrifício` : ""}</strong></p>${extra}${item.system.description?.value ?? ""}</section>`
+    content: `<section class="nova-era berserker-chat"><h2>${item.name}</h2><p><strong>${payment.cost} PS${payment.hpCost ? ` + ${payment.hpCost} PV de Sacrifício` : ""}${payment.discounted ? " • Frenesi Devastador" : ""}</strong></p>${extra}${item.system.description?.value ?? ""}</section>`
   });
   Hooks.callAll("novaEraBerserkerTechniqueUsed", { actor, item, ...payment });
 }

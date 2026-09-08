@@ -7,6 +7,7 @@ import {
   setBloodTechniqueExecutor,
   spendBlood
 } from "./core-automation.mjs";
+import { advancedDamageTechniqueItems, advancedHitTechniqueItems, resolveAdvancedBloodTechnique } from "./advanced-technique-automation.mjs";
 
 const SOCKET_TYPE = "berserkerTechnique";
 const ICON = `modules/${MODULE_ID}/assets/icons/berserker/coracao-com-sangue-v1.png`;
@@ -28,6 +29,11 @@ function responsible(actor) {
 function selectedTarget() {
   const targets = [...game.user.targets];
   return targets.length === 1 ? targets[0].actor : null;
+}
+
+function selectedTargetToken() {
+  const targets = [...game.user.targets];
+  return targets.length === 1 ? targets[0] : null;
 }
 
 function invisible(actor) {
@@ -310,13 +316,15 @@ async function executeTechnique(actor, item, context = {}) {
     if (!context.fallen) { ui.notifications.info("Nova Era: Recusar a Queda será oferecida automaticamente ao chegar a 0 PV."); return false; }
     return applyRecusar(actor, item);
   }
+  const advanced = await resolveAdvancedBloodTechnique(actor, item, context);
+  if (advanced !== null) return advanced;
   const payment = await payBloodTechnique(actor, item);
   if (!payment) return false;
   await postBloodTechnique(actor, item, payment);
   return true;
 }
 
-async function onMeleeHit({ actor, target, suppressTechniques = false }) {
+async function onMeleeHit({ actor, target, roll, suppressTechniques = false }) {
   if (!responsible(actor) || !target) return;
   const lamina = actor.effects.find(effect => effect.getFlag(MODULE_ID, "berserkerEffect") === "lamina-hematica");
   if (lamina && !game.modules.get("midi-qol")?.active && actor.getFlag(MODULE_ID, "laminaHematicaTurn") !== turnKey()) {
@@ -333,14 +341,14 @@ async function onMeleeHit({ actor, target, suppressTechniques = false }) {
     await deleteEffect(retaliation);
   }
   if (suppressTechniques) return;
-  const options = [known(actor, "berserker-tecnica-quebra-ossos"), known(actor, "berserker-tecnica-marca")].filter(item => item && Number(item.getFlag(MODULE_ID, "bloodCost")) <= bloodState(actor).points);
+  const options = [known(actor, "berserker-tecnica-quebra-ossos"), known(actor, "berserker-tecnica-marca"), ...advancedHitTechniqueItems(actor)].filter(item => item && Number(item.getFlag(MODULE_ID, "bloodCost")) <= bloodState(actor).points);
   if (!options.length) return;
   const selected = await Dialog.prompt({
     title: "Técnica ao acertar",
     content: `<form><div class="form-group"><label>Usar uma Técnica neste acerto?</label><select name="item"><option value="">Não usar</option>${options.map(item => `<option value="${item.id}">${item.name} — ${item.getFlag(MODULE_ID, "bloodCost")} PS</option>`).join("")}</select></div></form>`,
     label: "Confirmar", callback: html => String(html.find("[name='item']").val()), rejectClose: false
   });
-  if (selected) await executeTechnique(actor, actor.items.get(selected), { target });
+  if (selected) await executeTechnique(actor, actor.items.get(selected), { target, roll });
 }
 
 async function onDamaged({ actor, damage, nextHp, previousHp }) {
@@ -349,7 +357,7 @@ async function onDamaged({ actor, damage, nextHp, previousHp }) {
     const attacker = recentAttacker(actor);
     const carne = (attacker ?? selectedTarget()) ? known(actor, "berserker-tecnica-carne") : null;
     const coagulado = known(actor, "berserker-tecnica-coagulado");
-    const reactions = [carne, coagulado].filter(item => item && Number(item.getFlag(MODULE_ID, "bloodCost")) <= bloodState(actor).points);
+    const reactions = [carne, coagulado, ...advancedDamageTechniqueItems(actor)].filter(item => item && Number(item.getFlag(MODULE_ID, "bloodCost")) <= bloodState(actor).points);
     if (reactions.length) {
       const choice = await Dialog.prompt({
         title: "Reação de Sangue",
@@ -477,18 +485,29 @@ async function offerInvestida(token, changed, options = {}) {
   if (!actor || !isNovaEraBerserker(actor) || !responsible(actor) || !origin || Date.now() - origin.at > 10000) return;
   const item = known(actor, "berserker-tecnica-investida");
   if (!item || bloodState(actor).points < Number(item.getFlag(MODULE_ID, "bloodCost")) || actor.effects.some(effect => effect.getFlag(MODULE_ID, "consumeOnMeleeAttack"))) return;
-  const targetActor = selectedTarget();
-  const target = targetActor ? tokenFor(targetActor) : null;
-  if (!target || Number(target.document.disposition) === Number(token.disposition)) return;
   const grid = Number(canvas.scene?.grid?.size ?? 100);
   const units = Number(canvas.scene?.grid?.distance ?? 1.5);
   const destination = { x: Number(token.x), y: Number(token.y) };
   const travelled = Math.hypot(destination.x - origin.x, destination.y - origin.y) / grid * units;
-  const targetCenter = target.center;
+  if (travelled < 3) return;
   const half = grid * Number(token.width ?? 1) / 2;
-  const before = Math.hypot(origin.x + half - targetCenter.x, origin.y + half - targetCenter.y);
-  const after = Math.hypot(destination.x + half - targetCenter.x, destination.y + half - targetCenter.y);
-  if (travelled < 3 || after >= before) return;
+  const selected = selectedTargetToken();
+  const candidates = (canvas.tokens?.placeables ?? []).filter(candidate => {
+    if (!candidate?.actor || candidate.id === token.id || candidate.document.hidden) return false;
+    return Number(candidate.document.disposition) !== Number(token.disposition);
+  });
+  candidates.sort((left, right) => Number(right.id === selected?.id) - Number(left.id === selected?.id));
+  const approaches = candidates.map(target => {
+    const before = Math.hypot(origin.x + half - target.center.x, origin.y + half - target.center.y);
+    const after = Math.hypot(destination.x + half - target.center.x, destination.y + half - target.center.y);
+    return { target, before, after, gain: before - after };
+  }).filter(candidate => candidate.gain > 0).sort((left, right) => {
+    const selectedDifference = Number(right.target.id === selected?.id) - Number(left.target.id === selected?.id);
+    return selectedDifference || right.gain - left.gain || left.after - right.after;
+  });
+  const target = approaches[0]?.target;
+  const targetActor = target?.actor;
+  if (!targetActor) return;
   if (await confirm("Investida Carniceira", `Você se moveu ${travelled.toFixed(1)} m em direção a ${targetActor.name}. Gastar 1 PS para ativar a Investida?`)) await executeTechnique(actor, item, { movement: travelled, target: targetActor });
 }
 

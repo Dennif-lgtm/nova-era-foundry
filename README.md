@@ -9,6 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.28.0 — Berserker Completo
+
+- Corrige definitivamente o gatilho da Investida Carniceira: qualquer hostil do qual o Berserker realmente se aproximou pode ativar a oferta, com prioridade para o alvo selecionado.
+- Automatiza as 16 Técnicas avançadas dos níveis 5, 9, 13 e 17, com custos, Sacrifício, salvaguardas, dano, deslocamento, teleporte e condições reais.
+- Adiciona ofertas automáticas para Caçada Impossível e Pacto Carmesim e aplica Caído, Agarrado e Contido como estados do D&D5e.
+- Adiciona progressão assistida para Legado, seis Técnicas conhecidas e três Mutações da Besta, sem duplicar escolhas já presentes na ficha.
+- Automatiza os pilares dos quatro Legados: regeneração e sobrevivência do Imortal, Sangrando do Carniceiro, entradas e rupturas do Frenético e efeitos/Forma Predatória da Besta.
+- Completa Frenesi Aprimorado, Retaliação Brutal, Frenesi Irrestrito via Midi-QOL, Frenesi Eterno e Supremacia Berserk.
+- Expande o Coração do Berserker com estado do Legado, progressão das Técnicas, Mutações e acesso direto às características.
+- Atualiza o conteúdo instalado e as cópias existentes nos atores sem alterar Ladino ou Cronomante.
+
 ### v0.27.3 — Técnicas de Sangue completas
 
 - Integra o dano da Lâmina Hemática ao fluxo de dano do Midi-QOL, incluindo progressão, limite por turno e dados dobrados no crítico.
