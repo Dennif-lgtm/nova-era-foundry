@@ -64,7 +64,8 @@ function markup(actor) {
     <div class="ne-relic-fields">${fieldButton("necromancer-death-presence","Presença",mode === "avatar" ? "0 EC" : "1 EC")}${fieldButton("necromancer-dead-field","Domínio","5 EC")}${fieldButton("necromancer-infinite-army","Horda","6 EC")}</div>
     <div class="ne-relic-army-head"><span>VÍNCULOS CADAVÉRICOS</span><span>${servants.length} / ${servantLimit}</span></div><div class="ne-relic-servants">${servantSlots}</div>
     <button class="ne-relic-champion ${champion ? "" : "empty"}" data-action="${champion ? "open-actor" : "open-feature"}" data-actor-id="${champion?.id ?? ""}" data-item-id="${feature(actor,"necromancer-perfect-reanimation")?.id ?? ""}"><span class="sigil">V</span><span><b>${escape(champion?.name ?? "Nenhum Cadáver Perfeito")}</b><small>${champion ? "CADÁVER PERFEITO" : "RITUAL DISPONÍVEL NO NÍVEL 11"}</small></span><span class="hp">${champion ? `${Number(champion.system.attributes?.hp?.value ?? 0)} / ${Number(champion.system.attributes?.hp?.max ?? 0)} PV` : "SEM VÍNCULO"}</span></button>
-    <div class="ne-relic-order"><span>ORDEM NECROMÂNTICA</span>${["Atacar","Defender","Avançar","Recuar","Interagir"].map(order => `<button data-action="order" data-order="${order}">${order}</button>`).join("")}</div>
+    <div class="ne-relic-notice" role="status">As almas aguardam sua vontade.</div>
+    <details class="ne-relic-orders"><summary>ORDENS NECROMÂNTICAS</summary><div>${["Atacar","Defender","Avançar","Recuar","Interagir"].map(order => `<button data-action="order" data-order="${order}">${order}</button>`).join("")}</div></details>
     <footer>A morte deixa memória. Você lhe dá propósito.</footer>
   </section>`;
 }
@@ -94,7 +95,7 @@ function panelElement(actor) {
 
 class NecromancerPanelApplication extends FoundryApplication {
   constructor(actor, options={}) { super(options); this.actor=actor; }
-  static get defaultOptions() { return foundry.utils.mergeObject(super.defaultOptions, { classes:["nova-era-window","nova-era-necromancer-window"], width:640, height:940, resizable:true, minimizable:true, popOut:true }, { inplace:false }); }
+  static get defaultOptions() { return foundry.utils.mergeObject(super.defaultOptions, { classes:["nova-era-window","nova-era-necromancer-window"], width:680, height:1000, resizable:true, minimizable:true, popOut:true }, { inplace:false }); }
   get id() { return `nova-era-necromancer-${this.actor.id}`; }
   get title() { return `Relicário de Almas — ${this.actor.name}`; }
   async _renderInner() { return globalThis.jQuery(panelElement(this.actor)); }

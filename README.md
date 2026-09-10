@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker e Necromante de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.29.1 — Relicário visual V1.0
+
+- Aproxima o painel do Necromante do estudo interativo `Relicario_de_Almas_V1.0.html`.
+- Recalibra tamanho, proporções, cores, aura, partículas, órbitas e os quatro estados visuais do Relicário.
+- Reorganiza Essência, Instabilidade, comandos, campos e vínculos cadavéricos conforme a composição aprovada.
+- Mantém todas as automações e recolhe as ordens dos servos para preservar a leitura visual.
+
 ### v0.29.0 — Necromante e Relicário de Almas
 
 - Adiciona a classe completa do nível 1 ao 20, com progressão de conjurador completo e escolha permanente entre resistência de Sabedoria ou Constituição ao lado de Inteligência.
