@@ -7,7 +7,16 @@ Módulo de regras e automações para:
 
 ## Estado atual
 
-Esta versão reúne as classes Ladino, Cronomante e Berserker de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
+Esta versão reúne as classes Ladino, Cronomante, Berserker e Necromante de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
+
+### v0.29.0 — Necromante e Relicário de Almas
+
+- Adiciona a classe completa do nível 1 ao 20, com progressão de conjurador completo e escolha permanente entre resistência de Sabedoria ou Constituição ao lado de Inteligência.
+- Instala os Caminhos Sangrador de Almas, Senhor dos Mortos e Guardião do Túmulo, organizados em pastas próprias.
+- Adiciona o painel independente e animado **Relicário de Almas**, aberto diretamente pela ficha, com estados distintos para relicário vazio, essência armazenada, forma lich parcial e Avatar da Morte.
+- Controla Essência Cadavérica, Instabilidade, Marca de Morte, Sacrifício Profano, Toque Profano, Reanimação Menor e Explosão Cadavérica.
+- Reconhece cadáveres válidos, impede sua reutilização depois de Exauridos e permite que jogadores solicitem a criação de servos ao Mestre automaticamente.
+- Mantém a lista de magias fora do pacote da classe, conforme o documento consolidado; ela será distribuída separadamente.
 
 ### v0.28.1 — Observador de movimento
 

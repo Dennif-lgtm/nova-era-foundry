@@ -23,12 +23,15 @@ import { ensureRogueContent, installRogueContent } from "./content/rogue-install
 import { ensureRogueMacros, installRogueMacros } from "./content/macro-installer.mjs";
 import { ensureChronomancerContent, installChronomancerContent } from "./content/chronomancer-installer.mjs";
 import { ensureBerserkerContent, installBerserkerContent } from "./content/berserker-installer.mjs";
+import { ensureNecromancerContent, installNecromancerContent } from "./content/necromancer-installer.mjs";
 import { gainBlood, registerBerserkerAutomation, setBloodPoints, spendBlood, useBloodTechnique, useBrutalStrike } from "./berserker/core-automation.mjs";
 import { openBerserkerPanel, registerBerserkerPanel } from "./ui/berserker-panel.mjs";
 import { registerBerserkerTechniqueAutomation } from "./berserker/technique-automation.mjs";
 import { registerBerserkerAdvancedTechniqueAutomation } from "./berserker/advanced-technique-automation.mjs";
 import { registerBerserkerProgressionAutomation } from "./berserker/progression-automation.mjs";
 import { registerBerserkerLegacyAutomation } from "./berserker/legacy-automation.mjs";
+import { cadavericState, gainCadavericEssence, registerNecromancerAutomation, setCadavericEssence, spendCadavericEssence, useCorpseExplosion, useDeathMark, useLesserReanimation, useProfaneSacrifice, useProfaneTouch } from "./necromancer/core-automation.mjs";
+import { openNecromancerPanel, registerNecromancerPanel } from "./ui/necromancer-panel.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -69,6 +72,13 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+
+  game.settings.register(MODULE_ID, "necromancerContentVersion", {
+    scope: "world",
+    config: false,
+    type: String,
+    default: ""
+  });
 });
 
 Hooks.once("ready", async () => {
@@ -85,7 +95,8 @@ Hooks.once("ready", async () => {
       installRogue: installRogueContent,
       installRogueMacros,
       installChronomancer: installChronomancerContent,
-      installBerserker: installBerserkerContent
+      installBerserker: installBerserkerContent,
+      installNecromancer: installNecromancerContent
     },
     chronomancer: {
       openClock: openChronomancerClock,
@@ -98,6 +109,18 @@ Hooks.once("ready", async () => {
       spendBlood,
       useTechnique: useBloodTechnique,
       brutalStrike: useBrutalStrike
+    },
+    necromancer: {
+      openPanel: openNecromancerPanel,
+      state: cadavericState,
+      setEssence: setCadavericEssence,
+      gainEssence: gainCadavericEssence,
+      spendEssence: spendCadavericEssence,
+      mark: useDeathMark,
+      profaneTouch: useProfaneTouch,
+      sacrifice: useProfaneSacrifice,
+      reanimate: useLesserReanimation,
+      corpseExplosion: useCorpseExplosion
     },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
@@ -121,6 +144,8 @@ Hooks.once("ready", async () => {
   registerBerserkerProgressionAutomation();
   registerBerserkerLegacyAutomation();
   registerBerserkerPanel();
+  registerNecromancerAutomation();
+  registerNecromancerPanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();
@@ -161,6 +186,15 @@ Hooks.once("ready", async () => {
     console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Berserker`, error);
     if (game.user.isGM) {
       ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Berserker. Consulte o console para detalhes.");
+    }
+  }
+
+  try {
+    await ensureNecromancerContent();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Necromante`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Necromante. Consulte o console para detalhes.");
     }
   }
 
