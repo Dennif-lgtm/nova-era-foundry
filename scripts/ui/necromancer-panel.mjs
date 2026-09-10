@@ -100,7 +100,7 @@ function panelElement(actor) {
 
 class NecromancerPanelApplication extends FoundryApplication {
   constructor(actor, options={}) { super(options); this.actor=actor; }
-  static get defaultOptions() { return foundry.utils.mergeObject(super.defaultOptions, { classes:["nova-era-window","nova-era-necromancer-window"], width:680, height:1000, resizable:true, minimizable:true, popOut:true }, { inplace:false }); }
+  static get defaultOptions() { return foundry.utils.mergeObject(super.defaultOptions, { classes:["nova-era-window","nova-era-necromancer-window"], width:680, height:1000, resizable:true, minimizable:true, popOut:true, scrollY:[".window-content"] }, { inplace:false }); }
   get id() { return `nova-era-necromancer-${this.actor.id}`; }
   get title() { return `Relicário de Almas — ${this.actor.name}`; }
   async _renderInner() { return globalThis.jQuery(panelElement(this.actor)); }

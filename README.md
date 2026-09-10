@@ -9,6 +9,12 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker e Necromante de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.30.1 — Relicário completamente acessível
+
+- Adiciona rolagem vertical própria ao Relicário de Almas para acessar todos os Poderes do Necromante e as Ordens Necromânticas em qualquer resolução.
+- Preserva a posição da rolagem quando o painel é atualizado após uma ação.
+- Integra a barra de rolagem à estética do Relicário sem alterar suas automações.
+
 ### v0.30.0 — Necromante pronto para jogo
 
 - Faz Toque Profano, Explosão Cadavérica, Execução Sangrenta, Domínio e Maré Cadavérica aplicarem dano e salvaguardas diretamente aos alvos.
