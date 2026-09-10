@@ -4,6 +4,7 @@ import {
   setCadavericEssence, useCorpseExplosion, useDeathMark, useLesserReanimation,
   useProfaneSacrifice, useProfaneTouch
 } from "../necromancer/core-automation.mjs";
+import { activateNecromancerFeature, issueNecromanticOrder } from "../necromancer/advanced-automation.mjs";
 
 const openPanels = new Map();
 const FoundryApplication = globalThis.Application ?? foundry?.appv1?.api?.Application;
@@ -20,7 +21,7 @@ function stateMode(actor, state) {
   return state.points > 0 ? "essence" : "empty";
 }
 function modeTitle(mode) { return ({ empty: "O SILÊNCIO DAS ALMAS", essence: "ESSÊNCIA APRISIONADA", lich: "FORMA LICH PARCIAL", avatar: "AVATAR DA MORTE" })[mode]; }
-function worldServants(actor) { return game.actors.filter(entry => entry.getFlag(MODULE_ID, "necromancerServant") && entry.getFlag(MODULE_ID, "masterUuid") === actor.uuid); }
+function worldServants(actor) { return game.actors.filter(entry => entry.getFlag(MODULE_ID, "necromancerServant") && entry.getFlag(MODULE_ID, "masterUuid") === actor.uuid && !entry.getFlag(MODULE_ID, "necromancerPerfectCorpse") && !entry.getFlag(MODULE_ID, "necromancerHorde")); }
 function perfectCorpse(actor) { return game.actors.find(entry => entry.getFlag(MODULE_ID, "necromancerPerfectCorpse") && entry.getFlag(MODULE_ID, "masterUuid") === actor.uuid) ?? null; }
 function effectActive(actor, key) { return actor.effects.some(effect => effect.getFlag(MODULE_ID, "necromancerEffect") === key); }
 function escape(value) { return foundry.utils.escapeHTML(String(value ?? "")); }
@@ -47,7 +48,7 @@ function markup(actor) {
     const item = feature(actor, key);
     const effectKey = key === "necromancer-death-presence" ? "death-presence" : key === "necromancer-dead-field" ? "dead-field" : "cadaveric-horde";
     const active = effectActive(actor, effectKey);
-    return `<button data-action="open-feature" data-item-id="${item?.id ?? ""}" aria-pressed="${active}" ${item ? "" : "disabled"}>${active ? `${label} • ativa` : `${label} • ${cost}`}</button>`;
+    return `<button data-action="activate-feature" data-item-id="${item?.id ?? ""}" aria-pressed="${active}" ${item ? "" : "disabled"}>${active ? `${label} • ativa` : `${label} • ${cost}`}</button>`;
   };
   const art = ["empty", "essence", "lich", "avatar"].map(name => `<img class="ne-relic-art ${mode === name ? "visible" : ""}" src="${ART_ROOT}/relicario-${name === "empty" ? "vazio" : name === "essence" ? "essencia" : name}.webp" alt="Relicário: ${name}">`).join("");
   const reducedMotion = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
@@ -63,7 +64,12 @@ function markup(actor) {
     <div class="ne-relic-commands"><button data-action="mark"><b>Marca de Morte</b><small>AÇÃO BÔNUS · 18 M</small></button><button data-action="sacrifice" ${state.points >= state.maximum ? "disabled" : ""}><b>Sacrifício</b><small>AÇÃO BÔNUS · +1 EC</small></button><button data-action="reanimate" ${state.points < 2 || servants.length >= servantLimit ? "disabled" : ""}><b>Reanimar</b><small>AÇÃO · 2 EC</small></button><button data-action="explode" ${state.points < 2 ? "disabled" : ""}><b>Explodir cadáver</b><small>AÇÃO · 2 EC</small></button><button data-action="touch"><b>Toque Profano</b><small>AÇÃO · 18 M</small></button><button data-action="open-feature" data-item-id="${feature(actor,"necromancer-mass-harvest")?.id ?? ""}" ${feature(actor,"necromancer-mass-harvest") ? "" : "disabled"}><b>Colheita</b><small>MORTE MARCADA · 9 M</small></button></div>
     <div class="ne-relic-fields">${fieldButton("necromancer-death-presence","Presença",mode === "avatar" ? "0 EC" : "1 EC")}${fieldButton("necromancer-dead-field","Domínio","5 EC")}${fieldButton("necromancer-infinite-army","Horda","6 EC")}</div>
     <div class="ne-relic-army-head"><span>VÍNCULOS CADAVÉRICOS</span><span>${servants.length} / ${servantLimit}</span></div><div class="ne-relic-servants">${servantSlots}</div>
-    <button class="ne-relic-champion ${champion ? "" : "empty"}" data-action="${champion ? "open-actor" : "open-feature"}" data-actor-id="${champion?.id ?? ""}" data-item-id="${feature(actor,"necromancer-perfect-reanimation")?.id ?? ""}"><span class="sigil">V</span><span><b>${escape(champion?.name ?? "Nenhum Cadáver Perfeito")}</b><small>${champion ? "CADÁVER PERFEITO" : "RITUAL DISPONÍVEL NO NÍVEL 11"}</small></span><span class="hp">${champion ? `${Number(champion.system.attributes?.hp?.value ?? 0)} / ${Number(champion.system.attributes?.hp?.max ?? 0)} PV` : "SEM VÍNCULO"}</span></button>
+    <button class="ne-relic-champion ${champion ? "" : "empty"}" data-action="${champion ? "open-actor" : "activate-feature"}" data-actor-id="${champion?.id ?? ""}" data-item-id="${feature(actor,"necromancer-perfect-reanimation")?.id ?? ""}"><span class="sigil">V</span><span><b>${escape(champion?.name ?? "Nenhum Cadáver Perfeito")}</b><small>${champion ? "CADÁVER PERFEITO" : "RITUAL DISPONÍVEL NO NÍVEL 11"}</small></span><span class="hp">${champion ? `${Number(champion.system.attributes?.hp?.value ?? 0)} / ${Number(champion.system.attributes?.hp?.max ?? 0)} PV` : "SEM VÍNCULO"}</span></button>
+    <details class="ne-relic-orders"><summary>PODERES DO NECROMANTE</summary><div>${[
+      ["necromancer-unstable-body","Purgar Essência"],["necromancer-partial-lich","Forma Lich"],["necromancer-death-avatar","Avatar da Morte"],
+      ["blood-pact","Sangue Pactuado"],["bloody-execution","Execução Sangrenta"],["bone-fortress","Fortaleza de Ossos"],
+      ["protective-tomb","Túmulo Protetor"],["tomb-pact","Sentinela Eterno"]
+    ].filter(([key]) => feature(actor,key)).map(([key,label]) => `<button data-action="activate-feature" data-item-id="${feature(actor,key).id}">${label}</button>`).join("") || "<span>Nenhum poder ativo adicional neste nível.</span>"}</div></details>
     <div class="ne-relic-notice" role="status">As almas aguardam sua vontade.</div>
     <details class="ne-relic-orders"><summary>ORDENS NECROMÂNTICAS</summary><div>${["Atacar","Defender","Avançar","Recuar","Interagir"].map(order => `<button data-action="order" data-order="${order}">${order}</button>`).join("")}</div></details>
     <footer>A morte deixa memória. Você lhe dá propósito.</footer>
@@ -83,11 +89,10 @@ function panelElement(actor) {
     if (action === "reanimate") await useLesserReanimation(actor);
     if (action === "explode") await useCorpseExplosion(actor);
     if (action === "open-feature") actor.items.get(button.dataset.itemId)?.sheet?.render(true);
+    if (action === "activate-feature") await activateNecromancerFeature(actor, actor.items.get(button.dataset.itemId));
     if (action === "open-actor") game.actors.get(button.dataset.actorId)?.sheet?.render(true);
     if (action === "order") {
-      await actor.setFlag(MODULE_ID, "necromancerOrder", button.dataset.order);
-      await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<section class="nova-era necromancer-chat"><h2>Ordem: ${button.dataset.order}</h2><p>“Os mortos não hesitam. Eles obedecem.”</p></section>` });
-      Hooks.callAll("novaEraNecromancerChanged", { actor, reason: `Ordem ${button.dataset.order}` });
+      await issueNecromanticOrder(actor, button.dataset.order);
     }
   });
   return panel;

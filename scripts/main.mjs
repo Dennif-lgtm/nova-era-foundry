@@ -31,6 +31,7 @@ import { registerBerserkerAdvancedTechniqueAutomation } from "./berserker/advanc
 import { registerBerserkerProgressionAutomation } from "./berserker/progression-automation.mjs";
 import { registerBerserkerLegacyAutomation } from "./berserker/legacy-automation.mjs";
 import { cadavericState, gainCadavericEssence, registerNecromancerAutomation, setCadavericEssence, spendCadavericEssence, useCorpseExplosion, useDeathMark, useLesserReanimation, useProfaneSacrifice, useProfaneTouch } from "./necromancer/core-automation.mjs";
+import { activateNecromancerFeature, issueNecromanticOrder, registerNecromancerAdvancedAutomation } from "./necromancer/advanced-automation.mjs";
 import { openNecromancerPanel, registerNecromancerPanel } from "./ui/necromancer-panel.mjs";
 
 Hooks.once("init", () => {
@@ -120,7 +121,9 @@ Hooks.once("ready", async () => {
       profaneTouch: useProfaneTouch,
       sacrifice: useProfaneSacrifice,
       reanimate: useLesserReanimation,
-      corpseExplosion: useCorpseExplosion
+      corpseExplosion: useCorpseExplosion,
+      activateFeature: activateNecromancerFeature,
+      order: issueNecromanticOrder
     },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
@@ -145,6 +148,7 @@ Hooks.once("ready", async () => {
   registerBerserkerLegacyAutomation();
   registerBerserkerPanel();
   registerNecromancerAutomation();
+  registerNecromancerAdvancedAutomation();
   registerNecromancerPanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();

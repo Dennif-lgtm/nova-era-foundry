@@ -9,8 +9,10 @@ function classItem(actor) {
 }
 export function isNovaEraNecromancer(actor) { return !!classItem(actor); }
 export function necromancerLevel(actor) { return Number(classItem(actor)?.system?.levels ?? 0); }
-function prof(actor) { return Number(actor?.system?.attributes?.prof ?? 2); }
-function intelligence(actor) { return Number(actor?.system?.abilities?.int?.mod ?? 0); }
+export function necromancerProficiency(actor) { return Number(actor?.system?.attributes?.prof ?? 2); }
+export function necromancerIntelligence(actor) { return Number(actor?.system?.abilities?.int?.mod ?? 0); }
+function prof(actor) { return necromancerProficiency(actor); }
+function intelligence(actor) { return necromancerIntelligence(actor); }
 export function cadavericMaximum(actor) { return Math.max(0, prof(actor) + intelligence(actor)); }
 export function cadavericState(actor) {
   const raw = actor?.getFlag(MODULE_ID, STATE_FLAG) ?? {};
@@ -26,22 +28,27 @@ function responsible(actor) {
   const owners = game.users.filter(user => user.active && !user.isGM && actor.testUserPermission(user, "OWNER")).sort((a, b) => a.id.localeCompare(b.id));
   return owners[0]?.id === game.user.id || (!owners.length && game.user.isGM && game.users.activeGM?.id === game.user.id);
 }
-function has(actor, key) { return actor?.items?.some(item => item.getFlag(MODULE_ID, "contentKey") === key); }
+export function hasNecromancerFeature(actor, key) { return actor?.items?.some(item => item.getFlag(MODULE_ID, "contentKey") === key); }
+function has(actor, key) { return hasNecromancerFeature(actor, key); }
 export function lesserServantLimit(actor) {
   const level = necromancerLevel(actor);
   const base = level >= 17 ? 6 : level >= 13 ? 5 : level >= 9 ? 4 : level >= 5 ? 3 : 2;
   return base + (has(actor, "necromantic-command") ? 1 : 0) + (has(actor, "eternal-legacy") ? 1 : 0);
 }
 function turnKey() { return game.combat?.started ? `${game.combat.id}:${game.combat.round}:${game.combat.turn}` : `free:${Math.floor(Date.now() / 6000)}`; }
-function selectedToken() { const targets = [...game.user.targets]; return targets.length === 1 ? targets[0] : null; }
-function activeToken(actor) { return actor?.getActiveTokens?.(false, false)?.[0] ?? null; }
-function dc(actor) { return 8 + prof(actor) + intelligence(actor); }
-function distance(a, b) { try { return Number(canvas.grid.measurePath([a.center, b.center]).distance ?? Infinity); } catch { return Infinity; } }
+export function selectedNecromancerToken() { const targets = [...game.user.targets]; return targets.length === 1 ? targets[0] : null; }
+export function activeNecromancerToken(actor) { return actor?.getActiveTokens?.(false, false)?.[0] ?? null; }
+export function necromancerDC(actor) { return 8 + prof(actor) + intelligence(actor); }
+export function necromancerDistance(a, b) { try { return Number(canvas.grid.measurePath([a.center, b.center]).distance ?? Infinity); } catch { return Infinity; } }
+function selectedToken() { return selectedNecromancerToken(); }
+function activeToken(actor) { return activeNecromancerToken(actor); }
+function dc(actor) { return necromancerDC(actor); }
+function distance(a, b) { return necromancerDistance(a, b); }
 
 async function executeDocument(uuid, type, data = {}) {
   const document = await fromUuid(uuid);
   if (!document) return false;
-  if (type === "update") await document.update(data.change ?? {}, { novaEraNecromancer: true });
+  if (type === "update") await document.update(data.change ?? {}, { novaEraNecromancer: true, ...(data.options ?? {}) });
   if (type === "effect") {
     const actor = document.documentName === "Actor" ? document : document.actor;
     const existing = actor.effects.find(effect => effect.getFlag(MODULE_ID, "necromancerEffect") === data.effect.flags?.[MODULE_ID]?.necromancerEffect);
@@ -54,14 +61,29 @@ async function executeDocument(uuid, type, data = {}) {
     if (matches.length) await actor.deleteEmbeddedDocuments("ActiveEffect", matches.map(effect => effect.id), { novaEraNecromancer: true });
   }
   if (type === "token-flag") await document.setFlag(MODULE_ID, data.key, data.value);
+  if (type === "hp") {
+    const actor = document.documentName === "Actor" ? document : document.actor;
+    const hp = actor.system.attributes.hp;
+    const amount = Math.max(0, Number(data.amount) || 0);
+    if (data.mode === "heal") await actor.update({ "system.attributes.hp.value": Math.min(Number(hp.max ?? 0), Number(hp.value ?? 0) + amount) }, { novaEraNecromancer: true });
+    else if (data.mode === "temp") await actor.update({ "system.attributes.hp.temp": Math.max(Number(hp.temp ?? 0), amount) }, { novaEraNecromancer: true });
+    else {
+      const absorbed = data.ignoreTemp ? 0 : Math.min(Number(hp.temp ?? 0), amount);
+      await actor.update({ "system.attributes.hp.temp": data.ignoreTemp ? Number(hp.temp ?? 0) : Number(hp.temp ?? 0) - absorbed, "system.attributes.hp.value": Math.max(0, Number(hp.value ?? 0) - amount + absorbed) }, { novaEraNecromancer: true, novaEraNecromancerPreviousHp: Number(hp.value ?? 0) });
+    }
+  }
   return true;
 }
-async function action(document, type, data = {}) {
+export async function necromancerDocumentAction(document, type, data = {}) {
   if (!document) return false;
   if (game.user.isGM || document.isOwner) return executeDocument(document.uuid, type, data);
   game.socket.emit(`module.${MODULE_ID}`, { type: SOCKET_TYPE, uuid: document.uuid, action: type, data });
   return true;
 }
+async function action(document, type, data = {}) { return necromancerDocumentAction(document, type, data); }
+export async function applyNecromancerDamage(actor, amount, { ignoreTemp = false } = {}) { return action(actor, "hp", { mode: "damage", amount, ignoreTemp }); }
+export async function applyNecromancerHealing(actor, amount) { return action(actor, "hp", { mode: "heal", amount }); }
+export async function applyNecromancerTempHp(actor, amount) { return action(actor, "hp", { mode: "temp", amount }); }
 async function post(actor, title, text) {
   return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<section class="nova-era necromancer-chat"><h2>${title}</h2><p>${text}</p></section>` });
 }
@@ -144,7 +166,9 @@ export async function useProfaneTouch(actor) {
   if (!targetToken?.actor) return ui.notifications.warn("Nova Era: selecione exatamente um alvo.");
   const sourceToken = activeToken(actor);
   if (sourceToken && distance(sourceToken, targetToken) > 18) return ui.notifications.warn("Nova Era: o alvo está além de 18 m.");
-  const attack = await new Roll("1d20 + @attributes.prof + @abilities.int.mod", actor.getRollData()).evaluate();
+  const pact = actor.effects.find(effect => effect.getFlag(MODULE_ID, "necromancerEffect") === "blood-pact");
+  const hunting = pact?.getFlag(MODULE_ID, "benefits")?.includes("hunt") && Number(targetToken.actor.system.attributes.hp.value ?? 0) < Number(targetToken.actor.system.attributes.hp.max ?? 0) / 2;
+  const attack = await new Roll(`${hunting ? "2d20kh" : "1d20"} + @attributes.prof + @abilities.int.mod`, actor.getRollData()).evaluate();
   await attack.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `Toque Profano contra ${targetToken.name}` });
   if (Number(attack.total) < Number(targetToken.actor.system.attributes.ac.value ?? Infinity)) return post(actor, "Toque Profano", "A essência escapa por um instante.");
   const level = necromancerLevel(actor), dice = level >= 17 ? 4 : level >= 11 ? 3 : level >= 5 ? 2 : 1;
@@ -153,6 +177,7 @@ export async function useProfaneTouch(actor) {
   if (bonus) await actor.setFlag(MODULE_ID, "necromancerMarkDamageTurn", turnKey());
   const damage = await new Roll(`${dice}d8 + @abilities.int.mod + ${bonus}`, actor.getRollData()).evaluate();
   await damage.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `Toque Profano — dano necrótico${bonus ? " + Marca de Morte" : ""}` });
+  await applyNecromancerDamage(targetToken.actor, Number(damage.total));
   if (marked) {
     const choices = has(actor, "necromancer-improved-touch") ? 2 : 1;
     const picked = await Dialog.prompt({ title: "Manipulação Profana", content: `<form><p>Escolha ${choices === 2 ? "até duas manipulações diferentes" : "uma manipulação"}.</p>${["pull|Atrair", "push|Repelir", "weaken|Enfraquecer", ...(has(actor, "necromancer-improved-touch") ? ["profane|Profanar"] : [])].map(value => { const [key,label]=value.split("|"); return `<label><input type="checkbox" name="effect" value="${key}"> ${label}</label><br>`; }).join("")}</form>`, label: "Aplicar", callback: html => [...html[0].querySelectorAll("[name='effect']:checked")].slice(0, choices).map(input => input.value), rejectClose: false }) ?? [];
@@ -169,31 +194,49 @@ export async function useProfaneTouch(actor) {
 
 export async function useCorpseExplosion(actor) {
   const corpse = selectedToken();
-  if (!corpse?.actor || Number(corpse.actor.system.attributes.hp.value ?? 1) > 0) return ui.notifications.warn("Nova Era: selecione um cadáver ou servo destruído.");
+  const controlled = corpse?.actor?.getFlag(MODULE_ID, "masterUuid") === actor.uuid && corpse?.actor?.getFlag(MODULE_ID, "necromancerServant");
+  if (!corpse?.actor || (!controlled && Number(corpse.actor.system.attributes.hp.value ?? 1) > 0)) return ui.notifications.warn("Nova Era: selecione um cadáver ou morto-vivo controlado.");
   if (corpse.document.getFlag(MODULE_ID, "cadaverExhausted")) return ui.notifications.warn("Nova Era: este cadáver já está Exaurido.");
-  if (!await spendCadavericEssence(actor, 2, "Explosão Cadavérica")) return false;
+  if (!controlled && !await spendCadavericEssence(actor, 2, "Explosão Cadavérica")) return false;
   await action(corpse.document, "token-flag", { key: "cadaverExhausted", value: true });
+  if (controlled && Number(corpse.actor.system.attributes.hp.value ?? 0) > 0) await necromancerDocumentAction(corpse.actor, "update", { change: { "system.attributes.hp.value": 0 }, options: { novaEraNecromancerDetonation: true } });
   const level = necromancerLevel(actor), dice = level >= 17 ? 8 : level >= 11 ? 6 : 4;
   const roll = await new Roll(`${dice}d6`, actor.getRollData()).evaluate();
   await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: `Explosão Cadavérica — CD ${dc(actor)} Destreza • raio ${has(actor, "necromancer-dead-field") ? "3 m (4,5 m no Domínio)" : "3 m"}` });
+  const radius = actor.effects.some(effect => effect.getFlag(MODULE_ID, "necromancerEffect") === "dead-field") ? 4.5 : 3;
+  for (const token of canvas.tokens?.placeables ?? []) {
+    if (!token.actor || token === corpse || distance(corpse, token) > radius) continue;
+    const result = await token.actor.rollSavingThrow({ ability: "dex" });
+    const save = Array.isArray(result) ? result[0] : result;
+    const amount = Number(save?.total ?? 0) >= dc(actor) ? Math.floor(Number(roll.total) / 2) : Number(roll.total);
+    await applyNecromancerDamage(token.actor, amount);
+    Hooks.callAll("novaEraNecromancerNecroticDamage", { actor, target: token.actor, damage: amount, itemKey: "necromancer-corpse-explosion" });
+  }
   await post(actor, "Explosão Cadavérica", `“Até os restos ainda têm algo a oferecer.” O cadáver de <strong>${corpse.name}</strong> foi Exaurido.`);
   return true;
 }
 
 export async function useLesserReanimation(actor) {
-  const corpse = selectedToken();
-  if (!corpse?.actor || Number(corpse.actor.system.attributes.hp.value ?? 1) > 0) return ui.notifications.warn("Nova Era: selecione um Cadáver Válido.");
-  if (corpse.document.getFlag(MODULE_ID, "cadaverExhausted")) return ui.notifications.warn("Nova Era: este cadáver está Exaurido.");
-  const servants = game.actors.filter(entry => entry.getFlag(MODULE_ID, "masterUuid") === actor.uuid && entry.getFlag(MODULE_ID, "necromancerServant"));
-  if (servants.length >= lesserServantLimit(actor)) return ui.notifications.warn(`Nova Era: limite de ${lesserServantLimit(actor)} servos menores atingido.`);
+  let corpses = [...game.user.targets];
+  const double = has(actor, "profane-recruitment") && corpses.length === 2;
+  if (!double) corpses = corpses.length === 1 ? corpses : [];
+  if (!corpses.length || corpses.some(corpse => !corpse.actor || Number(corpse.actor.system.attributes.hp.value ?? 1) > 0)) return ui.notifications.warn("Nova Era: selecione um Cadáver Válido — ou dois com Recrutamento Profano.");
+  if (corpses.some(corpse => corpse.document.getFlag(MODULE_ID, "cadaverExhausted"))) return ui.notifications.warn("Nova Era: um dos cadáveres está Exaurido.");
+  const servants = game.actors.filter(entry => entry.getFlag(MODULE_ID, "masterUuid") === actor.uuid && entry.getFlag(MODULE_ID, "necromancerServant") && !entry.getFlag(MODULE_ID, "necromancerPerfectCorpse") && !entry.getFlag(MODULE_ID, "necromancerHorde"));
+  if (servants.length + corpses.length > lesserServantLimit(actor)) return ui.notifications.warn(`Nova Era: limite de ${lesserServantLimit(actor)} servos menores atingido.`);
   const choice = await Dialog.prompt({ title: "Reanimação Menor", content: `<form><label>Forma <select name="form"><option value="skeleton">Esqueleto</option><option value="zombie">Zumbi</option></select></label></form>`, label: "Erguer", callback: html => String(html.find("[name='form']").val()), rejectClose: false });
-  if (!choice || !await spendCadavericEssence(actor, 2, "Reanimação Menor")) return false;
-  await action(corpse.document, "token-flag", { key: "cadaverExhausted", value: true });
+  const discount = actor.getFlag(MODULE_ID, "profaneRecruitmentDiscount") ? 1 : 0;
+  const cost = Math.max(1, (double ? 3 : 2) - discount);
+  if (!choice || !await spendCadavericEssence(actor, cost, double ? "Recrutamento Profano" : "Reanimação Menor")) return false;
+  if (discount) await actor.unsetFlag(MODULE_ID, "profaneRecruitmentDiscount");
   const level = necromancerLevel(actor), proficiency = prof(actor);
-  const servantData = { choice, level, proficiency, masterUuid: actor.uuid, masterName: actor.name, ownerId: game.user.id, x: corpse.document.x, y: corpse.document.y, disposition: activeToken(actor)?.document.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY };
-  const servant = await createServant(servantData);
-  await post(actor, "Reanimação Menor", `“Levante-se. Sua utilidade ainda não terminou.” <strong>${choice === "skeleton" ? "Esqueleto" : "Zumbi"}</strong> foi criado.`);
-  return servant;
+  const created = [];
+  for (const corpse of corpses) {
+    await action(corpse.document, "token-flag", { key: "cadaverExhausted", value: true });
+    created.push(await createServant({ choice, level, proficiency, intelligence: intelligence(actor), masterUuid: actor.uuid, masterName: actor.name, ownerId: game.user.id, x: corpse.document.x, y: corpse.document.y, disposition: activeToken(actor)?.document.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY }));
+  }
+  await post(actor, double ? "Recrutamento Profano" : "Reanimação Menor", `“Levantem-se. Sua utilidade ainda não terminou.” <strong>${created.length} ${choice === "skeleton" ? "Esqueleto(s)" : "Zumbi(s)"}</strong> criado(s).`);
+  return created;
 }
 
 async function createServant(data) {
@@ -210,6 +253,11 @@ async function createServant(data) {
       attributes: { ac: { flat: (skeleton ? 12 : 10) + Number(data.proficiency), calc: "flat" }, hp: { value: hp, max: hp }, movement: { walk: skeleton ? 9 : 6, units: "m" } }
     }, ownership: { [data.ownerId]: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER }, flags: { [MODULE_ID]: { necromancerServant: true, masterUuid: data.masterUuid, servantType: data.choice } }
   }, { temporary: false });
+  await servant.createEmbeddedDocuments("Item", [{
+    name: skeleton ? "Lâmina Óssea" : "Golpe Cadavérico", type: "weapon", img: skeleton ? "icons/weapons/swords/sword-broad-serrated-blue.webp" : "icons/skills/melee/unarmed-punch-fist.webp",
+    system: { equipped: true, proficient: 0, weaponType: "natural", activation: { type: "action", cost: 1 }, actionType: "mwak", ability: "", attackBonus: String(Number(data.proficiency) + Number(data.intelligence ?? 0)), damage: { parts: [[`1d6 + ${data.proficiency}`, skeleton ? "piercing" : "bludgeoning"]] } },
+    flags: { [MODULE_ID]: { necromancerServantAttack: true, masterUuid: data.masterUuid } }
+  }]);
   if (canvas?.scene) {
     const source = servant.prototypeToken.toObject();
     source.name = servant.name; source.actorId = servant.id; source.x = Number(data.x); source.y = Number(data.y); source.disposition = Number(data.disposition);
@@ -227,6 +275,10 @@ async function onPreUpdateActor(actor, changed, options) {
 async function onUpdateActor(actor, changed, options = {}) {
   const next = foundry.utils.getProperty(changed, "system.attributes.hp.value");
   if (next === undefined || Number(next) > 0 || Number(options.novaEraNecromancerPreviousHp ?? 0) <= 0) return;
+  if (actor.getFlag(MODULE_ID, "necromancerServant") && !options.novaEraNecromancer) {
+    const master = await fromUuid(actor.getFlag(MODULE_ID, "masterUuid"));
+    if (master && responsible(master) && has(master, "profane-recruitment")) await master.setFlag(MODULE_ID, "profaneRecruitmentDiscount", true);
+  }
   for (const necromancer of game.actors.filter(isNovaEraNecromancer)) {
     if (!responsible(necromancer)) continue;
     const source = activeToken(necromancer), fallen = activeToken(actor);
@@ -240,6 +292,7 @@ async function onUpdateActor(actor, changed, options = {}) {
     if (marked) await necromancer.setFlag(MODULE_ID, STATE_FLAG, { ...cadavericState(necromancer), markUuid: "" });
     await action(fallen.document, "token-flag", { key: "cadaverExhausted", value: false });
     await post(necromancer, "Colher a Morte", `“A queda de <strong>${actor.name}</strong> alimenta aquilo que virá.” +${marked ? 2 : 1} EC.`);
+    Hooks.callAll("novaEraNecromancerDeathHarvested", { necromancer, fallen: actor, fallenToken: fallen, marked });
   }
 }
 async function recoverRest(actor, result, config) {

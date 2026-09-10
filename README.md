@@ -9,6 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker e Necromante de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.30.0 — Necromante pronto para jogo
+
+- Faz Toque Profano, Explosão Cadavérica, Execução Sangrenta, Domínio e Maré Cadavérica aplicarem dano e salvaguardas diretamente aos alvos.
+- Automatiza Extração de Essência, Sede de Alma, Colheita em Massa, Banquete Profano, Transcendência e os benefícios do Sangue Pactuado.
+- Implementa Presença da Morte, Corpo Instável, Forma Lich Parcial, Recusa da Morte, Avatar da Morte e sua sentença contra a Marca.
+- Cria Cadáver Perfeito e Horda Cadavérica como atores controláveis, com fichas, ataques e reconstrução após Descanso Longo.
+- Torna Esqueletos e Zumbis imediatamente jogáveis, incluindo ataque próprio, vantagem contra a Marca, Ataque Calculado, Carne Morta e Ordens mecânicas.
+- Automatiza Túmulo Protetor, Ossos Guardiões, Pacto do Túmulo, Sentinela Eterno, Fortaleza de Ossos e Vínculo com a Morte.
+- Adiciona comandos dos poderes avançados ao Relicário e ativação direta pelas habilidades da ficha, sem depender da aba de macros.
+- Migra servos já existentes, recupera usos nos descansos e mantém todas as automações anteriores de Ladino, Cronomante e Berserker.
+
 ### v0.29.1 — Relicário visual V1.0
 
 - Aproxima o painel do Necromante do estudo interativo `Relicario_de_Almas_V1.0.html`.
