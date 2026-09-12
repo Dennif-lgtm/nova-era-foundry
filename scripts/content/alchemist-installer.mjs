@@ -1,17 +1,18 @@
 import { MODULE_ID } from "../constants.mjs";
 import { ALCHEMIST_CLASS, ALCHEMIST_COMPONENTS, ALCHEMIST_FEATURES, ALCHEMIST_GREAT_WORKS, ALCHEMIST_PROJECTS, ALCHEMIST_SCHOOLS } from "./alchemist-data.mjs";
 
-const CONTENT_VERSION = "1";
+const CONTENT_VERSION = "2";
 const DEFAULT_ICON = "icons/tools/laboratory/mortar-powder-green.webp";
+const CLASS_ICON = `modules/${MODULE_ID}/assets/icons/alchemist/alquimista.webp`;
 const GROUP_ICONS = {
   alchemist: "icons/consumables/potions/bottle-corked-labeled-green.webp",
   containers: "icons/containers/bags/case-leather-tan.webp",
   compounds: "icons/consumables/potions/bottle-bulb-corked-green.webp",
   modifiers: "icons/magic/symbols/runes-star-pentagon-orange.webp",
   "great-works": "icons/magic/symbols/runes-star-pentagon-gold.webp",
-  "school-biomancer": "icons/magic/life/heart-cross-strong-green.webp",
-  "school-war-artificer": "icons/tools/smithing/anvil.webp",
-  "school-arcane-transmuter": "icons/magic/symbols/elements-air-earth-fire-water.webp",
+  "school-biomancer": `modules/${MODULE_ID}/assets/icons/alchemist/biomante.webp`,
+  "school-war-artificer": `modules/${MODULE_ID}/assets/icons/alchemist/artifice-belico.webp`,
+  "school-arcane-transmuter": `modules/${MODULE_ID}/assets/icons/alchemist/transmutador-arcano.webp`,
   homunculus: "icons/creatures/magical/construct-golem-stone-blue.webp"
 };
 
@@ -22,7 +23,7 @@ function stableId(seed) {
 }
 
 function iconFor(entry) {
-  if (entry.key === "alchemist") return GROUP_ICONS.alchemist;
+  if (entry.key === "alchemist") return CLASS_ICON;
   if (entry.key.includes("charge") || entry.role === "damage") return "icons/magic/fire/explosion-fireball-small-orange.webp";
   if (entry.role === "healing") return "icons/magic/life/heart-cross-green.webp";
   if (entry.role === "defense") return "icons/magic/defensive/shield-barrier-glowing-green.webp";

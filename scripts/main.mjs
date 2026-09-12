@@ -34,8 +34,15 @@ import { registerBerserkerLegacyAutomation } from "./berserker/legacy-automation
 import { cadavericState, gainCadavericEssence, registerNecromancerAutomation, setCadavericEssence, spendCadavericEssence, useCorpseExplosion, useDeathMark, useLesserReanimation, useProfaneSacrifice, useProfaneTouch } from "./necromancer/core-automation.mjs";
 import { activateNecromancerFeature, issueNecromanticOrder, registerNecromancerAdvancedAutomation } from "./necromancer/advanced-automation.mjs";
 import { openNecromancerPanel, registerNecromancerPanel } from "./ui/necromancer-panel.mjs";
-import { activateAlchemistFormula, alchemistState, buildAlchemistFormula, gainReagentPoints, prepareAlchemistFormula, prepareDangerousExperiment, registerAlchemistAutomation, setReagentPoints, spendReagentPoints } from "./alchemist/core-automation.mjs";
+import { activateAlchemistFormula, alchemistState, buildAlchemistFormula, configureAlchemistEngineering, finalizeAlchemistReserve, gainReagentPoints, prepareAlchemistFormula, prepareDangerousExperiment, recalibrateAlchemistExperiment, registerAlchemistAutomation, setReagentPoints, spendReagentPoints } from "./alchemist/core-automation.mjs";
 import { offerAlchemistProgression, registerAlchemistProgressionAutomation } from "./alchemist/progression-automation.mjs";
+import { registerAlchemistTriggerAutomation } from "./alchemist/trigger-automation.mjs";
+import { openHomunculusControl, registerAlchemistHomunculusAutomation } from "./alchemist/homunculus-automation.mjs";
+import { openAlchemistGreatWorks } from "./alchemist/great-work-automation.mjs";
+import { registerAlchemistSchoolAutomation } from "./alchemist/school-automation.mjs";
+import { registerAlchemistDamageInterception } from "./alchemist/damage-interception.mjs";
+import { activateAlchemistPerfectMatrix, configureAlchemistPrinciples, registerAlchemistTransmuterAutomation, reprogramAlchemistPrinciple } from "./alchemist/transmuter-automation.mjs";
+import { activateAlchemistThroughPlatform, configureAlchemistPlatforms, reconfigureAlchemistPlatform, registerAlchemistArtificerAutomation } from "./alchemist/artificer-automation.mjs";
 import { openAlchemistPanel, registerAlchemistPanel } from "./ui/alchemist-panel.mjs";
 
 Hooks.once("init", () => {
@@ -145,8 +152,19 @@ Hooks.once("ready", async () => {
       spendReagents: spendReagentPoints,
       buildFormula: buildAlchemistFormula,
       prepareFormula: prepareAlchemistFormula,
+      finalizeReserve: finalizeAlchemistReserve,
       experiment: prepareDangerousExperiment,
+      recalibrate: recalibrateAlchemistExperiment,
+      configureEngineering: configureAlchemistEngineering,
+      configurePrinciples: configureAlchemistPrinciples,
+      reprogramPrinciple: reprogramAlchemistPrinciple,
+      perfectMatrix: activateAlchemistPerfectMatrix,
+      configurePlatforms: configureAlchemistPlatforms,
+      reconfigurePlatform: reconfigureAlchemistPlatform,
+      activateThroughPlatform: activateAlchemistThroughPlatform,
       activateFormula: activateAlchemistFormula,
+      homunculus: openHomunculusControl,
+      greatWorks: openAlchemistGreatWorks,
       offerProgression: offerAlchemistProgression
     },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
@@ -175,6 +193,12 @@ Hooks.once("ready", async () => {
   registerNecromancerAdvancedAutomation();
   registerNecromancerPanel();
   registerAlchemistAutomation();
+  registerAlchemistTriggerAutomation();
+  registerAlchemistHomunculusAutomation();
+  registerAlchemistSchoolAutomation();
+  registerAlchemistDamageInterception();
+  registerAlchemistTransmuterAutomation();
+  registerAlchemistArtificerAutomation();
   registerAlchemistProgressionAutomation();
   registerAlchemistPanel();
   registerBaseFeatureAutomation();

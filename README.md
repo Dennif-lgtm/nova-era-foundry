@@ -9,10 +9,17 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante e Alquimista de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.32.0-rc.1 — Prévia de automações do Alquimista
+
+- Amplia os efeitos automáticos de Fórmulas, preparação, reservas, danos, curas e proteções reativas.
+- Acrescenta controles jogáveis para Biomante, Artífice Bélico, Transmutador Arcano e Homúnculo, além dos medalhões da classe e das Escolas.
+- Ainda requer testes no Foundry e possui habilidades guiadas ou pendentes; consulte [a matriz de automação](docs/alchemist-automation-matrix.md). Esta é uma versão de testes, não a conclusão da classe.
+
 ### v0.31.0 — Alquimista e Maleta de Síntese
 
 - Adiciona a classe Alquimista completa do nível 1 ao 20, com d8, progressão de Pontos de Reagente, Laboratório Portátil, Experimentação Perigosa, Reservas Catalíticas, Homúnculo, Grandes Obras e Fórmula Perfeita.
-- Instala as Escolas do Biomante, Artífice de Guerra e Transmutador Arcano, com características e Projetos exclusivos organizados em pastas próprias.
+- Instala as Escolas do Biomante, Artífice Bélico e Transmutador Arcano, com características e Projetos exclusivos organizados em pastas próprias.
+- Usa medalhões próprios para a classe e as três Escolas nas fichas e no conteúdo instalado pelo módulo.
 - Cria o Compêndio Alquímico com 32 Projetos Fundamentais dos Graus I–IV, Recipientes, Compostos Fundamentais, Modificadores e seis Grandes Obras.
 - Adiciona progressão assistida: as janelas de escolha registram automaticamente novos Projetos, Modificadores, pesquisas de Escola e a Grande Obra diretamente no Diário do personagem.
 - Adiciona o painel independente e animado **Maleta de Síntese**, aberto pela ficha, com quatro estados visuais, Pontos de Reagente, nove encaixes de Fórmula, Reservas e acesso ao Diário de Pesquisa.
