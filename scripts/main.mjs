@@ -24,6 +24,7 @@ import { ensureRogueMacros, installRogueMacros } from "./content/macro-installer
 import { ensureChronomancerContent, installChronomancerContent } from "./content/chronomancer-installer.mjs";
 import { ensureBerserkerContent, installBerserkerContent } from "./content/berserker-installer.mjs";
 import { ensureNecromancerContent, installNecromancerContent } from "./content/necromancer-installer.mjs";
+import { ensureAlchemistContent, installAlchemistContent } from "./content/alchemist-installer.mjs";
 import { gainBlood, registerBerserkerAutomation, setBloodPoints, spendBlood, useBloodTechnique, useBrutalStrike } from "./berserker/core-automation.mjs";
 import { openBerserkerPanel, registerBerserkerPanel } from "./ui/berserker-panel.mjs";
 import { registerBerserkerTechniqueAutomation } from "./berserker/technique-automation.mjs";
@@ -33,6 +34,9 @@ import { registerBerserkerLegacyAutomation } from "./berserker/legacy-automation
 import { cadavericState, gainCadavericEssence, registerNecromancerAutomation, setCadavericEssence, spendCadavericEssence, useCorpseExplosion, useDeathMark, useLesserReanimation, useProfaneSacrifice, useProfaneTouch } from "./necromancer/core-automation.mjs";
 import { activateNecromancerFeature, issueNecromanticOrder, registerNecromancerAdvancedAutomation } from "./necromancer/advanced-automation.mjs";
 import { openNecromancerPanel, registerNecromancerPanel } from "./ui/necromancer-panel.mjs";
+import { activateAlchemistFormula, alchemistState, buildAlchemistFormula, gainReagentPoints, prepareAlchemistFormula, prepareDangerousExperiment, registerAlchemistAutomation, setReagentPoints, spendReagentPoints } from "./alchemist/core-automation.mjs";
+import { offerAlchemistProgression, registerAlchemistProgressionAutomation } from "./alchemist/progression-automation.mjs";
+import { openAlchemistPanel, registerAlchemistPanel } from "./ui/alchemist-panel.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -80,6 +84,13 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+
+  game.settings.register(MODULE_ID, "alchemistContentVersion", {
+    scope: "world",
+    config: false,
+    type: String,
+    default: ""
+  });
 });
 
 Hooks.once("ready", async () => {
@@ -97,7 +108,8 @@ Hooks.once("ready", async () => {
       installRogueMacros,
       installChronomancer: installChronomancerContent,
       installBerserker: installBerserkerContent,
-      installNecromancer: installNecromancerContent
+      installNecromancer: installNecromancerContent,
+      installAlchemist: installAlchemistContent
     },
     chronomancer: {
       openClock: openChronomancerClock,
@@ -125,6 +137,18 @@ Hooks.once("ready", async () => {
       activateFeature: activateNecromancerFeature,
       order: issueNecromanticOrder
     },
+    alchemist: {
+      openPanel: openAlchemistPanel,
+      state: alchemistState,
+      setReagents: setReagentPoints,
+      gainReagents: gainReagentPoints,
+      spendReagents: spendReagentPoints,
+      buildFormula: buildAlchemistFormula,
+      prepareFormula: prepareAlchemistFormula,
+      experiment: prepareDangerousExperiment,
+      activateFormula: activateAlchemistFormula,
+      offerProgression: offerAlchemistProgression
+    },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
 
@@ -150,6 +174,9 @@ Hooks.once("ready", async () => {
   registerNecromancerAutomation();
   registerNecromancerAdvancedAutomation();
   registerNecromancerPanel();
+  registerAlchemistAutomation();
+  registerAlchemistProgressionAutomation();
+  registerAlchemistPanel();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();
@@ -199,6 +226,15 @@ Hooks.once("ready", async () => {
     console.error(`${MODULE_ID} | Falha ao atualizar o conteudo do Necromante`, error);
     if (game.user.isGM) {
       ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Necromante. Consulte o console para detalhes.");
+    }
+  }
+
+  try {
+    await ensureAlchemistContent();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar o conteúdo do Alquimista`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Alquimista. A Maleta de Síntese continua disponível; consulte o console para detalhes.");
     }
   }
 
