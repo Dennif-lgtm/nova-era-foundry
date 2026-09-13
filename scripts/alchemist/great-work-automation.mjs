@@ -46,13 +46,25 @@ async function finishGreatWork(actor,record){
   const approved=await Dialog.confirm({title:"Validar Grande Obra",content:`<p>Confirma os materiais específicos, os requisitos da Obra e o resultado <strong>${escape(record.description)}</strong>? Serão consumidos ${rule.pr} PR e ${rule.gp} PO.</p>`,yes:()=>true,no:()=>false,defaultYes:false});if(!approved)return false;
   const target=record.targetUuid?await fromUuid(record.targetUuid):null;
   if(rule.target&&!target){ui.notifications.warn("Nova Era: o alvo da Obra não foi encontrado.");return false;}
+  let metamorphosis="";
+  if(record.key.endsWith("metamorphosis")){
+    metamorphosis=await Dialog.prompt({title:"Metamorfose Perfeita",content:'<form><p>Escolha a adaptação permanente aprovada pelo Mestre.</p><select name="kind"><option value="muscular">Muscular · +3 m deslocamento</option><option value="dermal">Dérmica · +1 CA</option><option value="sensory">Sensorial · +2 Percepção</option><option value="metabolic">Metabólica · vantagem contra Veneno/Doença</option><option value="custom">Outra adaptação compatível · arbitragem do Mestre</option></select></form>',label:"Aplicar",callback:html=>String(html.find("[name='kind']").val()),rejectClose:false});
+    if(!metamorphosis)return false;
+  }
   if(!await spendReagentPoints(actor,rule.pr,"Grande Obra"))return false;
   await actor.update({"system.currency.gp":currency(actor)-rule.gp});
   if(record.key.endsWith("genesis")){
     const servant=game.actors.find(other=>other.getFlag(MODULE_ID,"alchemistHomunculusMaster")===actor.uuid);
     if(servant){await servant.unsetFlag(MODULE_ID,"alchemistHomunculusMaster");await servant.setFlag(MODULE_ID,"alchemistTrueHomunculus",true);}
   }
-  if(record.key.endsWith("metamorphosis"))await target.setFlag(MODULE_ID,"alchemistMetamorphosis",{source:actor.uuid,description:record.description});
+  if(record.key.endsWith("metamorphosis")){
+    const changes=[];
+    if(metamorphosis==="muscular")changes.push({key:"system.attributes.movement.walk",mode:CONST.ACTIVE_EFFECT_MODES.ADD,value:"3",priority:20});
+    if(metamorphosis==="dermal")changes.push({key:"system.attributes.ac.bonus",mode:CONST.ACTIVE_EFFECT_MODES.ADD,value:"1",priority:20});
+    if(metamorphosis==="sensory")changes.push({key:"system.skills.prc.bonuses.check",mode:CONST.ACTIVE_EFFECT_MODES.ADD,value:"2",priority:20});
+    await target.createEmbeddedDocuments("ActiveEffect",[{name:`Metamorfose Perfeita — ${metamorphosis}`,img:actor.items.find(item=>keyOf(item)===record.key)?.img,origin:actor.uuid,disabled:false,changes,flags:{[MODULE_ID]:{alchemistGreatWork:"metamorphosis",alchemistMetamorphosis:metamorphosis,sourceUuid:actor.uuid}}}]);
+    await target.setFlag(MODULE_ID,"alchemistMetamorphosis",{source:actor.uuid,description:record.description,kind:metamorphosis});
+  }
   if(record.key.endsWith("panacea")){
     const listed=[...target.effects].filter(effect=>effect.statuses?.has?.("poisoned")||/doença|veneno|toxina|contaminação|mutação/i.test(effect.name));
     if(listed.length){const chosen=await Dialog.prompt({title:"Panaceia Universal",content:`<form><p>Selecione somente o efeito causado pelo agente diagnosticado.</p><select name="effect"><option value="">Nenhum efeito listado corresponde</option>${listed.map(effect=>`<option value="${effect.id}">${escape(effect.name)}</option>`).join("")}</select></form>`,label:"Confirmar",callback:html=>String(html.find("[name='effect']").val()),rejectClose:false});if(chosen)await target.deleteEmbeddedDocuments("ActiveEffect",[chosen]);}

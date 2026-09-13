@@ -10,6 +10,13 @@ function kind(item){return item.type==="weapon"?"weapon":(item.system?.type?.val
 function compatible(module,item){const type=kind(item);if(["injector","launcher","impact"].includes(module))return type==="weapon";if(["reactive","reactiveArmor"].includes(module))return type!=="weapon";if(module==="propulsor")return type==="armor";return true;}
 function choose(title,prompt,entries){if(!entries.length)return Promise.resolve(null);return Dialog.prompt({title,content:'<form class="nova-era alchemist-choice"><p>'+escape(prompt)+'</p><select name="choice">'+entries.map(([id,label])=>'<option value="'+escape(id)+'">'+escape(label)+'</option>').join("")+'</select></form>',label:"Escolher",callback:html=>String(html.find("[name='choice']").val()),rejectClose:false});}
 function knownLimit(level){return level>=19?9:level>=15?9:level>=11?7:level>=7?5:3;}
+function resolver(actor){return alchemistResponsible(actor)||game.user.isGM&&game.users.activeGM?.id===game.user.id;}
+function overload(actor){
+  const active=actor?.getFlag?.(MODULE_ID,"alchemistOverload");
+  if(!active||active.expiresAt<=Number(game.time?.worldTime??0))return null;
+  if(active.combatId&&(!game.combat?.started||game.combat.id!==active.combatId||Number(game.combat.round)>active.expiryRound))return null;
+  return active;
+}
 
 async function ensureKnown(actor){
   const level=alchemistLevel(actor),available={...BASIC,...(level>=11?ADVANCED:{})};
@@ -71,12 +78,97 @@ export async function reconfigureAlchemistPlatform(actor){
 }
 
 export function alchemistHasPlatformModule(actor,module,{equipped=true}={}){
-  return platforms(actor).some(entry=>entry.modules.includes(module)&&(actor.items??[]).some(item=>item.uuid===entry.itemUuid&&(!equipped||item.system?.equipped!==false)));
+  return platforms(actor).some(entry=>(entry.modules.includes(module)||overload(actor)?.itemUuid===entry.itemUuid&&overload(actor)?.module===module)&&(actor.items??[]).some(item=>item.uuid===entry.itemUuid&&(!equipped||item.system?.equipped!==false)));
 }
 
 export function alchemistPlatformModules(actor,itemUuid){
   const entry=platforms(actor).find(value=>value.itemUuid===itemUuid),item=(actor.items??[]).find(value=>value.uuid===itemUuid);
-  return entry&&item&&item.system?.equipped!==false?entry.modules:[];
+  return entry&&item&&item.system?.equipped!==false?[...entry.modules,...(overload(actor)?.itemUuid===itemUuid?[overload(actor).module]:[])]:[];
+}
+
+export async function applyAlchemistReactivePlatform(token,{damageItem}={}){
+  const actor=token?.actor??token?.document?.actor;
+  if(!actor||!resolver(actor)||!damageItem?.damageDetail?.some(part=>Number(part.value??part.damage??0)>0))return false;
+  const entry=platforms(actor).find(value=>alchemistPlatformModules(actor,value.itemUuid).includes("reactive"));
+  if(!entry)return false;
+  const turn=game.combat?.started?`${game.combat.id}:${game.combat.round}`:`free:${Math.floor(Date.now()/6000)}`;
+  if(actor.getFlag(MODULE_ID,"alchemistReactiveTurn")===turn)return false;
+  const state=alchemistState(actor),allowed=new Set(["alchemist-project-neutralizer","alchemist-project-converter","alchemist-project-adaptive-matrix","alchemist-school-project-prism"]);
+  const formulas=state.prepared.flatMap((formula,index)=>formula&&allowed.has(formula.projectKey)?[[String(index),`${index+1}. ${formula.label}`]]:[]);
+  if(!formulas.length)return false;
+  const accept=await Dialog.confirm({title:"Módulo Reativo",content:"<p>Você sofreu dano. Usar sua Reação para ativar uma Fórmula defensiva preparada nesta armadura ou escudo?</p>",yes:()=>true,no:()=>false,defaultYes:false});
+  if(!accept)return false;
+  const selected=await choose("Módulo Reativo","Escolha a Fórmula defensiva e pague seus PR.",formulas);if(selected===null)return false;
+  const target=token?.object??token;
+  const used=await activateAlchemistFormula(actor,Number(selected),{triggered:true,targetsOverride:[target],platformItemUuid:entry.itemUuid});
+  if(used)await actor.setFlag(MODULE_ID,"alchemistReactiveTurn",turn);
+  return !!used;
+}
+
+export async function activateAlchemistOverload(actor){
+  if(!alchemistCanOperate(actor)||!hasAlchemistFeature(actor,"alchemist-artificer-overload"))return false;
+  if(actor.getFlag(MODULE_ID,"alchemistOverloadUsed")){ui.notifications.warn("Nova Era: Sobrecarga Bélica já foi usada desde o Descanso Longo.");return false;}
+  const known=await ensureKnown(actor);if(!known)return false;
+  const entries=platforms(actor).map(entry=>({entry,item:actor.items.find(item=>item.uuid===entry.itemUuid)})).filter(value=>value.item?.system?.equipped!==false&&known.some(id=>!value.entry.modules.includes(id)&&compatible(id,value.item)));
+  const uuid=await choose("Sobrecarga Bélica","Escolha a Plataforma que receberá um Módulo temporário por 1 minuto.",entries.map(value=>[value.item.uuid,value.item.name]));if(!uuid)return false;
+  const {entry,item}=entries.find(value=>value.item.uuid===uuid);
+  const module=await choose("Módulo temporário","Escolha um Módulo conhecido e compatível.",known.filter(id=>!entry.modules.includes(id)&&compatible(id,item)).map(id=>[id,BASIC[id]??ADVANCED[id]]));if(!module)return false;
+  if(!await Dialog.confirm({title:"Sobrecarga Bélica",content:`<p>Ativar ${escape(BASIC[module]??ADVANCED[module])} em ${escape(item.name)} por 1 minuto? A primeira Fórmula da Plataforma em cada turno custa 1 PR a menos, mínimo 1, sem acumular descontos.</p>`,yes:()=>true,no:()=>false,defaultYes:false}))return false;
+  await actor.setFlag(MODULE_ID,"alchemistOverload",{itemUuid:uuid,module,expiresAt:Number(game.time?.worldTime??0)+60,combatId:game.combat?.started?game.combat.id:"",expiryRound:game.combat?.started?Number(game.combat.round)+10:0});
+  await actor.setFlag(MODULE_ID,"alchemistOverloadUsed",true);
+  await postAlchemist(actor,"Sobrecarga Bélica",`${escape(item.name)} recebeu ${escape(BASIC[module]??ADVANCED[module])} por 1 minuto.`);
+  return true;
+}
+
+export async function activateAlchemistPropulsor(actor){
+  if(!alchemistCanOperate(actor)||!alchemistHasPlatformModule(actor,"propulsor"))return false;
+  const used=Number(actor.getFlag(MODULE_ID,"alchemistPropulsorUsed")??0),limit=alchemistProficiency(actor);
+  if(used>=limit){ui.notifications.warn("Nova Era: os usos do Propulsor acabaram até o Descanso Longo.");return false;}
+  const accept=await Dialog.confirm({title:"Propulsor",content:`<p>Gastar Ação Bônus para mover até 3 m sem provocar Ataques de Oportunidade? Restam ${limit-used} usos.</p>`,yes:()=>true,no:()=>false,defaultYes:false});
+  if(!accept)return false;
+  await actor.setFlag(MODULE_ID,"alchemistPropulsorUsed",used+1);
+  await postAlchemist(actor,"Propulsor",`${escape(actor.name)} pode mover seu token até 3 m sem provocar Ataques de Oportunidade nesta Ação Bônus. Restam ${limit-used-1} usos.`);
+  return true;
+}
+
+async function offerImpactVector({actor,project,targets,platformItemUuid}){
+  if(!platformItemUuid||!resolver(actor)||!alchemistPlatformModules(actor,platformItemUuid).includes("impact")||project.getFlag(MODULE_ID,"role")!=="damage"||!targets?.length)return;
+  const turn=game.combat?.started?`${game.combat.id}:${game.combat.round}:${game.combat.turn}`:`free:${Math.floor(Date.now()/6000)}`;
+  if(actor.getFlag(MODULE_ID,"alchemistImpactTurn")===turn)return;
+  const sizes=["tiny","sm","med","lg","huge","grg"],sourceSize=sizes.indexOf(actor.system?.traits?.size??"med");
+  const eligible=targets.filter(token=>sizes.indexOf(token.actor?.system?.traits?.size??"med")<=sourceSize+1);
+  if(!eligible.length)return;
+  const chosen=await choose("Vetor de Impacto","Escolha um alvo atingido para empurrar até 3 m, ou cancele.",eligible.map((token,index)=>[String(index),token.name]));
+  if(chosen===null)return;
+  const target=eligible[Number(chosen)];if(!target)return;
+  if(!await Dialog.confirm({title:"Vetor de Impacto",content:`<p>Usar o Vetor neste turno para empurrar ${escape(target.name)} até 3 m? Mova o token pelo tabuleiro após confirmar.</p>`,yes:()=>true,no:()=>false,defaultYes:false}))return;
+  await actor.setFlag(MODULE_ID,"alchemistImpactTurn",turn);
+  await postAlchemist(actor,"Vetor de Impacto",`${escape(target.name)} pode ser empurrado até 3 m. O jogador ou Mestre posiciona o token respeitando obstáculos.`);
+}
+
+export function applyAlchemistStabilizer(workflow){
+  const actor=workflow?.actor??workflow?.item?.actor,item=workflow?.item,tracker=workflow?.attackRollModifierTracker;
+  if(!actor||!item||!tracker||!alchemistPlatformModules(actor,item.uuid).includes("stabilizer"))return false;
+  const sources=Object.keys(tracker.attribution?.DIS??{});
+  if(sources.length!==1||sources[0]!=="nearbyFoe")return false;
+  tracker.disadvantage.clear();
+  return true;
+}
+
+async function offerOverloadSwitch(combat){
+  const actor=combat?.combatant?.actor,active=overload(actor);
+  if(!active||!alchemistResponsible(actor))return;
+  const item=actor.items.find(value=>value.uuid===active.itemUuid),entry=platforms(actor).find(value=>value.itemUuid===active.itemUuid);
+  if(!item||!entry)return;
+  const known=actor.getFlag(MODULE_ID,"alchemistKnownModules")??[];
+  const choices=known.filter(id=>id!==active.module&&!entry.modules.includes(id)&&compatible(id,item));
+  if(!choices.length)return;
+  const change=await Dialog.confirm({title:"Sobrecarga Bélica",content:"<p>Seu turno começou. Trocar gratuitamente o Módulo temporário desta Plataforma?</p>",yes:()=>true,no:()=>false,defaultYes:false});
+  if(!change)return;
+  const module=await choose("Sobrecarga — novo Módulo","Escolha o Módulo temporário para este turno.",choices.map(id=>[id,BASIC[id]??ADVANCED[id]]));
+  if(!module)return;
+  await actor.setFlag(MODULE_ID,"alchemistOverload",{...active,module});
+  await postAlchemist(actor,"Sobrecarga Bélica",`Módulo temporário alterado para ${escape(BASIC[module]??ADVANCED[module])}.`);
 }
 
 export async function activateAlchemistThroughPlatform(actor){
@@ -85,19 +177,19 @@ export async function activateAlchemistThroughPlatform(actor){
   if(!entries.length){ui.notifications.warn("Nova Era: configure e equipe uma Plataforma antes de ativar uma Fórmula por ela.");return false;}
   const itemUuid=await choose("Plataforma Bélica","Escolha a Plataforma usada na ativação.",entries.map(value=>[value.item.uuid,value.item.name]));if(!itemUuid)return false;
   const modules=alchemistPlatformModules(actor,itemUuid),state=alchemistState(actor);
-  const formulas=state.prepared.flatMap((formula,index)=>formula&&((modules.includes("launcher")&&["flask","grenade"].includes(formula.container))||(modules.includes("injector")&&formula.container==="syringe"))?[[String(index),(index+1)+". "+formula.label]]:[]);
-  if(!formulas.length){ui.notifications.warn("Nova Era: esta Plataforma não possui Fórmula preparada compatível com Lançador ou Injetor.");return false;}
+  const formulas=state.prepared.flatMap((formula,index)=>formula?[[String(index),(index+1)+". "+formula.label]]:[]);
+  if(!formulas.length){ui.notifications.warn("Nova Era: prepare uma Fórmula antes de ativá-la pela Plataforma.");return false;}
   const slotChoice=await choose("Fórmula da Plataforma","Escolha a Fórmula. O Injetor exige um acerto da arma; o Lançador concede +6 m.",formulas);if(slotChoice===null)return false;
   const slot=Number(slotChoice),formula=state.prepared[slot];
-  if(formula.container==="syringe"){
+  if(formula.container==="syringe"&&modules.includes("injector")){
     const hit=await Dialog.confirm({title:"Injetor",content:"<p>O ataque desta arma acertou o alvo selecionado? A Fórmula usa esse acerto e não faz um segundo ataque.</p>",yes:()=>true,no:()=>false,defaultYes:false});if(!hit)return false;
   }
-  return activateAlchemistFormula(actor,slot,{platformItemUuid:itemUuid,deliveryConfirmed:formula.container==="syringe"});
+  return activateAlchemistFormula(actor,slot,{platformItemUuid:itemUuid,deliveryConfirmed:formula.container==="syringe"&&modules.includes("injector")});
 }
 
 async function injectorOnHit(workflow){
   const actor=workflow?.actor??workflow?.item?.actor,item=workflow?.item;
-  if(!actor||!item||!alchemistResponsible(actor)||!alchemistPlatformModules(actor,item.uuid).includes("injector"))return;
+  if(!actor||!item||!resolver(actor)||!alchemistPlatformModules(actor,item.uuid).includes("injector"))return;
   const hit=[...(workflow.hitTargets??[])][0];if(!hit)return;
   const state=alchemistState(actor),formulas=state.prepared.flatMap((formula,index)=>formula?.container==="syringe"?[[String(index),(index+1)+". "+formula.label]]:[]);
   if(!formulas.length)return;
@@ -108,10 +200,16 @@ async function injectorOnHit(workflow){
 
 export function registerAlchemistArtificerAutomation(){
   Hooks.on("midi-qol.DamageRollComplete",workflow=>void injectorOnHit(workflow));
+  Hooks.on("midi-qol.preAttackRollConfig",workflow=>{applyAlchemistStabilizer(workflow);});
+  Hooks.on("novaEraAlchemistFormulaResolved",data=>void offerImpactVector(data));
+  Hooks.on("updateCombat",(combat,changed)=>{if(changed.turn!==undefined||changed.round!==undefined)void offerOverloadSwitch(combat);});
   Hooks.on("dnd5e.restCompleted",(actor,result,config)=>{
     if(!alchemistResponsible(actor)||!(result?.longRest===true||result?.type==="long"||config?.type==="long"))return;
     void actor.setFlag(MODULE_ID,"alchemistPlatformRestEpoch",Number(actor.getFlag(MODULE_ID,"alchemistPlatformRestEpoch")??0)+1);
     void actor.setFlag(MODULE_ID,"alchemistReconfigureUsed",0);
     void actor.setFlag(MODULE_ID,"alchemistChamberUsed",0);
+    void actor.setFlag(MODULE_ID,"alchemistPropulsorUsed",0);
+    void actor.unsetFlag(MODULE_ID,"alchemistOverloadUsed");
+    void actor.unsetFlag(MODULE_ID,"alchemistOverload");
   });
 }

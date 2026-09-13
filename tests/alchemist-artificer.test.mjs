@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MODULE_ID } from "../scripts/constants.mjs";
-import { alchemistHasPlatformModule, configureAlchemistPlatforms } from "../scripts/alchemist/artificer-automation.mjs";
+import { alchemistHasPlatformModule, alchemistPlatformModules, applyAlchemistStabilizer, configureAlchemistPlatforms } from "../scripts/alchemist/artificer-automation.mjs";
 
 const player={id:"player",active:true,isGM:false};
-globalThis.game={user:player,users:[player],combat:null};
+globalThis.game={user:player,users:[player],combat:null,time:{worldTime:0}};
 globalThis.foundry={utils:{escapeHTML:value=>String(value)}};
 globalThis.ChatMessage={getSpeaker:()=>({}),create:async()=>({})};
 globalThis.ui={notifications:{warn(){},info(){}}};
@@ -20,4 +20,26 @@ test("Plataforma guarda apenas Módulos conhecidos e compatíveis",async()=>{
   assert.equal(alchemistHasPlatformModule(actor,"reactiveArmor"),false);
   weapon.system.equipped=false;
   assert.equal(alchemistHasPlatformModule(actor,"injector"),false);
+});
+
+test("Sobrecarga adiciona apenas o Módulo temporário e expira após um minuto",async()=>{
+  weapon.system.equipped=true;
+  actor.flags[MODULE_ID].alchemistPlatforms=[{itemUuid:weapon.uuid,modules:["injector","launcher"]}];
+  actor.flags[MODULE_ID].alchemistOverload={itemUuid:weapon.uuid,module:"impact",expiresAt:60,combatId:"",expiryRound:0};
+  assert.deepEqual(alchemistPlatformModules(actor,weapon.uuid),["injector","launcher","impact"]);
+  game.time.worldTime=61;
+  assert.deepEqual(alchemistPlatformModules(actor,weapon.uuid),["injector","launcher"]);
+});
+
+test("Estabilizador remove só a desvantagem por inimigo próximo",()=>{
+  game.time.worldTime=0;
+  actor.flags[MODULE_ID].alchemistOverload=null;
+  actor.flags[MODULE_ID].alchemistPlatforms=[{itemUuid:weapon.uuid,modules:["stabilizer"]}];
+  let cleared=0;
+  const tracker={attribution:{DIS:{nearbyFoe:"Nearby foe"}},disadvantage:{clear(){cleared++;}}};
+  assert.equal(applyAlchemistStabilizer({actor,item:weapon,attackRollModifierTracker:tracker}),true);
+  assert.equal(cleared,1);
+  tracker.attribution.DIS.invisible="Invisible foe";
+  assert.equal(applyAlchemistStabilizer({actor,item:weapon,attackRollModifierTracker:tracker}),false);
+  assert.equal(cleared,1);
 });

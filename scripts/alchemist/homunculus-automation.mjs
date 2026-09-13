@@ -1,5 +1,5 @@
 import { MODULE_ID } from "../constants.mjs";
-import { activateAlchemistFormula, alchemistCanOperate, alchemistIntelligence, alchemistLevel, alchemistProficiency, alchemistResponsible, alchemistState, applyAlchemistHealing, hasAlchemistFeature, isNovaEraAlchemist, postAlchemist } from "./core-automation.mjs";
+import { activateAlchemistFormula, alchemistCanOperate, alchemistDocumentAction, alchemistIntelligence, alchemistLevel, alchemistProficiency, alchemistResponsible, alchemistState, applyAlchemistHealing, hasAlchemistFeature, isNovaEraAlchemist, postAlchemist } from "./core-automation.mjs";
 
 const SOCKET_TYPE="alchemistHomunculus";
 const ICON="icons/creatures/magical/construct-golem-stone-blue.webp";
@@ -9,6 +9,11 @@ function sourceToken(actor){return actor.getActiveTokens?.()[0]??null;}
 function bodyExists(actor){return game.scenes?.some(scene=>scene.tokens?.some(token=>token.actorId===actor.id))??false;}
 function distance(a,b){try{return Number(canvas.grid.measurePath([a.center,b.center]).distance??Infinity);}catch{return Infinity;}}
 function turnKey(){return game.combat?.started?`${game.combat.id}:${game.combat.round}:${game.combat.turn}`:"";}
+async function applyDodge(master,servant){
+  await alchemistDocumentAction(servant,"effect",{effect:{name:"Homúnculo — Esquiva",img:ICON,origin:master.uuid,disabled:false,duration:{seconds:6,rounds:1,startTime:game.time?.worldTime,startRound:game.combat?.round,startTurn:game.combat?.turn},changes:[{key:"flags.midi-qol.grants.disadvantage.attack.all",mode:CONST.ACTIVE_EFFECT_MODES.OVERRIDE,value:"1",priority:20}],flags:{[MODULE_ID]:{alchemistEffect:"homunculus-dodge",alchemistHomunculusDodge:true}}}});
+  await postAlchemist(master,"Homúnculo — Esquiva",`${escape(servant.name)} busca segurança; ataques contra ele têm desvantagem até o início de seu próximo turno.`);
+}
+async function clearDodge(servant){for(const effect of [...(servant.effects??[])].filter(value=>value.getFlag(MODULE_ID,"alchemistHomunculusDodge")))await alchemistDocumentAction(servant,"effect-delete",{id:effect.id});}
 
 async function createHomunculus(data){
   if(!game.user.isGM||game.users.activeGM?.id!==game.user.id)return false;
@@ -73,16 +78,27 @@ export async function openHomunculusControl(actor){
   if(choice==="load"){
     const entries=state.prepared.flatMap((entry,index)=>entry?[[String(index),`${index+1}. ${entry.label}`]]:[]);if(!entries.length)return ui.notifications.warn("Nova Era: não há Fórmula preparada para carregar.");
     const selected=await Dialog.prompt({title:"Carregar Fórmula",content:`<form><p>Requer 1 minuto com o Kit.</p><select name="slot">${entries.map(([value,label])=>`<option value="${value}">${escape(label)}</option>`).join("")}</select></form>`,label:"Carregar",callback:html=>Number(html.find("[name='slot']").val()),rejectClose:false});
-    if(selected===null)return false;await servant.setFlag(MODULE_ID,"alchemistCarriedSlot",selected);await postAlchemist(actor,"Homúnculo preparado",`O Homúnculo carrega <strong>${escape(state.prepared[selected]?.label)}</strong>.`);return true;
+    if(selected===null)return false;await servant.setFlag(MODULE_ID,"alchemistCarriedSlot",selected);await servant.setFlag(MODULE_ID,"alchemistCarriedReadyAt",Number(game.time?.worldTime??0)+60);await servant.setFlag(MODULE_ID,"alchemistCarriedReadyRound",game.combat?.started?Number(game.combat.round)+10:0);await servant.setFlag(MODULE_ID,"alchemistCarriedCombatId",game.combat?.started?game.combat.id:"");await postAlchemist(actor,"Homúnculo preparado",`O Homúnculo começou a carregar <strong>${escape(state.prepared[selected]?.label)}</strong>. A entrega estará disponível após 1 minuto com o Kit.`);return true;
   }
   if(choice==="deliver"){
     if(slot===null||!state.prepared[slot])return ui.notifications.warn("Nova Era: carregue uma Fórmula primeiro.");
+    const readyAt=Number(servant.getFlag(MODULE_ID,"alchemistCarriedReadyAt")??0),readyRound=Number(servant.getFlag(MODULE_ID,"alchemistCarriedReadyRound")??0),readyCombat=servant.getFlag(MODULE_ID,"alchemistCarriedCombatId");
+    if(Number(game.time?.worldTime??0)<readyAt&&(!readyCombat||!game.combat?.started||game.combat.id!==readyCombat||Number(game.combat.round)<readyRound)){ui.notifications.warn("Nova Era: carregar a Fórmula no Homúnculo requer 1 minuto com o Kit.");return false;}
     const masterToken=sourceToken(actor),servantToken=sourceToken(servant);if(masterToken&&servantToken&&distance(masterToken,servantToken)>18)return ui.notifications.warn("Nova Era: o Homúnculo deve estar a até 18 m do Alquimista.");
     if(!servantToken){ui.notifications.warn("Nova Era: coloque o token do Homúnculo na cena antes de entregar uma Fórmula.");return false;}
-    const delivered=await activateAlchemistFormula(actor,slot,{sourceToken:servantToken});if(delivered&&turn)await actor.setFlag(MODULE_ID,"alchemistHomunculusCommandTurn",turn);return delivered;
+    const delivered=await activateAlchemistFormula(actor,slot,{sourceToken:servantToken});if(delivered){await clearDodge(servant);if(turn)await actor.setFlag(MODULE_ID,"alchemistHomunculusCommandTurn",turn);}return delivered;
   }
-  if(choice==="move"&&turn)await actor.setFlag(MODULE_ID,"alchemistHomunculusCommandTurn",turn);
-  await postAlchemist(actor,"Ordem ao Homúnculo",choice==="move"?"O Homúnculo pode mover-se ou Interagir com Objeto. Mova o token para registrar a posição final.":"Sem nova ordem, o Homúnculo busca segurança e usa Esquiva.");return true;
+  if(choice==="move"){await clearDodge(servant);if(turn)await actor.setFlag(MODULE_ID,"alchemistHomunculusCommandTurn",turn);await postAlchemist(actor,"Ordem ao Homúnculo","O Homúnculo pode mover-se ou Interagir com Objeto. Mova o token para registrar a posição final.");return true;}
+  await applyDodge(actor,servant);return true;
+}
+
+async function automaticDodge(combat,changed){
+  if(changed.turn===undefined&&changed.round===undefined)return;
+  const servant=combat.combatant?.actor,master=servant?.getFlag(MODULE_ID,"alchemistHomunculusMaster")?await fromUuid(servant.getFlag(MODULE_ID,"alchemistHomunculusMaster")):null;
+  if(!master||!alchemistResponsible(master))return;
+  const command=String(master.getFlag(MODULE_ID,"alchemistHomunculusCommandTurn")??"");
+  if(command.startsWith(`${combat.id}:${combat.round}:`))return;
+  await applyDodge(master,servant);
 }
 
 async function rest(actor,result,config={}){
@@ -98,4 +114,5 @@ async function rest(actor,result,config={}){
 export function registerAlchemistHomunculusAutomation(){
   game.socket.on(`module.${MODULE_ID}`,payload=>{if(payload?.type!==SOCKET_TYPE)return;if(payload.action==="create")void createHomunculus(payload.data);if(payload.action==="reconstruct")void reconstructHomunculus(payload.data);});
   Hooks.on("dnd5e.restCompleted",(actor,result,config)=>void rest(actor,result,config));
+  Hooks.on("updateCombat",(combat,changed)=>void automaticDodge(combat,changed));
 }

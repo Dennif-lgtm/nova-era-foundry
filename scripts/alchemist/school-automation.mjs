@@ -26,8 +26,17 @@ async function addAdaptation(source,target,kind,{chimera=false}={}){
     if(!type)return false;changes.push({key:"system.traits.dr.value",mode:CONST.ACTIVE_EFFECT_MODES.ADD,value:type,priority:20});extra.alchemistCarapaceType=type;
   }
   if(kind==="amphibious")changes.push({key:"system.attributes.movement.swim",mode:CONST.ACTIVE_EFFECT_MODES.OVERRIDE,value:String(target.system?.attributes?.movement?.walk??9),priority:20});
+  let replaced=null;
+  if(!chimera&&present.length>=limit){
+    if(present.length===1)replaced=present[0];
+    else{
+      const selected=await Dialog.prompt({title:"Engenharia da Vida",content:`<form><p>Escolha qual Adaptação de ${escape(target.name)} será substituída.</p><select name="id">${present.map(effect=>`<option value="${escape(effect.id)}">${escape(effect.name)}</option>`).join("")}</select></form>`,label:"Substituir",callback:html=>String(html.find("[name='id']").val()),rejectClose:false});
+      if(!selected)return false;
+      replaced=present.find(effect=>effect.id===selected);if(!replaced)return false;
+    }
+  }
   if(superior&&!chimera&&!await spendReagentPoints(source,1,"Reescrita Orgânica"))return false;
-  if(!chimera&&present.length>=limit){const old=present[0];await alchemistDocumentAction(target,"effect-delete",{id:old.id});}
+  if(replaced)await alchemistDocumentAction(target,"effect-delete",{id:replaced.id});
   const duration=chimera||superior?60:600;
   await alchemistDocumentAction(target,"effect",{effect:{name:`${chimera?"Forma Quimérica — ":"Adaptação "}${BASIC[kind]??SUPERIOR[kind]}`,img:ICON,origin:source.uuid,disabled:false,duration:{seconds:duration,startTime:now(),rounds:duration/6,startRound:game.combat?.round,startTurn:game.combat?.turn},changes,flags:{[MODULE_ID]:{alchemistEffect:`${chimera?"chimera":"adaptation"}:${source.id}:${kind}`, ...extra}}}});
   await postAlchemist(source,chimera?"Forma Quimérica":"Adaptação Induzida",`<strong>${escape(target.name)}</strong> recebe ${escape(BASIC[kind]??SUPERIOR[kind])} por ${duration/60} minuto${duration===60?"":"s"}.${["metabolic","amphibious"].includes(kind)?" A vantagem específica ou a respiração devem ser observadas na resolução do teste.":""}`);

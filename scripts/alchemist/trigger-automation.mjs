@@ -1,7 +1,7 @@
 import { MODULE_ID } from "../constants.mjs";
 import {
   activateAlchemistFormula, alchemistAnatomyBonus, alchemistDocumentAction, alchemistProficiency, alchemistResponsible, alchemistState, applyAlchemistHealing,
-  isNovaEraAlchemist, postAlchemist, resolveDelayedAlchemistFormula, rollAlchemist, updateAlchemistState
+  applyAlchemistDamage, isNovaEraAlchemist, postAlchemist, resolveDelayedAlchemistFormula, rollAlchemist, updateAlchemistState
 } from "./core-automation.mjs";
 
 const processing = new Set();
@@ -10,9 +10,42 @@ const beforeHp = new Map();
 const endingCombatants = new Map();
 const symbiosisUsed=new Set();
 const now = () => Number(game.time?.worldTime ?? 0);
+const resolver=actor=>alchemistResponsible(actor)||game.user.isGM&&game.users.activeGM?.id===game.user.id;
+const chainDamageType={igneous:"fire",cryogenic:"cold",corrosive:"acid",toxic:"poison"};
+
+export async function handleAlchemistChainReaction({actor,formula,targets}){
+  if(!resolver(actor))return;
+  for(const token of targets){
+    const target=token?.actor;
+    if(!target)continue;
+    for(const active of [...(target.effects??[])]){
+      const chain=active.getFlag(MODULE_ID,"alchemistChainReaction");
+      if(!chain||active.disabled||chain.projectKey===formula.projectKey)continue;
+      const source=await fromUuid(chain.sourceUuid);
+      await alchemistDocumentAction(target,"effect-delete",{id:active.id});
+      const damage=await rollAlchemist(source??actor,"3d6","Reação em Cadeia");
+      await applyAlchemistDamage(target,damage,chainDamageType[chain.compound]??"force",source??actor);
+      await postAlchemist(source??actor,"Reação em Cadeia",`${foundry.utils.escapeHTML(target.name)} recebeu ${damage} de dano quando outra Fórmula atingiu a marca.`);
+    }
+  }
+}
+
+export async function handleAlchemistEthericInterference(workflow){
+  const actor=workflow?.actor??workflow?.item?.actor,item=workflow?.item;
+  if(!actor||!resolver(actor)||!item||item.type!=="spell"&&!item.system?.properties?.has?.("mgc"))return;
+  const key=game.combat?.started?`${game.combat.id}:${game.combat.round}`:`free:${Math.floor(Date.now()/6000)}`;
+  for(const active of [...(actor.effects??[])]){
+    if(active.disabled||!active.getFlag(MODULE_ID,"alchemistEthericInterference")||active.getFlag(MODULE_ID,"alchemistEthericInterferenceTurn")===key)continue;
+    const source=await fromUuid(active.getFlag(MODULE_ID,"sourceUuid"));
+    await alchemistDocumentAction(actor,"effect-flag",{id:active.id,key:"alchemistEthericInterferenceTurn",value:key});
+    const damage=await rollAlchemist(source??actor,"2d6","Interferente Etérico");
+    await applyAlchemistDamage(actor,damage,"force",source??null);
+    break;
+  }
+}
 
 async function handleSymbiosis({actor,project,targets}){
-  if(!alchemistResponsible(actor)||project.getFlag(MODULE_ID,"contentKey")==="alchemist-project-symbiotic-catalyst")return;
+  if(!resolver(actor)||project.getFlag(MODULE_ID,"contentKey")==="alchemist-project-symbiotic-catalyst")return;
   const role=project.getFlag(MODULE_ID,"role");
   if(!["healing","support","defense"].includes(role))return;
   const turn=game.combat?.started?`${game.combat.id}:${game.combat.round}`:`free:${Math.floor(Date.now()/6000)}`;
@@ -103,6 +136,7 @@ async function expire() {
     if(!alchemistResponsible(actor))continue;
     const state=alchemistState(actor),active=state.active.filter(entry=>entry.charges>0&&entry.expiresAt>now());
     if(active.length!==state.active.length)await updateAlchemistState(actor,{active},"Preparações expiradas");
+    if(state.improvised&&!state.improvised.experimentCombatId&&state.improvised.experimentExpiresAt&&state.improvised.experimentExpiresAt<=now())await updateAlchemistState(actor,{improvised:null},"Experimentação expirada");
   }
 }
 
@@ -128,6 +162,8 @@ async function processDelayed(combat=null){
 
 export function registerAlchemistTriggerAutomation() {
   Hooks.on("novaEraAlchemistFormulaResolved",data=>void handleSymbiosis(data));
+  Hooks.on("novaEraAlchemistFormulaResolved",data=>void handleAlchemistChainReaction(data));
+  Hooks.on("midi-qol.preItemRoll",workflow=>void handleAlchemistEthericInterference(workflow));
   Hooks.on("dnd5e.rollSavingThrow",(rolls,{subject}={})=>{
     if(!subject||!alchemistResponsible(subject))return;
     for(const effect of [...(subject.effects??[])].filter(value=>value.getFlag(MODULE_ID,"alchemistSymbioticSave")))void alchemistDocumentAction(subject,"effect-delete",{id:effect.id});
@@ -152,11 +188,15 @@ export function registerAlchemistTriggerAutomation() {
     void handle("movement",document.actor,document);
   });
   Hooks.on("preUpdateCombat",(combat,changed)=>{
-    if(changed.round!==undefined||changed.turn!==undefined)endingCombatants.set(combat.id,combat.combatant?.actor??null);
+    if(changed.round!==undefined||changed.turn!==undefined)endingCombatants.set(combat.id,{actor:combat.combatant?.actor??null,round:Number(combat.round)});
   });
   Hooks.on("updateCombat",(combat,changed)=>{
     if(changed.round===undefined&&changed.turn===undefined)return;
-    const ending=endingCombatants.get(combat.id);endingCombatants.delete(combat.id);
+    const ended=endingCombatants.get(combat.id),ending=ended?.actor;endingCombatants.delete(combat.id);
+    if(ending&&isNovaEraAlchemist(ending)&&alchemistResponsible(ending)){
+      const improvised=alchemistState(ending).improvised;
+      if(improvised?.experimentCombatId===combat.id&&ended.round>=improvised.experimentExpiryRound)void updateAlchemistState(ending,{improvised:null},"Experimentação expirada no fim do próximo turno");
+    }
     if(ending&&game.user.isGM&&game.users.activeGM?.id===game.user.id)void (async()=>{
       for(const activeEffect of [...ending.effects]){
         const save=activeEffect.getFlag(MODULE_ID,"saveEndTurn");if(!save)continue;

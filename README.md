@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante e Alquimista de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.32.0-rc.2 — Maleta e efeitos avançados do Alquimista
+
+- Amplia os fluxos da maleta para Controle, Reação em Cadeia, Interferente Etérico, Transferência, Eco Recursivo e Transposição em duas etapas.
+- Acrescenta proteções de Contenção e Condutor, entrega do Artífice por Plataforma, Módulo Reativo, Sobrecarga, Dispersor, Propulsor e Vetor.
+- Melhora Homúnculo, Engenharia da Vida, Metamorfose e revestimento de três munições.
+- Limita a Matriz de Compatibilidade a exceções de recipiente com resolução segura; vínculos inválidos não gastam PR.
+- Esta ainda é uma versão de testes. Aplicações dependentes da cena são guiadas pelo Mestre; veja a [matriz de automação](docs/alchemist-automation-matrix.md).
+
 ### v0.32.0-rc.1 — Prévia de automações do Alquimista
 
 - Amplia os efeitos automáticos de Fórmulas, preparação, reservas, danos, curas e proteções reativas.
