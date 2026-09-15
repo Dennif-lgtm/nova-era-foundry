@@ -9,6 +9,14 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante e Alquimista de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.32.0-rc.4 — Dardo e Homúnculo do Alquimista
+
+- Faz a Carga Alquímica entregue por Dardo realizar um ataque real de Destreza + Proficiência e bônus de ataques à distância contra a CA do alvo.
+- O dano do Dardo só é rolado e aplicado após um acerto; um disparo que erra ainda consome os PR da ativação.
+- Reduz o carregamento ou troca de Fórmula do Homúnculo de dez rodadas para uma rodada, ou seis segundos fora de combate.
+- Mantém a entrega pelo Homúnculo como Ação Bônus, usando os PR, alcance e limite de Catalisação do Alquimista.
+- Inclui testes de regressão para acerto/erro do Dardo e para a disponibilidade da Fórmula do Homúnculo na rodada seguinte.
+
 ### v0.32.0-rc.3 — Correção da duração do Frenesi
 
 - Durante combate, o minuto sem violência do Berserker passa a contar como dez rodadas, não como sessenta segundos reais.

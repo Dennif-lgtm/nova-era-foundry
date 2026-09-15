@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { MODULE_ID } from "../scripts/constants.mjs";
-import { activateAlchemistCompatibility, activateAlchemistRecursiveEcho, activateAlchemistTransposition, resolveAlchemistControl, resolveAlchemistTransfer } from "../scripts/alchemist/core-automation.mjs";
+import { activateAlchemistCompatibility, activateAlchemistFormula, activateAlchemistRecursiveEcho, activateAlchemistTransposition, resolveAlchemistControl, resolveAlchemistTransfer } from "../scripts/alchemist/core-automation.mjs";
 import { handleAlchemistChainReaction, handleAlchemistEthericInterference } from "../scripts/alchemist/trigger-automation.mjs";
 import { markAlchemistCoatedAmmunition } from "../scripts/alchemist/damage-interception.mjs";
 
@@ -123,6 +123,24 @@ test("Compatibilidade antiga com composto fundamentalmente incompatível não ga
   assert.equal(await activateAlchemistCompatibility(source),false);
   assert.equal(source.flags[MODULE_ID].alchemistState.points,5);
   assert.equal(target.system.attributes.hp.value,30);
+});
+
+test("Carga Alquímica em Dardo exige acerto antes de aplicar o dano",async()=>{
+  const source=actor("Dardista",{alchemist:true}),target=actor("AlvoDardo",{hp:30});
+  source.items.push({name:"Carga Alquímica",getFlag:(scope,key)=>key==="contentKey"?"alchemist-project-charge":key==="role"?"damage":key==="dice"?"2d6":key==="reagentCost"?1:key==="containers"?["dart"]:null});
+  source.flags[MODULE_ID].alchemistState={points:5,prepared:[{label:"Carga Ígnea de Dardo",projectKey:"alchemist-project-charge",projectName:"Carga Alquímica",compound:"igneous",container:"dart",modifiers:[],cost:1}]};
+  gm.targets=new Set([{actor:target,name:target.name}]);
+  globalThis.Dialog={confirm:async()=>true};
+  const totals=[9,20,6],formulas=[];
+  globalThis.Roll=class{constructor(formula){this.formula=formula;this.total=totals.shift();formulas.push(formula);}async evaluate(){return this;}async toMessage(){}};
+  assert.equal(await activateAlchemistFormula(source,0),true);
+  assert.equal(target.system.attributes.hp.value,30);
+  assert.equal(formulas.length,1);
+  assert.match(formulas[0],/^1d20/);
+  assert.equal(await activateAlchemistFormula(source,0),true);
+  assert.equal(target.system.attributes.hp.value,24);
+  assert.deepEqual(formulas.map(value=>String(value).startsWith("1d20")?"attack":"damage"),["attack","attack","damage"]);
+  assert.equal(source.flags[MODULE_ID].alchemistState.points,3);
 });
 
 test("Revestimento de munição consome as três peças mesmo sem acerto",async()=>{

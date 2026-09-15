@@ -3,12 +3,20 @@ import { activateAlchemistFormula, alchemistCanOperate, alchemistDocumentAction,
 
 const SOCKET_TYPE="alchemistHomunculus";
 const ICON="icons/creatures/magical/construct-golem-stone-blue.webp";
+const LOAD_SECONDS=6;
 function escape(value){return foundry.utils.escapeHTML(String(value??""));}
 function homunculus(actor){return game.actors.find(other=>other.getFlag(MODULE_ID,"alchemistHomunculusMaster")===actor.uuid)??null;}
 function sourceToken(actor){return actor.getActiveTokens?.()[0]??null;}
 function bodyExists(actor){return game.scenes?.some(scene=>scene.tokens?.some(token=>token.actorId===actor.id))??false;}
 function distance(a,b){try{return Number(canvas.grid.measurePath([a.center,b.center]).distance??Infinity);}catch{return Infinity;}}
 function turnKey(){return game.combat?.started?`${game.combat.id}:${game.combat.round}:${game.combat.turn}`:"";}
+export function alchemistHomunculusDeliveryReady(servant,{worldTime=Number(game.time?.worldTime??0),combat=game.combat}={}){
+  const readyAt=Number(servant?.getFlag?.(MODULE_ID,"alchemistCarriedReadyAt")??0);
+  const readyRound=Number(servant?.getFlag?.(MODULE_ID,"alchemistCarriedReadyRound")??0);
+  const readyCombat=String(servant?.getFlag?.(MODULE_ID,"alchemistCarriedCombatId")??"");
+  if(worldTime>=readyAt)return true;
+  return Boolean(readyCombat&&combat?.started&&combat.id===readyCombat&&Number(combat.round)>=readyRound);
+}
 async function applyDodge(master,servant){
   await alchemistDocumentAction(servant,"effect",{effect:{name:"Homúnculo — Esquiva",img:ICON,origin:master.uuid,disabled:false,duration:{seconds:6,rounds:1,startTime:game.time?.worldTime,startRound:game.combat?.round,startTurn:game.combat?.turn},changes:[{key:"flags.midi-qol.grants.disadvantage.attack.all",mode:CONST.ACTIVE_EFFECT_MODES.OVERRIDE,value:"1",priority:20}],flags:{[MODULE_ID]:{alchemistEffect:"homunculus-dodge",alchemistHomunculusDodge:true}}}});
   await postAlchemist(master,"Homúnculo — Esquiva",`${escape(servant.name)} busca segurança; ataques contra ele têm desvantagem até o início de seu próximo turno.`);
@@ -72,18 +80,17 @@ export async function openHomunculusControl(actor){
   }
   if(Number(servant.system?.attributes?.hp?.value??0)<=0){ui.notifications.warn("Nova Era: o Homúnculo está Inerte. Repare-o ou conclua um Descanso Longo.");return false;}
   const state=alchemistState(actor),slot=servant.getFlag(MODULE_ID,"alchemistCarriedSlot");
-  const choice=await Dialog.prompt({title:`Homúnculo — ${actor.name}`,content:`<form class="nova-era alchemist-choice"><p>PV ${servant.system.attributes.hp.value}/${servant.system.attributes.hp.max} · Fórmula carregada: ${slot===null?"nenhuma":escape(state.prepared[slot]?.label??"encaixe vazio")}</p><select name="action"><option value="deliver">Entregar Fórmula carregada (Ação Bônus de comando)</option><option value="load">Trocar Fórmula carregada (1 minuto com Kit)</option><option value="move">Mover ou Interagir (Ação Bônus de comando)</option><option value="dodge">Esquiva / buscar segurança</option></select></form>`,label:"Continuar",callback:html=>String(html.find("[name='action']").val()),rejectClose:false});
+  const choice=await Dialog.prompt({title:`Homúnculo — ${actor.name}`,content:`<form class="nova-era alchemist-choice"><p>PV ${servant.system.attributes.hp.value}/${servant.system.attributes.hp.max} · Fórmula carregada: ${slot===null?"nenhuma":escape(state.prepared[slot]?.label??"encaixe vazio")}</p><select name="action"><option value="deliver">Entregar Fórmula carregada (Ação Bônus de comando)</option><option value="load">Trocar Fórmula carregada (pronta na próxima rodada)</option><option value="move">Mover ou Interagir (Ação Bônus de comando)</option><option value="dodge">Esquiva / buscar segurança</option></select></form>`,label:"Continuar",callback:html=>String(html.find("[name='action']").val()),rejectClose:false});
   if(!choice)return false;
   const turn=turnKey();if(["deliver","move"].includes(choice)&&turn&&actor.getFlag(MODULE_ID,"alchemistHomunculusCommandTurn")===turn){ui.notifications.warn("Nova Era: o Homúnculo já recebeu uma ordem com Ação Bônus neste turno.");return false;}
   if(choice==="load"){
     const entries=state.prepared.flatMap((entry,index)=>entry?[[String(index),`${index+1}. ${entry.label}`]]:[]);if(!entries.length)return ui.notifications.warn("Nova Era: não há Fórmula preparada para carregar.");
-    const selected=await Dialog.prompt({title:"Carregar Fórmula",content:`<form><p>Requer 1 minuto com o Kit.</p><select name="slot">${entries.map(([value,label])=>`<option value="${value}">${escape(label)}</option>`).join("")}</select></form>`,label:"Carregar",callback:html=>Number(html.find("[name='slot']").val()),rejectClose:false});
-    if(selected===null)return false;await servant.setFlag(MODULE_ID,"alchemistCarriedSlot",selected);await servant.setFlag(MODULE_ID,"alchemistCarriedReadyAt",Number(game.time?.worldTime??0)+60);await servant.setFlag(MODULE_ID,"alchemistCarriedReadyRound",game.combat?.started?Number(game.combat.round)+10:0);await servant.setFlag(MODULE_ID,"alchemistCarriedCombatId",game.combat?.started?game.combat.id:"");await postAlchemist(actor,"Homúnculo preparado",`O Homúnculo começou a carregar <strong>${escape(state.prepared[selected]?.label)}</strong>. A entrega estará disponível após 1 minuto com o Kit.`);return true;
+    const selected=await Dialog.prompt({title:"Carregar Fórmula",content:`<form><p>A Fórmula ficará pronta na próxima rodada (6 segundos).</p><select name="slot">${entries.map(([value,label])=>`<option value="${value}">${escape(label)}</option>`).join("")}</select></form>`,label:"Carregar",callback:html=>Number(html.find("[name='slot']").val()),rejectClose:false});
+    if(selected===null)return false;await servant.setFlag(MODULE_ID,"alchemistCarriedSlot",selected);await servant.setFlag(MODULE_ID,"alchemistCarriedReadyAt",Number(game.time?.worldTime??0)+LOAD_SECONDS);await servant.setFlag(MODULE_ID,"alchemistCarriedReadyRound",game.combat?.started?Number(game.combat.round)+1:0);await servant.setFlag(MODULE_ID,"alchemistCarriedCombatId",game.combat?.started?game.combat.id:"");await postAlchemist(actor,"Homúnculo preparado",`O Homúnculo começou a carregar <strong>${escape(state.prepared[selected]?.label)}</strong>. A entrega estará disponível na próxima rodada.`);return true;
   }
   if(choice==="deliver"){
     if(slot===null||!state.prepared[slot])return ui.notifications.warn("Nova Era: carregue uma Fórmula primeiro.");
-    const readyAt=Number(servant.getFlag(MODULE_ID,"alchemistCarriedReadyAt")??0),readyRound=Number(servant.getFlag(MODULE_ID,"alchemistCarriedReadyRound")??0),readyCombat=servant.getFlag(MODULE_ID,"alchemistCarriedCombatId");
-    if(Number(game.time?.worldTime??0)<readyAt&&(!readyCombat||!game.combat?.started||game.combat.id!==readyCombat||Number(game.combat.round)<readyRound)){ui.notifications.warn("Nova Era: carregar a Fórmula no Homúnculo requer 1 minuto com o Kit.");return false;}
+    if(!alchemistHomunculusDeliveryReady(servant)){ui.notifications.warn("Nova Era: a Fórmula do Homúnculo ficará pronta na próxima rodada.");return false;}
     const masterToken=sourceToken(actor),servantToken=sourceToken(servant);if(masterToken&&servantToken&&distance(masterToken,servantToken)>18)return ui.notifications.warn("Nova Era: o Homúnculo deve estar a até 18 m do Alquimista.");
     if(!servantToken){ui.notifications.warn("Nova Era: coloque o token do Homúnculo na cena antes de entregar uma Fórmula.");return false;}
     const delivered=await activateAlchemistFormula(actor,slot,{sourceToken:servantToken});if(delivered){await clearDodge(servant);if(turn)await actor.setFlag(MODULE_ID,"alchemistHomunculusCommandTurn",turn);}return delivered;

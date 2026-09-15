@@ -103,6 +103,16 @@ const roll=rollAlchemist;
 async function save(actor,ability) { return Number(firstRoll(await actor.rollSavingThrow({ability}))?.total??0); }
 export async function postAlchemist(actor,title,text) { return ChatMessage.create({speaker:ChatMessage.getSpeaker({actor}),content:`<section class="nova-era alchemist-chat"><h2>${title}</h2><p>${text}</p><blockquote>“Toda descoberta começa como uma hipótese.”</blockquote></section>`}); }
 const post=postAlchemist;
+export async function resolveAlchemistDartAttack(actor,target,project) {
+  if(!target?.actor)return false;
+  const rangedBonus=String(actor.system?.bonuses?.rwak?.attack??"").trim();
+  const formula=`1d20 + @abilities.dex.mod + @attributes.prof${rangedBonus?` + ${rangedBonus}`:""}`;
+  const total=await roll(actor,formula,`${project.name} — Ataque de Dardo`);
+  const armorClass=Number(target.actor.system?.attributes?.ac?.value??10);
+  if(total>=armorClass)return true;
+  await post(actor,"Dardo evitado",`${escape(target.name)} não foi atingido (Ataque ${total} contra CA ${armorClass}). A Fórmula não causou dano.`);
+  return false;
+}
 async function choose(title,prompt,entries) {
   if(!entries.length)return null;
   return Dialog.prompt({title,content:`<form class="nova-era alchemist-choice"><p>${prompt}</p><div class="form-group"><select name="choice">${entries.map(([value,label])=>`<option value="${escape(value)}">${escape(label)}</option>`).join("")}</select></div></form>`,label:"Confirmar",callback:html=>String(html.find("[name='choice']").val()),rejectClose:false});
@@ -279,8 +289,16 @@ async function targetsFor(actor,formula,role,sourceToken=null,rangeBonus=0) {
 }
 async function resolveDamage(actor,formula,project,targets,options={}) {
   const dice=addDice(project.getFlag(MODULE_ID,"dice")||"2d6",extraDice(formula)),type=damageType(formula,project,options),area=["grenade","mine"].includes(formula.container);
-  const damage=await roll(actor,addDice(dice,Number(options.experimentChoice==="potential")),`${project.name} — ${type}`),failed=[],affected=[];
-  for(const token of targets){let amount=damage;if(area){const total=await save(token.actor,"dex");if(total>=alchemistDC(actor))amount=Math.floor(damage/2);else failed.push(token);}else if(formula.container!=="dart"&&!options.deliveryConfirmed){const attack=await roll(actor,"1d20 + @abilities.int.mod + @attributes.prof",`${project.name} — Ataque de Fórmula`);if(attack<Number(token.actor.system.attributes.ac.value??10)){await post(actor,"Fórmula evitada",`${token.name} não foi atingido.`);continue;}}amount+=await alchemistAnatomyBonus(actor,token.actor);await applyAlchemistDamage(token.actor,amount,type,actor);affected.push(token);}
+  let damage=null;const damageRoll=async()=>damage??=await roll(actor,addDice(dice,Number(options.experimentChoice==="potential")),`${project.name} — ${type}`),failed=[],affected=[];
+  for(const token of targets){
+    if(!area&&!options.deliveryConfirmed){
+      if(formula.container==="dart"){if(!await resolveAlchemistDartAttack(actor,token,project))continue;}
+      else{const attack=await roll(actor,"1d20 + @abilities.int.mod + @attributes.prof",`${project.name} — Ataque de Fórmula`);if(attack<Number(token.actor.system.attributes.ac.value??10)){await post(actor,"Fórmula evitada",`${token.name} não foi atingido.`);continue;}}
+    }
+    let amount=await damageRoll();
+    if(area){const total=await save(token.actor,"dex");if(total>=alchemistDC(actor))amount=Math.floor(amount/2);else failed.push(token);}
+    amount+=await alchemistAnatomyBonus(actor,token.actor);await applyAlchemistDamage(token.actor,amount,type,actor);affected.push(token);
+  }
   if(formula.modifiers.includes("fragmentation")&&failed.length){const bonus=await roll(actor,dice.replace(/^\d+/,"1"),"Fragmentação");await applyAlchemistDamage(failed[0].actor,bonus,type);}
   return area?failed:affected;
 }
@@ -303,7 +321,7 @@ async function resolveSupport(actor,formula,project,targets,options={}) {
   const key=keyOf(project),target=targets[0]?.actor;if(!target)return post(actor,project.name,"A Fórmula foi ativada; resolva a propriedade narrativa descrita no Projeto.");
   if(project.getFlag(MODULE_ID,"role")==="debuff"||(key==="alchemist-project-conductor"&&formula.container!=="ointment")){
     if(formula.container==="dart"){
-      if(options.dartHit!==true&&!await confirm("Entrega por Dardo",`O ataque da arma acertou ${escape(target.name)}? A Fórmula não realiza um segundo ataque.`))return false;
+      if(!options.deliveryConfirmed&&!await resolveAlchemistDartAttack(actor,targets[0],project))return false;
     }else if(!options.deliveryConfirmed){
       const attack=await roll(actor,"1d20 + @abilities.int.mod + @attributes.prof",`${project.name} — Ataque de Fórmula`);
       if(attack<Number(target.system?.attributes?.ac?.value??10)){await post(actor,"Fórmula evitada",`${escape(target.name)} não foi atingido.`);return false;}
@@ -506,10 +524,6 @@ async function experimentationResult(actor,cost,plan) {
 
 async function planFormulaChoices(actor,formula,project,targets){
   const key=keyOf(project),choices={};
-  if(["debuff","damage"].includes(project.getFlag(MODULE_ID,"role"))&&formula.container==="dart"){
-    if(!await confirm("Entrega por Dardo",`O ataque da arma acertou ${escape(targets[0]?.name)}? A Fórmula não realiza um segundo ataque.`))return null;
-    choices.dartHit=true;
-  }
   if(key==="alchemist-project-converter"){
     choices.converterType=await choose(project.name,"Escolha o tipo de dano armazenado.",[["acid","Ácido"],["lightning","Elétrico"],["fire","Fogo"],["cold","Frio"]]);
     if(!choices.converterType)return null;
