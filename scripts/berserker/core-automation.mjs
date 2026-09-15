@@ -39,7 +39,7 @@ export function bloodState(actor) {
   const points = Math.clamp(Number(stored.points ?? 0), 0, maximum);
   const threshold = Math.ceil(maximum / 2);
   const forcedFrenzy = actor?.effects?.some(effect => effect.getFlag(MODULE_ID, "berserkerLegacyEffect") === "immortal-ascension") ?? false;
-  return { points, maximum, threshold, frenzy: points >= threshold || forcedFrenzy, lastViolence: Number(stored.lastViolence ?? 0) };
+  return { points, maximum, threshold, frenzy: points >= threshold || forcedFrenzy, lastViolence: Number(stored.lastViolence ?? 0), lastViolenceCombatId: String(stored.lastViolenceCombatId ?? ""), lastViolenceRound: Number(stored.lastViolenceRound ?? 0) };
 }
 
 function mayManage(actor) {
@@ -94,6 +94,8 @@ function scheduleViolenceExpiry(actor) {
   const timer = setTimeout(async () => {
     if (!actor || !isNovaEraBerserker(actor) || !mayManage(actor)) return;
     const state = bloodState(actor);
+    // Um turno demorado na mesa não representa um minuto dentro do combate.
+    if (game.combat?.started && game.combat.id === state.lastViolenceCombatId) return;
     if (Date.now() - state.lastViolence < 59_000) return scheduleViolenceExpiry(actor);
     const floor = berserkerLevel(actor) >= 19 ? Math.max(0, state.threshold - 1) : 0;
     await setBloodPoints(actor, floor, { reason: "Fim da Violência", violence: false });
@@ -101,15 +103,22 @@ function scheduleViolenceExpiry(actor) {
   violenceTimers.set(actor.uuid, timer);
 }
 
-export async function setBloodPoints(actor, value, { reason = "Ajuste", violence = false } = {}) {
+export async function setBloodPoints(actor, value, { reason = "Ajuste", violence = false, clearViolence = false } = {}) {
   if (!isNovaEraBerserker(actor) || !mayManage(actor)) return bloodState(actor);
   const before = bloodState(actor);
   const points = Math.clamp(Number(value) || 0, 0, before.maximum);
-  const next = { points, lastViolence: violence ? Date.now() : before.lastViolence };
+  const combat = violence && game.combat?.started ? game.combat : null;
+  const next = {
+    points,
+    lastViolence: clearViolence ? 0 : violence ? Date.now() : before.lastViolence,
+    lastViolenceCombatId: clearViolence ? "" : violence ? combat?.id ?? "" : before.lastViolenceCombatId,
+    lastViolenceRound: clearViolence ? 0 : combat ? Number(combat.round) : violence ? 0 : before.lastViolenceRound
+  };
   await actor.setFlag(MODULE_ID, STATE_FLAG, next);
   const forcedFrenzy = actor.effects.some(effect => effect.getFlag(MODULE_ID, "berserkerLegacyEffect") === "immortal-ascension");
   await syncFrenzyEffect(actor, points >= before.threshold || forcedFrenzy);
-  if (violence) scheduleViolenceExpiry(actor);
+  if (clearViolence) clearTimeout(violenceTimers.get(actor.uuid));
+  else if (violence) scheduleViolenceExpiry(actor);
   Hooks.callAll("novaEraBerserkerChanged", { actor, before, after: bloodState(actor), reason });
   return bloodState(actor);
 }
@@ -226,7 +235,29 @@ async function onCombatStart(combat) {
     const actor = combatant.actor;
     if (!isNovaEraBerserker(actor) || !isAutomationAuthority(actor)) continue;
     const floor = berserkerLevel(actor) >= 19 ? Math.max(0, bloodThreshold(actor) - 1) : 0;
-    await setBloodPoints(actor, floor, { reason: "Iniciativa" });
+    await setBloodPoints(actor, floor, { reason: "Iniciativa", clearViolence: true });
+  }
+}
+
+async function onCombatTurn(combat, changed) {
+  if (!("turn" in changed || "round" in changed) || !combat.started) return;
+  const actor = combat.combatant?.actor;
+  if (!isNovaEraBerserker(actor) || !isAutomationAuthority(actor)) return;
+  const state = bloodState(actor);
+  if (state.lastViolenceCombatId !== combat.id || !state.lastViolenceRound || Number(combat.round) - state.lastViolenceRound < 10) return;
+  const floor = berserkerLevel(actor) >= 19 ? Math.max(0, state.threshold - 1) : 0;
+  await setBloodPoints(actor, floor, { reason: "Fim da Violência", clearViolence: true });
+}
+
+async function onCombatEnd(combat) {
+  for (const combatant of combat.combatants) {
+    const actor = combatant.actor;
+    if (!isNovaEraBerserker(actor) || !isAutomationAuthority(actor)) continue;
+    const state = bloodState(actor);
+    if (state.lastViolenceCombatId !== combat.id) continue;
+    await actor.setFlag(MODULE_ID, STATE_FLAG, { points: state.points, lastViolence: Date.now(), lastViolenceCombatId: "", lastViolenceRound: 0 });
+    clearTimeout(violenceTimers.get(actor.uuid));
+    if (state.points > 0) scheduleViolenceExpiry(actor);
   }
 }
 
@@ -312,6 +343,9 @@ export function registerBerserkerAutomation() {
   Hooks.on("preUpdateActor", (actor, changed, options) => void onPreUpdateActor(actor, changed, options));
   Hooks.on("updateActor", (actor, changed, options) => void onUpdateActor(actor, changed, options));
   Hooks.on("combatStart", combat => void onCombatStart(combat));
+  Hooks.on("updateCombat", (combat, changed) => void onCombatTurn(combat, changed));
+  Hooks.on("combatEnd", combat => void onCombatEnd(combat));
+  Hooks.on("deleteCombat", combat => void onCombatEnd(combat));
   Hooks.on("createItem", item => { if (isNovaEraBerserker(item.parent)) void setBloodPoints(item.parent, bloodState(item.parent).points, { reason: "Sincronização" }); });
   Hooks.on("deleteItem", item => { if (item.parent && isNovaEraBerserker(item.parent)) void setBloodPoints(item.parent, bloodState(item.parent).points, { reason: "Sincronização" }); });
 }

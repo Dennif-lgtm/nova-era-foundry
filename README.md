@@ -9,6 +9,13 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante e Alquimista de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.32.0-rc.3 — Correção da duração do Frenesi
+
+- Durante combate, o minuto sem violência do Berserker passa a contar como dez rodadas, não como sessenta segundos reais.
+- Impede que o Frenesi termine enquanto o jogador ainda está realizando um turno demorado.
+- Fora de combate, mantém a expiração após um minuto real sem causar ou sofrer violência hostil.
+- Cair abaixo do Limiar ao gastar Pontos de Sangue continua encerrando o Frenesi normalmente.
+
 ### v0.32.0-rc.2 — Maleta e efeitos avançados do Alquimista
 
 - Amplia os fluxos da maleta para Controle, Reação em Cadeia, Interferente Etérico, Transferência, Eco Recursivo e Transposição em duas etapas.
