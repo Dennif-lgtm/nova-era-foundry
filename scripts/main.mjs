@@ -25,6 +25,7 @@ import { ensureChronomancerContent, installChronomancerContent } from "./content
 import { ensureBerserkerContent, installBerserkerContent } from "./content/berserker-installer.mjs";
 import { ensureNecromancerContent, installNecromancerContent } from "./content/necromancer-installer.mjs";
 import { ensureAlchemistContent, installAlchemistContent } from "./content/alchemist-installer.mjs";
+import { ensureHeraldContent, installHeraldContent } from "./content/herald-installer.mjs";
 import { gainBlood, registerBerserkerAutomation, setBloodPoints, spendBlood, useBloodTechnique, useBrutalStrike } from "./berserker/core-automation.mjs";
 import { openBerserkerPanel, registerBerserkerPanel } from "./ui/berserker-panel.mjs";
 import { registerBerserkerTechniqueAutomation } from "./berserker/technique-automation.mjs";
@@ -44,6 +45,13 @@ import { registerAlchemistDamageInterception } from "./alchemist/damage-intercep
 import { activateAlchemistPerfectMatrix, configureAlchemistPrinciples, registerAlchemistTransmuterAutomation, reprogramAlchemistPrinciple } from "./alchemist/transmuter-automation.mjs";
 import { activateAlchemistThroughPlatform, configureAlchemistPlatforms, reconfigureAlchemistPlatform, registerAlchemistArtificerAutomation } from "./alchemist/artificer-automation.mjs";
 import { openAlchemistPanel, registerAlchemistPanel } from "./ui/alchemist-panel.mjs";
+import {
+  activateHeraldConcordance, activateHeraldHarmony, configureHeraldSpellAffinity,
+  dissipateHeraldResonances, endHeraldTurn, generateHeraldResonance, heraldState,
+  prepareHeraldRelease, registerHeraldAutomation, tuneHeraldResonances
+} from "./herald/core-automation.mjs";
+import { openHeraldPanel, registerHeraldPanel } from "./ui/herald-panel.mjs";
+import { activateHeraldFeature, registerHeraldAdvancedAutomation } from "./herald/advanced-automation.mjs";
 
 Hooks.once("init", () => {
   console.info(`${MODULE_ID} | Inicializando Nova Era`);
@@ -98,6 +106,13 @@ Hooks.once("init", () => {
     type: String,
     default: ""
   });
+
+  game.settings.register(MODULE_ID, "heraldContentVersion", {
+    scope: "world",
+    config: false,
+    type: String,
+    default: ""
+  });
 });
 
 Hooks.once("ready", async () => {
@@ -116,7 +131,8 @@ Hooks.once("ready", async () => {
       installChronomancer: installChronomancerContent,
       installBerserker: installBerserkerContent,
       installNecromancer: installNecromancerContent,
-      installAlchemist: installAlchemistContent
+      installAlchemist: installAlchemistContent,
+      installHerald: installHeraldContent
     },
     chronomancer: {
       openClock: openChronomancerClock,
@@ -167,6 +183,19 @@ Hooks.once("ready", async () => {
       greatWorks: openAlchemistGreatWorks,
       offerProgression: offerAlchemistProgression
     },
+    herald: {
+      openPanel: openHeraldPanel,
+      state: heraldState,
+      generate: generateHeraldResonance,
+      activateConcordance: activateHeraldConcordance,
+      tune: tuneHeraldResonances,
+      dissipate: dissipateHeraldResonances,
+      prepareRelease: prepareHeraldRelease,
+      harmony: activateHeraldHarmony,
+      endTurn: endHeraldTurn,
+      configureSpellAffinity: configureHeraldSpellAffinity,
+      activateFeature: activateHeraldFeature
+    },
     macros: { ...baseMacroApi, ...secondaryMacroApi, ...subclassMacroApi }
   };
 
@@ -201,6 +230,9 @@ Hooks.once("ready", async () => {
   registerAlchemistArtificerAutomation();
   registerAlchemistProgressionAutomation();
   registerAlchemistPanel();
+  registerHeraldAutomation();
+  registerHeraldPanel();
+  registerHeraldAdvancedAutomation();
   registerBaseFeatureAutomation();
   registerAdvancedBaseFeatureAutomation();
   registerSecondaryEffects();
@@ -259,6 +291,15 @@ Hooks.once("ready", async () => {
     console.error(`${MODULE_ID} | Falha ao atualizar o conteúdo do Alquimista`, error);
     if (game.user.isGM) {
       ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Alquimista. A Maleta de Síntese continua disponível; consulte o console para detalhes.");
+    }
+  }
+
+  try {
+    await ensureHeraldContent();
+  } catch (error) {
+    console.error(`${MODULE_ID} | Falha ao atualizar o conteúdo do Arauto das Ressonâncias`, error);
+    if (game.user.isGM) {
+      ui.notifications.error("Nova Era: não foi possível atualizar alguns itens do Arauto. Os Cristais da Ressonância continuam disponíveis; consulte o console para detalhes.");
     }
   }
 

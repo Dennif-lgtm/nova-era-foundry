@@ -7,7 +7,16 @@ Módulo de regras e automações para:
 
 ## Estado atual
 
-Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante e Alquimista de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
+Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante, Alquimista e Arauto das Ressonâncias de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
+
+### v0.33.0-rc.1 — Arauto das Ressonâncias em testes
+
+- Adiciona a classe Arauto das Ressonâncias completa do nível 1 ao 20 e os Caminhos Sentimentalista, Concordante e Executor.
+- Integra o painel independente **Três Cristais V8**, aberto pela ficha, sem alterar a arte aprovada.
+- Automatiza geração, duração, limite, Sobrecarga, Satz Aurora, Eco Ressonante, Afinidade Natural, Fluxo, Transbordamento e Harmonia Absoluta.
+- Oferece Modulação, Ressonância Pura e Tríade antes das magias elegíveis e aplica dano, cura, PV temporários e modificadores de Equilíbrio.
+- Acrescenta ativações e gatilhos dos três Caminhos, incluindo Vínculo Vital, Renascimento Guiado, Campo Harmônico, Sinfonia, Fratura, Cadeia e Julgamento Final.
+- Esta é uma versão de testes. A ordem recomendada de validação está em [docs/herald-test-plan.md](docs/herald-test-plan.md).
 
 ### v0.32.0-rc.4 — Dardo e Homúnculo do Alquimista
 
