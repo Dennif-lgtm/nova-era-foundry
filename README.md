@@ -9,6 +9,12 @@ Módulo de regras e automações para:
 
 Esta versão reúne as classes Ladino, Cronomante, Berserker, Necromante, Alquimista e Arauto das Ressonâncias de Nova Era, com conteúdo organizado, painéis próprios e automações independentes.
 
+### v0.33.0-rc.2 — Rolagem do painel do Arauto
+
+- Adiciona rolagem vertical própria ao painel Três Cristais V8.
+- Limita a altura inicial à área disponível da tela, mantendo cabeçalho, rodapé e técnicas acessíveis.
+- Inclui barra de rolagem dourada integrada ao visual do Arauto e preserva o redimensionamento da janela.
+
 ### v0.33.0-rc.1 — Arauto das Ressonâncias em testes
 
 - Adiciona a classe Arauto das Ressonâncias completa do nível 1 ao 20 e os Caminhos Sentimentalista, Concordante e Executor.

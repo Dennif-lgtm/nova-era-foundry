@@ -2152,11 +2152,28 @@
 .ne-alchemy-finalize{width:100%;min-height:31px;margin-top:6px;border:1px solid #9d824b;background:#17231d;color:#e5d0a0;font:11px Georgia,serif;cursor:pointer}.ne-alchemy-finalize:hover{background:#2b4035}
 
 /* Arauto das Ressonancias — painel oficial Tres Cristais V8 */
+.nova-era-herald-window,
+.nova-era-herald-window.window-app { max-height: calc(100vh - 24px) !important; }
 .nova-era-herald-window .window-content {
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 58px) !important;
   padding: 0;
-  overflow-y: auto;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #b59a61 #0b1020;
   background: #101521;
 }
+.nova-era-herald-window .window-content::-webkit-scrollbar { width: 10px; }
+.nova-era-herald-window .window-content::-webkit-scrollbar-track { background: #0b1020; border-left: 1px solid #463d2d; }
+.nova-era-herald-window .window-content::-webkit-scrollbar-thumb { background: linear-gradient(#d4b985, #75623d); border: 2px solid #0b1020; border-radius: 8px; }
+.nova-era-herald-window .window-content::-webkit-scrollbar-thumb:hover { background: linear-gradient(#efd79f, #9c824e); }
 
 .ne-herald-instrument {
   --v: #77d6a2;
@@ -2165,6 +2182,8 @@
   --gold: #d4b985;
   --path-accent: var(--gold);
   position: relative;
+  width: 100%;
+  height: auto !important;
   min-height: 100%;
   padding: 25px 30px 20px;
   overflow: hidden;

@@ -78,7 +78,7 @@ function panelElement(app) {
 
 class HeraldPanelApplication extends FoundryApplication {
   constructor(actor, options = {}) { super(options); this.actor = actor; this.selected = new Set(); }
-  static get defaultOptions() { return foundry.utils.mergeObject(super.defaultOptions, { classes: ["nova-era-window", "nova-era-herald-window"], width: 760, height: 1000, resizable: true, minimizable: true, popOut: true, scrollY: [".window-content"] }, { inplace: false }); }
+  static get defaultOptions() { return foundry.utils.mergeObject(super.defaultOptions, { classes: ["nova-era-window", "nova-era-herald-window"], width: 760, height: Math.min(900, Math.max(560, globalThis.innerHeight - 90)), resizable: true, minimizable: true, popOut: true, scrollY: [".window-content"] }, { inplace: false }); }
   get id() { return `nova-era-herald-${this.actor.id}`; }
   get title() { return `Cristais da Ressonância — ${this.actor.name}`; }
   async _renderInner() { return globalThis.jQuery(panelElement(this)); }
